@@ -40,7 +40,7 @@ defmodule Fastrepl.MixProject do
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:phoenix_live_view, "~> 0.20.2"},
       {:floki, ">= 0.30.0", only: :test},
-      {:esbuild, "~> 0.8", runtime: Mix.env() == :dev},
+      # {:esbuild, "~> 0.8", runtime: Mix.env() == :dev},
       {:tailwind, "~> 0.2", runtime: Mix.env() == :dev},
       {:heroicons,
        github: "tailwindlabs/heroicons",
@@ -67,7 +67,8 @@ defmodule Fastrepl.MixProject do
       {:retry, "~> 0.18"},
       {:earmark, "~> 1.4"},
       {:assent, "~> 0.2.9"},
-      {:rustler, "~> 0.32.1"}
+      {:rustler, "~> 0.32.1"},
+      {:live_svelte, "~> 0.13.1"}
     ]
   end
 
@@ -79,7 +80,7 @@ defmodule Fastrepl.MixProject do
   # See the documentation for `Mix` for more info on aliases.
   defp aliases do
     [
-      setup: ["deps.get", "ecto.setup", "assets.setup", "assets.build"],
+      setup: ["deps.get", "ecto.setup", "cmd --cd assets npm install"],
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
@@ -87,7 +88,7 @@ defmodule Fastrepl.MixProject do
       "assets.build": ["tailwind fastrepl", "esbuild fastrepl"],
       "assets.deploy": [
         "tailwind fastrepl --minify",
-        "esbuild fastrepl --minify",
+        "cmd --cd assets node build.js --deploy",
         "phx.digest"
       ]
     ]

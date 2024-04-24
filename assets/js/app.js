@@ -21,12 +21,17 @@ import "phoenix_html";
 import { Socket } from "phoenix";
 import { LiveSocket } from "phoenix_live_view";
 import topbar from "../vendor/topbar";
+import { getHooks } from "live_svelte";
+import * as Components from "../svelte/**/*.svelte";
 
-let csrfToken = document
+const csrfToken = document
   .querySelector("meta[name='csrf-token']")
   .getAttribute("content");
-let liveSocket = new LiveSocket("/live", Socket, {
-  longPollFallbackMs: 2500,
+
+const liveSocket = new LiveSocket("/live", Socket, {
+  hooks: {
+    ...getHooks(Components),
+  },
   params: { _csrf_token: csrfToken },
 });
 

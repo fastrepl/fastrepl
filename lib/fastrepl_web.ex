@@ -87,6 +87,8 @@ defmodule FastreplWeb do
       import FastreplWeb.CoreComponents
       import FastreplWeb.Gettext
 
+      import LiveSvelte
+
       # Shortcut for generating JS commands
       alias Phoenix.LiveView.JS
 

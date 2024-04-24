@@ -10,6 +10,7 @@ module.exports = {
     "./js/**/*.js",
     "../lib/fastrepl_web.ex",
     "../lib/fastrepl_web/**/*.*ex",
+    "./svelte/**/*.svelte",
   ],
   theme: {
     extend: {

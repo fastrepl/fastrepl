@@ -8,6 +8,7 @@ defmodule Fastrepl.Application do
   @impl true
   def start(_type, _args) do
     children = [
+      {NodeJS.Supervisor, [path: LiveSvelte.SSR.NodeJS.server_path(), pool_size: 4]},
       FastreplWeb.Telemetry,
       Fastrepl.Repo,
       {DNSCluster, query: Application.get_env(:fastrepl, :dns_cluster_query) || :ignore},
