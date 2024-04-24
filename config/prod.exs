@@ -16,5 +16,10 @@ config :swoosh, local: false
 # Do not print debug messages in production
 config :logger, level: :info
 
+config :fastrepl, Fastrepl.Native.RustChunker,
+  crate: :rust_chunker,
+  skip_compilation?: true,
+  load_from: {:fastrepl, "priv/native/librust_chunker"}
+
 # Runtime production configuration, including reading
 # of environment variables, is done on config/runtime.exs.

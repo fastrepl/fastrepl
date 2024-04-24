@@ -66,7 +66,8 @@ defmodule Fastrepl.MixProject do
       {:castore, ">= 0.0.0"},
       {:retry, "~> 0.18"},
       {:earmark, "~> 1.4"},
-      {:assent, "~> 0.2.9"}
+      {:assent, "~> 0.2.9"},
+      {:rustler, "~> 0.32.1"}
     ]
   end
 

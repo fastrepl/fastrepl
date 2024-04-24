@@ -18,6 +18,11 @@ ARG DEBIAN_VERSION=bullseye-20240130-slim
 ARG BUILDER_IMAGE="hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-debian-${DEBIAN_VERSION}"
 ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
 
+FROM rust:1.68.0 as rust
+WORKDIR /app
+COPY native/rust_chunker ./
+RUN cargo rustc --release 
+
 FROM ${BUILDER_IMAGE} as builder
 
 # install build dependencies
@@ -53,6 +58,8 @@ COPY assets assets
 
 # compile assets
 RUN mix assets.deploy
+
+COPY --from=rust /app/target/release/librust_chunker.so priv/native/librust_chunker.so
 
 # Compile the release
 RUN mix compile
