@@ -1,0 +1,52 @@
+version: "3"
+
+dotenv: [".env"]
+
+tasks:
+  dev:
+    silent: true
+    cmds:
+      - task: db:dev:up
+      - task: redis:up
+      - sleep 1
+      - mix ecto.migrate --quiet
+      - MIX_ENV=dev mix phx.server
+      - task: db:dev:down
+      - task: redis:down
+
+  test:
+    silent: true
+    cmds:
+      - task: db:test:up
+      - sleep 1
+      - MIX_ENV=test mix test
+      - task: db:test:down
+
+  db:dev:up:
+    silent: true
+    cmds:
+      - docker run
+        --name fastrepl_dev
+        -p 5432:5432
+        -e POSTGRES_USER=postgres
+        -e POSTGRES_PASSWORD=postgres
+        -e POSTGRES_DB=fastrepl_dev
+        -d pgvector/pgvector:pg16
+
+  db:dev:down: docker rm -f fastrepl_dev
+
+  db:test:up:
+    silent: true
+    cmds:
+      - docker run
+        --name fastrepl_test
+        -p 5432:5432
+        -e POSTGRES_USER=postgres
+        -e POSTGRES_PASSWORD=postgres
+        -e POSTGRES_DB=fastrepl_test
+        -d pgvector/pgvector:pg16
+
+  db:test:down: docker rm -f fastrepl_dev
+
+  redis:up: docker run -d --name redis-container -p 6379:6379 redis:latest --requirepass "password"
+  redis:down: docker rm -f redis-container

@@ -31,7 +31,11 @@ if config_env() == :prod do
   maybe_ipv6 = if System.get_env("ECTO_IPV6") in ~w(true 1), do: [:inet6], else: []
 
   config :fastrepl, Fastrepl.Repo,
-    # ssl: true,
+    ssl: true,
+    ssl_opts: [
+      server_name_indication: ~c"ep-late-queen-a693d7y8.us-west-2.aws.neon.tech",
+      verify: :verify_none
+    ],
     url: database_url,
     pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
     socket_options: maybe_ipv6
