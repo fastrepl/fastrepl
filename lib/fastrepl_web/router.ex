@@ -1,6 +1,16 @@
 defmodule FastreplWeb.Router do
   use FastreplWeb, :router
 
+  import FastreplWeb.GithubAuth
+
+  if Application.compile_env(:fastrepl, :dev_routes) do
+    scope "/dev" do
+      pipe_through :browser
+
+      forward "/mailbox", Plug.Swoosh.MailboxPreview
+    end
+  end
+
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
@@ -8,6 +18,7 @@ defmodule FastreplWeb.Router do
     plug :put_root_layout, html: {FastreplWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug :fetch_github_user
   end
 
   pipeline :api do
@@ -20,17 +31,10 @@ defmodule FastreplWeb.Router do
     get "/", PageController, :home
   end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", FastreplWeb do
-  #   pipe_through :api
-  # end
+  scope "/auth/github", FastreplWeb do
+    pipe_through [:browser]
 
-  # Enable Swoosh mailbox preview in development
-  if Application.compile_env(:fastrepl, :dev_routes) do
-    scope "/dev" do
-      pipe_through :browser
-
-      forward "/mailbox", Plug.Swoosh.MailboxPreview
-    end
+    get "/", GithubAuthController, :request
+    get "/callback", GithubAuthController, :callback
   end
 end

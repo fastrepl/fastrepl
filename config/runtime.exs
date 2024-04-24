@@ -119,3 +119,17 @@ if config_env() == :prod do
   #
   # See https://hexdocs.pm/swoosh/Swoosh.html#module-installation for details.
 end
+
+if config_env() != :test do
+  config :assent,
+    github: [
+      client_id: System.fetch_env!("GITHUB_CLIENT_ID"),
+      client_secret: System.fetch_env!("GITHUB_CLIENT_SECRET"),
+      redirect_uri:
+        if config_env() == :prod do
+          "https://app.fastrepl.com/auth/github/callback"
+        else
+          "http://localhost:4000/auth/github/callback"
+        end
+    ]
+end
