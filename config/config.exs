@@ -61,6 +61,10 @@ config :logger, :console,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
+config :posthog,
+  api_url: "https://us.i.posthog.com",
+  api_key: "phc_qdLGlOK8YuOSe6dbBNlD3QbSzjASgIuJevfB9Xi4gKz"
+
 config :fastrepl, :vectordb_registry, Fastrepl.VectordbRegistry
 config :fastrepl, :orchestrator_registry, Fastrepl.OrchestratorRegistry
 
