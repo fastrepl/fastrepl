@@ -1,9 +1,8 @@
 defmodule FastreplWeb.PageController do
   use FastreplWeb, :controller
 
-  def home(conn, _params) do
-    # The home page is often custom made,
-    # so skip the default app layout.
-    render(conn, :home, layout: false)
+  def new_demo(conn, _params) do
+    id = Nanoid.generate()
+    conn |> redirect(to: "/demo/#{id}")
   end
 end

@@ -8,7 +8,7 @@ defmodule Fastrepl.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      {Registry, keys: :unique, name: Fastrepl.ManagerRegistry},
+      {Registry, keys: :unique, name: Fastrepl.OrchestratorRegistry},
       {Registry, keys: :unique, name: Fastrepl.VectordbRegistry},
       {NodeJS.Supervisor, [path: LiveSvelte.SSR.NodeJS.server_path(), pool_size: 4]},
       FastreplWeb.Telemetry,

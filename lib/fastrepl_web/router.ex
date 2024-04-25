@@ -26,9 +26,16 @@ defmodule FastreplWeb.Router do
   end
 
   scope "/", FastreplWeb do
-    pipe_through :browser
+    pipe_through [:browser]
 
-    get "/", PageController, :home
+    get "/demo/new", PageController, :new_demo
+
+    live_session :main,
+      on_mount: [{FastreplWeb.GithubAuth, :mount_current_user}] do
+      live "/", MainLive, :index
+      live "/thread/:id", ThreadLive, :normal
+      live "/demo/:id", ThreadLive, :demo
+    end
   end
 
   scope "/auth/github", FastreplWeb do

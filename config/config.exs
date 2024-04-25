@@ -62,6 +62,7 @@ config :logger, :console,
 config :phoenix, :json_library, Jason
 
 config :fastrepl, :vectordb_registry, Fastrepl.VectordbRegistry
+config :fastrepl, :orchestrator_registry, Fastrepl.OrchestratorRegistry
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
