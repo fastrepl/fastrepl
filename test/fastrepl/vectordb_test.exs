@@ -25,16 +25,11 @@ defmodule Fastrepl.VectordbTest do
   end
 
   setup do
-    {:ok, pid} = Registry.start_link(keys: :unique, name: __MODULE__)
+    registry_name = __MODULE__ |> Module.concat(Nanoid.generate())
+    {:ok, _} = Registry.start_link(keys: :unique, name: registry_name)
 
     Application.put_env(:fastrepl, :embedding, MockEmbedding)
-    Application.put_env(:fastrepl, :vectordb_registry, __MODULE__)
-
-    on_exit(fn ->
-      Application.put_env(:fastrepl, :embedding, nil)
-      Application.put_env(:fastrepl, :vectordb_registry, nil)
-      Process.exit(pid, :normal)
-    end)
+    Application.put_env(:fastrepl, :vectordb_registry, registry_name)
   end
 
   describe "query/3" do
