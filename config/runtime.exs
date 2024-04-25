@@ -121,6 +121,12 @@ if config_env() == :prod do
 end
 
 if config_env() != :test do
+  config :fastrepl, :github_app_id, System.get_env("GITHUB_APP_ID")
+  config :fastrepl, :github_app_secret, System.get_env("GITHUB_APP_SECRET")
+
+  config :langchain, openai_key: System.fetch_env!("OPENAI_API_KEY")
+  config :langchain, anthropic_key: System.fetch_env!("ANTHROPIC_API_KEY")
+
   config :assent,
     github: [
       client_id: System.get_env("GITHUB_CLIENT_ID"),
@@ -132,9 +138,6 @@ if config_env() != :test do
           "http://localhost:4000/auth/github/callback"
         end
     ]
-
-  config :fastrepl, :github_app_id, System.get_env("GITHUB_APP_ID")
-  config :fastrepl, :github_app_secret, System.get_env("GITHUB_APP_SECRET")
 
   config :oapi_github,
     app_name: "app.fastrepl.com",

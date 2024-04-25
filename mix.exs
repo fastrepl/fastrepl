@@ -71,7 +71,10 @@ defmodule Fastrepl.MixProject do
       {:live_svelte, "~> 0.13.1"},
       {:oapi_github, "~> 0.3.1"},
       {:httpoison, "~> 2.0"},
-      {:posthog, "~> 0.1"}
+      {:posthog, "~> 0.1"},
+      {:langchain,
+       git: "https://github.com/brainlid/langchain.git",
+       rev: "a76854aae40eb601112a0e425dd8e782addb0a29"}
     ]
   end
 
