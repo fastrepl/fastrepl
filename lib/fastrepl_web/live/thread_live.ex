@@ -7,7 +7,18 @@ defmodule FastreplWeb.ThreadLive do
 
   def render(assigns) do
     ~H"""
-    <div>123</div>
+    <div>Thread</div>
+    <.svelte
+      name="ChatEditor"
+      socket={@socket}
+      ssr={false}
+      props={
+        %{
+          input_name: "instruction",
+          placeholder: "Reply here: "
+        }
+      }
+    />
     """
   end
 

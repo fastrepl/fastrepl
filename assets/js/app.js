@@ -24,6 +24,20 @@ import topbar from "../vendor/topbar";
 import { getHooks } from "live_svelte";
 import * as Components from "../svelte/**/*.svelte";
 
+import hljs from "highlight.js";
+
+const Highlight = {
+  mounted() {
+    this._fn();
+  },
+  updated() {
+    this._fn();
+  },
+  _fn() {
+    hljs.highlightAll();
+  },
+};
+
 const csrfToken = document
   .querySelector("meta[name='csrf-token']")
   .getAttribute("content");
@@ -31,6 +45,7 @@ const csrfToken = document
 const liveSocket = new LiveSocket("/live", Socket, {
   hooks: {
     ...getHooks(Components),
+    Highlight,
   },
   params: { _csrf_token: csrfToken },
 });
