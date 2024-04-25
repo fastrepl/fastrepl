@@ -123,8 +123,8 @@ end
 if config_env() != :test do
   config :assent,
     github: [
-      client_id: System.fetch_env!("GITHUB_CLIENT_ID"),
-      client_secret: System.fetch_env!("GITHUB_CLIENT_SECRET"),
+      client_id: System.get_env("GITHUB_CLIENT_ID"),
+      client_secret: System.get_env("GITHUB_CLIENT_SECRET"),
       redirect_uri:
         if config_env() == :prod do
           "https://app.fastrepl.com/auth/github/callback"
@@ -132,4 +132,11 @@ if config_env() != :test do
           "http://localhost:4000/auth/github/callback"
         end
     ]
+
+  config :fastrepl, :github_app_id, System.get_env("GITHUB_APP_ID")
+  config :fastrepl, :github_app_secret, System.get_env("GITHUB_APP_SECRET")
+
+  config :oapi_github,
+    app_name: "app.fastrepl.com",
+    apps: [{:fastrepl, System.get_env("GITHUB_APP_ID"), System.get_env("GITHUB_APP_SECRET")}]
 end

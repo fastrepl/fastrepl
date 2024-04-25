@@ -68,7 +68,9 @@ defmodule Fastrepl.MixProject do
       {:earmark, "~> 1.4"},
       {:assent, "~> 0.2.9"},
       {:rustler, "~> 0.32.1"},
-      {:live_svelte, "~> 0.13.1"}
+      {:live_svelte, "~> 0.13.1"},
+      {:oapi_github, "~> 0.3.1"},
+      {:httpoison, "~> 2.0"}
     ]
   end
 
