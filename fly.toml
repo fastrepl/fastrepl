@@ -14,7 +14,7 @@ kill_signal = 'SIGTERM'
   release_command = '/app/bin/migrate'
 
 [env]
-  PHX_HOST = 'app.fastrepl.dev'
+  PHX_HOST = 'app.fastrepl.com'
   PORT = '8080'
 
 [http_service]
