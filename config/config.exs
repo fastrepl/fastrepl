@@ -65,6 +65,9 @@ config :posthog,
   api_url: "https://us.i.posthog.com",
   api_key: "phc_qdLGlOK8YuOSe6dbBNlD3QbSzjASgIuJevfB9Xi4gKz"
 
+config :fastrepl, :env, Mix.env()
+config :fastrepl, :root, File.cwd!()
+
 config :fastrepl, :vectordb_registry, Fastrepl.VectordbRegistry
 config :fastrepl, :orchestrator_registry, Fastrepl.OrchestratorRegistry
 

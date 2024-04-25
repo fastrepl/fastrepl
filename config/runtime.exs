@@ -118,14 +118,16 @@ if config_env() == :prod do
   #     config :swoosh, :api_client, Swoosh.ApiClient.Hackney
   #
   # See https://hexdocs.pm/swoosh/Swoosh.html#module-installation for details.
+
+  config :fastrepl, :redis_url, System.get_env("REDIS_URL")
 end
 
 if config_env() != :test do
   config :fastrepl, :github_app_id, System.get_env("GITHUB_APP_ID")
   config :fastrepl, :github_app_secret, System.get_env("GITHUB_APP_SECRET")
 
-  config :langchain, openai_key: System.fetch_env!("OPENAI_API_KEY")
-  config :langchain, anthropic_key: System.fetch_env!("ANTHROPIC_API_KEY")
+  config :langchain, openai_key: System.get_env("OPENAI_API_KEY")
+  config :langchain, anthropic_key: System.get_env("ANTHROPIC_API_KEY")
 
   config :assent,
     github: [
