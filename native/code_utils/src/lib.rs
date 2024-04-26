@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests;
 
-rustler::init!("Elixir.Fastrepl.Native.RustChunker", [chunk_code]);
+rustler::init!("Elixir.Fastrepl.Native.CodeUtils", [chunk_code]);
 
 #[derive(rustler::NifStruct)]
 #[module = "Fastrepl.Retrieval.Chunker.Chunk"]

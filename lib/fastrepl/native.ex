@@ -1,5 +1,5 @@
-defmodule Fastrepl.Native.RustChunker do
-  use Rustler, otp_app: :fastrepl, crate: :rust_chunker
+defmodule Fastrepl.Native.CodeUtils do
+  use Rustler, otp_app: :fastrepl, crate: :code_utils
   alias Fastrepl.Retrieval.Chunker.Chunk
 
   @spec chunk_code(String.t(), String.t()) :: [Chunk.t()]

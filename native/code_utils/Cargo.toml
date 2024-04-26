@@ -1,12 +1,12 @@
 [package]
-name = "rust_chunker"
+name = "code_utils"
 version = "0.1.0"
 edition = "2021"
 description = "Code chunker used in Fastrepl"
 license = "MIT"
 
 [lib]
-name = "rust_chunker"
+name = "code_utils"
 path = "src/lib.rs"
 crate-type = ["cdylib"]
 

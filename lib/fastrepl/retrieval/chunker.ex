@@ -19,17 +19,17 @@ defimpl String.Chars, for: Fastrepl.Retrieval.Chunker.Chunk do
 end
 
 defmodule Fastrepl.Retrieval.Chunker do
-  alias Fastrepl.Native.RustChunker
+  alias Fastrepl.Native.CodeUtils
 
   def chunk_code(path, code) do
-    RustChunker.chunk_code(path, code)
+    CodeUtils.chunk_code(path, code)
   end
 
   def chunk_file(path) do
     code = File.read!(path)
 
     if String.valid?(code) do
-      RustChunker.chunk_code(path, code)
+      CodeUtils.chunk_code(path, code)
     else
       []
     end

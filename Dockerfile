@@ -20,7 +20,7 @@ ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
 
 FROM rust:1.76.0-bullseye as rust
 WORKDIR /app
-COPY native/rust_chunker ./
+COPY native/code_utils ./
 RUN cargo rustc --release 
 
 FROM ${BUILDER_IMAGE} as builder
@@ -64,7 +64,7 @@ WORKDIR /app
 # compile assets
 RUN mix assets.deploy
 
-COPY --from=rust /app/target/release/librust_chunker.so priv/native/librust_chunker.so
+COPY --from=rust /app/target/release/libcode_utils.so priv/native/libcode_utils.so
 
 # Compile the release
 RUN mix compile

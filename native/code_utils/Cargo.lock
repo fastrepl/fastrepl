@@ -84,6 +84,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
+name = "code_utils"
+version = "0.1.0"
+dependencies = [
+ "include_uri",
+ "insta",
+ "rs-tree-sitter-languages",
+ "rustler",
+ "tree-sitter",
+]
+
+[[package]]
 name = "console"
 version = "0.15.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -579,17 +590,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c7ba19bf4c536205313b857ba557d4f240892022272848b5ae2c913db970dcb9"
 dependencies = [
  "cc",
- "tree-sitter",
-]
-
-[[package]]
-name = "rust_chunker"
-version = "0.1.0"
-dependencies = [
- "include_uri",
- "insta",
- "rs-tree-sitter-languages",
- "rustler",
  "tree-sitter",
 ]
 
