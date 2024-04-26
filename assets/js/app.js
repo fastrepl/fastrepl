@@ -28,7 +28,7 @@ import hljs from "highlight.js";
 
 import posthog from "posthog-js";
 posthog.init("phc_qdLGlOK8YuOSe6dbBNlD3QbSzjASgIuJevfB9Xi4gKz", {
-  api_host: '"https://us.i.posthog.com"',
+  api_host: "https://us.i.posthog.com",
 });
 window.posthog = posthog;
 
