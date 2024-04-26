@@ -3,6 +3,7 @@ defmodule Fastrepl.Retrieval.Vectordb do
 
   @default_tok_k 5
   @default_threshold 0.5
+  @ingest_chunk_size 100
 
   defp embedding_module() do
     Application.fetch_env!(:fastrepl, :embedding)
@@ -41,8 +42,10 @@ defmodule Fastrepl.Retrieval.Vectordb do
     Agent.update(pid, fn state -> state |> Map.put(:docs, state.docs ++ docs) end)
 
     docs
-    |> Enum.map(&to_string/1)
-    |> embedding_module().generate()
+    |> Stream.map(&to_string/1)
+    |> Stream.chunk_every(@ingest_chunk_size)
+    |> Stream.each(&embedding_module().generate(&1))
+    |> Stream.run()
   end
 
   def query(pid, q, opts \\ []) do

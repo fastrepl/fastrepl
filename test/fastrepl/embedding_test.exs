@@ -31,8 +31,8 @@ defmodule Fastrepl.EmbeddingTest do
     assert MockEmbeddingWithCache.generate(["1", "22", "333"]) ==
              {:ok, [[1], [2], [3]]}
 
-    assert MockEmbeddingWithCache.generate(["1", "22", "333"]) ==
-             {:ok, [[1], [2], [3]]}
+    assert MockEmbeddingWithCache.generate(["1", "4444", "333"]) ==
+             {:ok, [[1], [4], [3]]}
 
     {:ok, embeddings} = MockEmbeddingWithCache.generate(List.duplicate("1", 500))
     assert Enum.count(embeddings) == 500

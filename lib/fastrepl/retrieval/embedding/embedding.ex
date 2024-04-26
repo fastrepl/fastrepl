@@ -3,10 +3,12 @@ defmodule Fastrepl.Retrieval.Embedding do
 end
 
 defmodule Fastrepl.Retrieval.Embedding.Cache do
+  @moduledoc """
+  Expects a module to implement `generate_without_cache/1`.
+  """
+
   defmacro __using__(_opts) do
     quote do
-      @generate_batch_size 100
-
       def generate(texts) do
         {cached, not_cached} =
           texts
@@ -19,21 +21,11 @@ defmodule Fastrepl.Retrieval.Embedding.Cache do
           |> Enum.map(fn {data, index} -> {index, data |> elem(1)} end)
           |> Map.new()
 
-        fetched_map =
-          not_cached
-          |> Enum.map(fn {_, index} -> {index, Enum.at(texts, index)} end)
-          |> Enum.chunk_every(@generate_batch_size)
-          |> Enum.flat_map(fn batch ->
-            batch_texts = Enum.map(batch, fn {_, text} -> text end)
-            {:ok, generated_embeddings} = __MODULE__.generate_without_cache(batch_texts)
-            Enum.zip(batch, generated_embeddings)
-          end)
-          |> Map.new(fn {{index, _}, embedding} -> {index, embedding} end)
+        indices = not_cached |> Enum.map(&elem(&1, 1))
+        texts_to_generate = indices |> Enum.map(&Enum.at(texts, &1))
+        {:ok, embeddings} = __MODULE__.generate_without_cache(texts_to_generate)
 
-        fetched_map
-        |> Enum.each(fn {index, embedding} ->
-          set_cache(texts |> Enum.at(index), embedding)
-        end)
+        fetched_map = Enum.zip(indices, embeddings) |> Map.new()
 
         ret =
           Map.merge(cached_map, fetched_map)
