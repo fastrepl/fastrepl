@@ -15,55 +15,73 @@ defmodule Fastrepl.Orchestrator do
   def init(args) do
     Process.flag(:trap_exit, true)
 
-    sha = Github.get_repo!(args.repo_full_name) |> Github.get_latest_commit()
-    repo_root = Path.join("./tmp/repos", "#{args.repo_full_name}-#{sha}")
-
-    if not File.exists?(repo_root) do
-      send(self(), {:init_repo, args.repo_full_name})
-    else
-      send(self(), {:init_vectordb, repo_root})
-    end
+    send(self(), :init_repo)
 
     state =
       %{}
       |> Map.put(:orchestrator_pid, self())
       |> Map.put(:thread_id, args.thread_id)
       |> Map.put(:repo_full_name, args.repo_full_name)
-      |> Map.put(:repo_root, repo_root)
 
     {:ok, state}
   end
 
   @impl true
-  def handle_info({:init_repo, repo_full_name}, state) do
-    Task.start(fn ->
-      url = Github.URL.clone_without_token(repo_full_name)
-      FS.git_clone(url, state.repo_root)
+  def handle_info(:init_repo, state) do
+    sha = Github.get_repo!(state.repo_full_name) |> Github.get_latest_commit()
 
-      send(state.orchestrator_pid, {:init_vectordb, state.repo_root})
-    end)
+    repo_root =
+      Application.get_env(:fastrepl, :clone_dir, "./tmp/repos")
+      |> Path.join("#{state.repo_full_name}-#{sha}")
+
+    if not File.exists?(repo_root) do
+      Task.start(fn ->
+        url = Github.URL.clone_without_token(state.repo_full_name)
+        FS.git_clone(url, repo_root)
+      end)
+    end
+
+    send(self(), {:init_vectordb, repo_root})
+
+    state =
+      state
+      |> Map.put(:repo_root, repo_root)
+      |> Map.put(:repo_sha, sha)
 
     {:noreply, state}
   end
 
   @impl true
   def handle_info({:init_vectordb, repo_root}, state) do
-    {:ok, _vectordb_pid} = Vectordb.start(state.thread_id)
+    {:ok, vectordb_pid} = Vectordb.start(state.thread_id)
 
     chunks =
       repo_root
       |> FS.list_informative_files()
       |> Enum.flat_map(&Chunker.chunk_file/1)
 
-    IO.inspect(chunks)
-    # Vectordb.ingest(vectordb_pid, chunks)
+    Task.start(fn ->
+      Vectordb.ingest(vectordb_pid, chunks)
+    end)
 
-    {:noreply, state}
+    {:noreply, state |> Map.put(:vectordb_pid, vectordb_pid)}
+  end
+
+  @impl true
+  def handle_info({:EXIT, _pid, reason}, state) do
+    {:stop, reason, state}
   end
 
   @impl true
   def terminate(_reason, state) do
-    Registry.unregister(registry_module(), state.thread_id)
+    if state[:thread_id] do
+      Registry.unregister(registry_module(), state.thread_id)
+    end
+
+    if state[:vectordb_pid] do
+      Vectordb.stop(state.vectordb_pid)
+    end
+
     :ok
   end
 
