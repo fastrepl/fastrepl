@@ -42,7 +42,7 @@ defmodule Fastrepl.Retrieval.Vectordb do
 
     docs
     |> Enum.map(&to_string/1)
-    |> embedding_module().generate!()
+    |> embedding_module().generate()
   end
 
   def query(pid, q, opts \\ []) do

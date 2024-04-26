@@ -18,7 +18,7 @@ defmodule Fastrepl.EmbeddingTest do
       @behaviour Fastrepl.Retrieval.Embedding
       use Fastrepl.Retrieval.Embedding.Cache
 
-      def generate(texts) do
+      def generate_without_cache(texts) do
         {:ok, Enum.map(texts, fn text -> [String.length(text)] end)}
       end
     end
@@ -28,13 +28,13 @@ defmodule Fastrepl.EmbeddingTest do
     assert MockEmbeddingWithCache.generate(["1", "22", "333"]) ==
              {:ok, [[1], [2], [3]]}
 
-    assert MockEmbeddingWithCache.generate_with_cache(["1", "22", "333"]) ==
+    assert MockEmbeddingWithCache.generate(["1", "22", "333"]) ==
              {:ok, [[1], [2], [3]]}
 
-    assert MockEmbeddingWithCache.generate_with_cache(["1", "22", "333"]) ==
+    assert MockEmbeddingWithCache.generate(["1", "22", "333"]) ==
              {:ok, [[1], [2], [3]]}
 
-    {:ok, embeddings} = MockEmbeddingWithCache.generate_with_cache(List.duplicate("1", 12345))
-    assert Enum.count(embeddings) == 12345
+    {:ok, embeddings} = MockEmbeddingWithCache.generate(List.duplicate("1", 500))
+    assert Enum.count(embeddings) == 500
   end
 end

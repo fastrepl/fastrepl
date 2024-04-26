@@ -8,19 +8,18 @@ defmodule Fastrepl.VectordbTest do
     @behaviour Fastrepl.Retrieval.Embedding
 
     def generate(texts) do
-      {:ok, generate!(texts)}
-    end
+      embeddings =
+        texts
+        |> Enum.map(fn text ->
+          cond do
+            text |> to_string() |> String.contains?("hey") -> [0.1, 0.2, 0.3]
+            text |> to_string() |> String.contains?("hello") -> [0.12, 0.22, 0.32]
+            text |> to_string() |> String.contains?("hi") -> [0.15, 0.25, 0.35]
+            text |> to_string() |> String.contains?("fastrepl") -> [0.3, 0.2, 0.1]
+          end
+        end)
 
-    def generate!(texts) do
-      texts
-      |> Enum.map(fn text ->
-        cond do
-          text |> to_string() |> String.contains?("hey") -> [0.1, 0.2, 0.3]
-          text |> to_string() |> String.contains?("hello") -> [0.12, 0.22, 0.32]
-          text |> to_string() |> String.contains?("hi") -> [0.15, 0.25, 0.35]
-          text |> to_string() |> String.contains?("fastrepl") -> [0.3, 0.2, 0.1]
-        end
-      end)
+      {:ok, embeddings}
     end
   end
 

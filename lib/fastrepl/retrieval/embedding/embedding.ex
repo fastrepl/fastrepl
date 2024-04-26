@@ -5,9 +5,9 @@ end
 defmodule Fastrepl.Retrieval.Embedding.Cache do
   defmacro __using__(_opts) do
     quote do
-      @generate_batch_size 50
+      @generate_batch_size 100
 
-      def generate_with_cache(texts) do
+      def generate(texts) do
         {cached, not_cached} =
           texts
           |> Enum.map(&get_cache/1)
@@ -25,7 +25,7 @@ defmodule Fastrepl.Retrieval.Embedding.Cache do
           |> Enum.chunk_every(@generate_batch_size)
           |> Enum.flat_map(fn batch ->
             batch_texts = Enum.map(batch, fn {_, text} -> text end)
-            {:ok, generated_embeddings} = __MODULE__.generate(batch_texts)
+            {:ok, generated_embeddings} = __MODULE__.generate_without_cache(batch_texts)
             Enum.zip(batch, generated_embeddings)
           end)
           |> Map.new(fn {{index, _}, embedding} -> {index, embedding} end)
@@ -59,8 +59,6 @@ defmodule Fastrepl.Retrieval.Embedding.Cache do
       defp set_cache(text, embedding) do
         text |> get_key() |> cache_module().set(embedding)
       end
-
-      defoverridable generate_with_cache: 1
     end
   end
 end
