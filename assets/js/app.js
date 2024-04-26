@@ -25,6 +25,7 @@ import { getHooks } from "live_svelte";
 import * as Components from "../svelte/**/*.svelte";
 
 import hljs from "highlight.js";
+window.hljs = hljs;
 
 import posthog from "posthog-js";
 posthog.init("phc_qdLGlOK8YuOSe6dbBNlD3QbSzjASgIuJevfB9Xi4gKz", {
@@ -34,13 +35,33 @@ window.posthog = posthog;
 
 const Highlight = {
   mounted() {
+    this.el.style.display = "none";
     this._fn();
+    setTimeout(() => {
+      this.el.style.display = "";
+    }, 100);
   },
   updated() {
     this._fn();
   },
   _fn() {
-    hljs.highlightAll();
+    window.hljs.highlightAll();
+    if (window.hljs.initLineNumbersOnLoad) {
+      window.hljs.initLineNumbersOnLoad();
+    }
+    if (window.hljs.highlightLinesElement) {
+      const lines = JSON.parse(this.el.getAttribute("highlight-lines"));
+
+      window.hljs.highlightLinesElement(
+        this.el,
+        lines.map(([start, end]) => ({
+          start,
+          end,
+          color: "rgba(255, 255, 255, 0.2)",
+        })),
+        true,
+      );
+    }
   },
 };
 
