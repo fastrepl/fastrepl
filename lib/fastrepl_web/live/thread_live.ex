@@ -47,6 +47,10 @@ defmodule FastreplWeb.ThreadLive do
     end
   end
 
+  def handle_info({:sync, state}, socket) do
+    {:noreply, socket |> update_socket(state)}
+  end
+
   defp find_existing_orchestrator(thread_id) do
     registry = Application.fetch_env!(:fastrepl, :orchestrator_registry)
 
@@ -54,5 +58,9 @@ defmodule FastreplWeb.ThreadLive do
       [{pid, _value}] -> pid
       [] -> nil
     end
+  end
+
+  defp update_socket(socket, state) do
+    state |> Enum.reduce(socket, fn {k, v}, acc -> assign(acc, k, v) end)
   end
 end

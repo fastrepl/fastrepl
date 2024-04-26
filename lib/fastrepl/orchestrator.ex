@@ -92,4 +92,8 @@ defmodule Fastrepl.Orchestrator do
   defp registry_module() do
     Application.fetch_env!(:fastrepl, :orchestrator_registry)
   end
+
+  # defp sync_with_views(thread_id, state) when is_map(state) do
+  #   Phoenix.PubSub.broadcast(Fastrepl.PubSub, "thread:#{thread_id}", {:sync, state})
+  # end
 end
