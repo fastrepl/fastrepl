@@ -30,12 +30,14 @@ defmodule Fastrepl.ChunckerTest do
   describe "chunk_code/2" do
     test "it works 1" do
       code = "123\n456\n789" |> String.duplicate(100)
-      _ = Chunker.chunk_code("test.unknown", code)
+      chunks = Chunker.chunk_code("test.unknown", code)
+      assert chunks |> get_in([Access.at(0), Access.key!(:file_path)]) == "test.unknown"
     end
 
     test "it works 2" do
       code = "const a = 1;\n" |> String.duplicate(100)
-      _ = Chunker.chunk_code("test.js", code)
+      chunks = Chunker.chunk_code("test.js", code)
+      assert chunks |> get_in([Access.at(0), Access.key!(:file_path)]) == "test.js"
     end
   end
 end
