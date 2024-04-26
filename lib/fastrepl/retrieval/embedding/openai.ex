@@ -11,6 +11,10 @@ defmodule Fastrepl.Retrieval.Embedding.OpenAI do
   @max_input_tokens 8191
   # @max_batch_size 2048
 
+  def generate([]) do
+    {:ok, []}
+  end
+
   @spec generate(String.t() | [String.t()]) :: {:ok, [[float()]]} | {:error, any()}
   def generate(texts) do
     retry with:
