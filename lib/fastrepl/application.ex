@@ -25,7 +25,7 @@ defmodule Fastrepl.Application do
 
     children =
       if Application.get_env(:fastrepl, :env) != :test do
-        [{Redix, Application.fetch_env!(:fastrepl, :redis_url)}] ++ children
+        [{Redix, {Application.fetch_env!(:fastrepl, :redis_url), [name: :redix]}}] ++ children
       else
         children
       end
