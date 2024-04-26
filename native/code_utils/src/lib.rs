@@ -33,7 +33,7 @@ const NAIVE_CHUNKING_LINE_COUNT: usize = 50;
 const NAIVE_CHUNKING_OVERLAP: usize = 10;
 
 fn _chunk_code<'a>(path: &'a str, code: &str) -> Vec<Chunk<'a>> {
-    let ext = path.split(".").last().unwrap_or("");
+    let ext = path.split('.').last().unwrap_or("");
     let language = match ext {
         "js" | "mjs" | "cjs" => Some(rs_tree_sitter_languages::javascript::language()),
         "ts" | "mts" | "cts" => Some(rs_tree_sitter_languages::typescript::language()),
