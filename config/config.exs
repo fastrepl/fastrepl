@@ -70,6 +70,8 @@ config :fastrepl, :root, File.cwd!()
 
 config :fastrepl, :vectordb_registry, Fastrepl.VectordbRegistry
 config :fastrepl, :orchestrator_registry, Fastrepl.OrchestratorRegistry
+config :fastrepl, :cache, Fastrepl.Cache.Redis
+config :fastrepl, :embedding, Fastrepl.Retrieval.Embedding.OpenAIWithCache
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

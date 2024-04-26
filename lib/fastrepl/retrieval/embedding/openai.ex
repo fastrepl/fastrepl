@@ -67,3 +67,12 @@ defmodule Fastrepl.Retrieval.Embedding.OpenAI do
     end
   end
 end
+
+defmodule Fastrepl.Retrieval.Embedding.OpenAIWithCache do
+  @behaviour Fastrepl.Retrieval.Embedding
+  use Fastrepl.Retrieval.Embedding.Cache
+
+  def generate(texts) do
+    Fastrepl.Retrieval.Embedding.OpenAI.generate(texts)
+  end
+end
