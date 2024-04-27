@@ -4,7 +4,7 @@ defmodule FastreplWeb.GithubAuth do
   alias Assent.{Config, Strategy.Github}
 
   # http://localhost:4000/auth/github
-  def request(conn) do
+  def sign_in(conn) do
     Application.get_env(:assent, :github)
     |> Github.authorize_url()
     |> case do
@@ -22,6 +22,14 @@ defmodule FastreplWeb.GithubAuth do
           "Something went wrong generating the request authorization url: #{inspect(error)}"
         )
     end
+  end
+
+  def sign_out(conn) do
+    conn
+    |> delete_session(:github_user)
+    |> delete_session(:github_user_token)
+    |> delete_session(:session_params)
+    |> Phoenix.Controller.redirect(to: "/")
   end
 
   # http://localhost:4000/auth/github/callback

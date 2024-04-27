@@ -3,8 +3,12 @@ defmodule FastreplWeb.GithubAuthController do
 
   alias FastreplWeb.GithubAuth
 
-  def request(conn, _params) do
-    GithubAuth.request(conn)
+  def sign_in(conn, _params) do
+    GithubAuth.sign_in(conn)
+  end
+
+  def sign_out(conn, _params) do
+    GithubAuth.sign_out(conn)
   end
 
   def callback(conn, _params) do

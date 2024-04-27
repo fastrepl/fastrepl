@@ -41,7 +41,8 @@ defmodule FastreplWeb.Router do
   scope "/auth/github", FastreplWeb do
     pipe_through [:browser]
 
-    get "/", GithubAuthController, :request
+    get "/", GithubAuthController, :sign_in
+    get "/out", GithubAuthController, :sign_out
     get "/callback", GithubAuthController, :callback
   end
 end

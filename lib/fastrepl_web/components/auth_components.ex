@@ -1,13 +1,13 @@
 defmodule FastreplWeb.AuthComponents do
   use Phoenix.Component
 
-  def sign_in_with_github(assigns) do
+  attr :text, :string
+  attr :href, :string
+
+  def github(assigns) do
     ~H"""
-    <a
-      href="/auth/github"
-      class="flex flex-row items-center bg-[#24292e] rounded-xl px-4 py-2 gap-4 w-fit"
-    >
-      <svg viewBox="0 0 16 16" class="fill-white w-5 h-5">
+    <a href={@href} class="flex flex-row items-center bg-[#24292e] rounded-xl px-3 py-2 gap-3 w-fit">
+      <svg viewBox="0 0 16 16" class="fill-white w-4 h-4">
         <path
           fill-rule="evenodd"
           d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
@@ -19,8 +19,8 @@ defmodule FastreplWeb.AuthComponents do
           .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"
         />
       </svg>
-      <div class="text-white text-sm font-semibold">
-        Sign in with GitHub
+      <div class="text-white text-xs font-semibold">
+        <%= @text %>
       </div>
     </a>
     """

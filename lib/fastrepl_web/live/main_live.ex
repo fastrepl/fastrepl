@@ -1,7 +1,6 @@
 defmodule FastreplWeb.MainLive do
   use FastreplWeb, :live_view
 
-  import FastreplWeb.AuthComponents, only: [sign_in_with_github: 1]
   import FastreplWeb.ThreadComponents, only: [thread: 1]
 
   def render(assigns) do
@@ -9,7 +8,6 @@ defmodule FastreplWeb.MainLive do
     <div>
       <span>Demo:</span>
       <.link href={~p"/demo/new"}>Go</.link>
-      <.sign_in_with_github />
     </div>
 
     <%= for { id, _pid } <- @threads  do %>
