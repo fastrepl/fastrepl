@@ -1,8 +1,9 @@
 defmodule FastreplWeb.ThreadLive do
   use FastreplWeb, :live_view
 
-  import FastreplWeb.ThreadComponents, only: [snippet: 1]
+  import FastreplWeb.ThreadComponents, only: [render_chunk: 1]
   alias Fastrepl.Orchestrator
+  alias Fastrepl.FS
 
   @demo_repo_full_name "brainlid/langchain"
 
@@ -34,9 +35,23 @@ defmodule FastreplWeb.ThreadLive do
       </form>
     </div>
 
-    <%= if assigns[:code] do %>
-      <.snippet code={@code} highlight_lines={[[1, 1]]} />
+    <%= if assigns[:chunks] do %>
+      <.render_chunks socket={@socket} chunks={@chunks} current_chunk={@current_chunk} />
     <% end %>
+    """
+  end
+
+  def render_chunks(assigns) do
+    ~H"""
+    <div class="absolute left-10">
+      <.svelte
+        name="TreeView"
+        socket={@socket}
+        ssr={false}
+        props={%{items: @chunks |> Enum.map(& &1.file_path) |> Enum.uniq() |> FS.build_tree()}}
+      />
+    </div>
+    <.render_chunk chunk={@current_chunk} />
     """
   end
 
@@ -96,6 +111,22 @@ defmodule FastreplWeb.ThreadLive do
     end
   end
 
+  def handle_event("tree:select", %{"path" => path}, socket) do
+    if Path.extname(path) == "" do
+      {:noreply, socket}
+    else
+      chunk =
+        socket.assigns.chunks
+        |> Enum.find(&(&1.file_path == path))
+
+      if chunk do
+        {:noreply, socket |> assign(:current_chunk, chunk)}
+      else
+        {:noreply, socket}
+      end
+    end
+  end
+
   defp find_existing_orchestrator(thread_id) do
     registry = Application.fetch_env!(:fastrepl, :orchestrator_registry)
 
@@ -106,6 +137,14 @@ defmodule FastreplWeb.ThreadLive do
   end
 
   defp update_socket(socket, state) do
-    state |> Enum.reduce(socket, fn {k, v}, acc -> assign(acc, k, v) end)
+    socket = state |> Enum.reduce(socket, fn {k, v}, acc -> assign(acc, k, v) end)
+
+    cond do
+      socket.assigns[:chunks] != nil ->
+        socket |> assign(:current_chunk, socket.assigns.chunks |> Enum.at(0))
+
+      true ->
+        socket
+    end
   end
 end

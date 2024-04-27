@@ -1,6 +1,8 @@
 defmodule FastreplWeb.ThreadComponents do
   use Phoenix.Component
+
   import FastreplWeb.CoreComponents, only: [icon: 1]
+  alias Fastrepl.Retrieval.Chunker.Chunk
 
   attr :id, :string, required: true
   attr :repo_full_name, :string, required: true
@@ -33,16 +35,16 @@ defmodule FastreplWeb.ThreadComponents do
     """
   end
 
-  attr :code, :string, required: true
+  attr :chunk, Chunk, required: true
   attr :highlight_lines, :list, default: []
 
-  def snippet(assigns) do
+  def render_chunk(assigns) do
     ~H"""
     <pre><code
-        id={:crypto.hash(:sha, @code) |> Base.encode16(case: :lower)}
+        id={:crypto.hash(:sha, to_string(@chunk)) |> Base.encode16(case: :lower)}
         phx-hook="Highlight" highlight-lines={Jason.encode!(@highlight_lines)}
         class="rounded-lg h-[450px] text-xs"
-      ><%= @code %></code>
+      ><%= @chunk.content %></code>
     </pre>
     """
   end
