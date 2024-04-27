@@ -18,3 +18,15 @@ impl<'a> std::fmt::Debug for Chunk<'a> {
         writeln!(f, "```")
     }
 }
+
+// https://docs.rs/grep-printer/latest/grep_printer/struct.JSON.html
+#[derive(serde::Deserialize)]
+pub struct GrepResult {
+    pub r#type: String,
+    pub data: GrepResultData,
+}
+
+#[derive(serde::Deserialize)]
+pub struct GrepResultData {
+    pub line_number: Option<usize>,
+}

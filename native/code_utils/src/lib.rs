@@ -1,10 +1,11 @@
 mod ds;
 mod chunk;
+mod query;
 
 #[cfg(test)]
 mod tests;
 
-rustler::init!("Elixir.Fastrepl.Native.CodeUtils", [chunk_code]);
+rustler::init!("Elixir.Fastrepl.Native.CodeUtils", [chunk_code, grep]);
 
 #[rustler::nif(schedule = "DirtyCpu")]
 fn chunk_code<'a>(path: &'a str, code: &str) -> Vec<ds::Chunk<'a>> {
@@ -30,5 +31,19 @@ fn _chunk_code<'a>(path: &'a str, code: &str) -> Vec<ds::Chunk<'a>> {
     match language {
         Some(language) => chunk::language_aware(path, code, &language),
         None => chunk::naive(path, code),
+    }
+}
+
+#[rustler::nif(schedule = "DirtyCpu")]
+fn grep(path: &str, pattern: &str) -> Vec<usize> {
+    _grep(path, pattern)
+}
+
+fn _grep(path: &str, pattern: &str) -> Vec<usize> {
+    let reader = std::fs::File::open(path);
+
+    match reader {
+        Ok(reader) => query::grep(reader, pattern).unwrap_or(vec![]),
+        Err(_) => vec![],
     }
 }
