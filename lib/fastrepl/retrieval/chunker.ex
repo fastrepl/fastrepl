@@ -21,17 +21,7 @@ end
 defmodule Fastrepl.Retrieval.Chunker do
   alias Fastrepl.Native.CodeUtils
 
-  def chunk_code(path, code) do
-    CodeUtils.chunk_code(path, code)
-  end
-
   def chunk_file(path) do
-    code = File.read!(path)
-
-    if String.valid?(code) do
-      CodeUtils.chunk_code(path, code)
-    else
-      []
-    end
+    CodeUtils.chunk_file(path)
   end
 end

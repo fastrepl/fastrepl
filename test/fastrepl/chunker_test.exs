@@ -1,6 +1,6 @@
 defmodule Fastrepl.ChunckerTest do
   @moduledoc """
-  Detailed tests should be placed in the Rust side.
+  Detailed tests should be placed on the Rust side.
   """
 
   use ExUnit.Case, async: true
@@ -27,17 +27,33 @@ defmodule Fastrepl.ChunckerTest do
     end
   end
 
-  describe "chunk_code/2" do
-    test "it works 1" do
-      code = "123\n456\n789" |> String.duplicate(100)
-      chunks = Chunker.chunk_code("test.unknown", code)
-      assert chunks |> get_in([Access.at(0), Access.key!(:file_path)]) == "test.unknown"
+  describe "chunk_file/2" do
+    setup do
+      code = "const a = 1;\n" |> String.duplicate(100)
+      path_unknown = System.tmp_dir!() |> Path.join("test.unknown")
+      path_js = System.tmp_dir!() |> Path.join("test.js")
+
+      File.write!(path_unknown, code)
+      File.write!(path_js, code)
+
+      on_exit(fn ->
+        File.rm!(path_unknown)
+        File.rm!(path_js)
+      end)
+
+      {:ok, %{path_unknown: path_unknown, path_js: path_js}}
     end
 
-    test "it works 2" do
-      code = "const a = 1;\n" |> String.duplicate(100)
-      chunks = Chunker.chunk_code("test.js", code)
-      assert chunks |> get_in([Access.at(0), Access.key!(:file_path)]) == "test.js"
+    test "it works 1", %{path_unknown: path_unknown} do
+      chunks = Chunker.chunk_file(path_unknown)
+      assert chunks |> get_in([Access.at(0), Access.key!(:file_path)]) == path_unknown
+      assert length(chunks) == 3
+    end
+
+    test "it works 2", %{path_js: path_js} do
+      chunks = Chunker.chunk_file(path_js)
+      assert chunks |> get_in([Access.at(0), Access.key!(:file_path)]) == path_js
+      assert length(chunks) == 3
     end
   end
 end

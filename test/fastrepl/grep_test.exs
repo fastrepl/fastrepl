@@ -23,7 +23,7 @@ defmodule Fastrepl.GrepTest do
 
   describe "grep/2" do
     test "simple", %{path: path} do
-      result = Grep.grep(path, "b")
+      result = Grep.grep_file(path, "b")
       assert result == [2, 5]
     end
   end
