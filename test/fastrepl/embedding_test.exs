@@ -1,9 +1,8 @@
 defmodule Fastrepl.EmbeddingTest do
   use ExUnit.Case, async: true
 
-  setup do
-    Application.put_env(:fastrepl, :cache, Fastrepl.Cache.InMemory)
-  end
+  import Mox, only: [verify_on_exit!: 1]
+  setup :verify_on_exit!
 
   test "it works" do
     defmodule MockEmbedding do
@@ -25,16 +24,17 @@ defmodule Fastrepl.EmbeddingTest do
 
     assert MockEmbedding.generate(["1", "22", "333"]) == {:ok, [[1], [2], [3]]}
 
-    assert MockEmbeddingWithCache.generate(["1", "22", "333"]) ==
-             {:ok, [[1], [2], [3]]}
+    Fastrepl.Cache.Mock
+    |> Mox.expect(:get, 3, fn _key -> {:error, nil} end)
+    |> Mox.expect(:set, 3, fn _key, _value -> :ok end)
+    |> Mox.expect(:get, 1, fn _key -> {:ok, [1]} end)
+    |> Mox.expect(:get, 2, fn _key -> {:error, nil} end)
+    |> Mox.expect(:set, 2, fn _key, _value -> :ok end)
 
     assert MockEmbeddingWithCache.generate(["1", "22", "333"]) ==
              {:ok, [[1], [2], [3]]}
 
-    assert MockEmbeddingWithCache.generate(["1", "4444", "333"]) ==
-             {:ok, [[1], [4], [3]]}
-
-    {:ok, embeddings} = MockEmbeddingWithCache.generate(List.duplicate("1", 500))
-    assert Enum.count(embeddings) == 500
+    assert MockEmbeddingWithCache.generate(["1", "4444", "55555"]) ==
+             {:ok, [[1], [4], [5]]}
   end
 end

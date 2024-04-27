@@ -23,6 +23,11 @@ defmodule Fastrepl.Retrieval.Embedding.Cache do
 
         fetched_map = Enum.zip(indices, embeddings) |> Map.new()
 
+        fetched_map
+        |> Enum.each(fn {index, embedding} ->
+          set_cache(Enum.at(texts, index), embedding)
+        end)
+
         ret =
           Map.merge(cached_map, fetched_map)
           |> Enum.sort_by(fn {index, _} -> index end)

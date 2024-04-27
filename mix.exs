@@ -59,6 +59,7 @@ defmodule Fastrepl.MixProject do
       {:bandit, "~> 1.2"},
       #
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
+      {:mox, "~> 1.0", only: :test},
       {:req, "~> 0.4.0"},
       {:nanoid, "~> 2.1.0"},
       {:bumblebee, "~> 0.5.3"},
