@@ -49,13 +49,13 @@ const Highlight = {
   _fn() {
     window.hljs.highlightAll();
     if (window.hljs.initLineNumbersOnLoad) {
-      window.hljs.initLineNumbersOnLoad({
-        startFrom: 1,
-        singleLine: true,
-      });
+      window.hljs.initLineNumbersOnLoad();
     }
     if (window.hljs.highlightLinesElement) {
-      const lines = JSON.parse(this.el.getAttribute("highlight-lines"));
+      let lines = [];
+      try {
+        lines = JSON.parse(this.el.getAttribute("highlight-lines"));
+      } catch (_) {}
 
       window.hljs.highlightLinesElement(
         this.el,
@@ -92,7 +92,7 @@ const liveSocket = new LiveSocket("/live", Socket, {
   hooks: {
     ...getHooks(Components),
     Highlight,
-    Tooltip
+    Tooltip,
   },
   params: { _csrf_token: csrfToken },
 });
