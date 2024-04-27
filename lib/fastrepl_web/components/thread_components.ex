@@ -32,4 +32,18 @@ defmodule FastreplWeb.ThreadComponents do
     </div>
     """
   end
+
+  attr :code, :string, required: true
+  attr :highlight_lines, :list, default: []
+
+  def snippet(assigns) do
+    ~H"""
+    <pre><code
+        id={:crypto.hash(:sha, @code) |> Base.encode16(case: :lower)}
+        phx-hook="Highlight" highlight-lines={Jason.encode!(@highlight_lines)}
+        class="rounded-lg h-[450px] text-xs"
+      ><%= @code %></code>
+    </pre>
+    """
+  end
 end

@@ -27,6 +27,18 @@ defmodule Fastrepl.Orchestrator do
   end
 
   @impl true
+  def handle_call({:submit, %{instruction: instruction}}, _from, state) do
+    if state[:vectordb_pid] do
+      Task.start(fn ->
+        chunks = Vectordb.query(state.vectordb_pid, instruction, top_k: 1, threshold: 0.1)
+        sync_with_views(state.thread_id, %{code: chunks |> Enum.at(0) |> to_string()})
+      end)
+    end
+
+    {:reply, %{}, state}
+  end
+
+  @impl true
   def handle_info(:init_repo, state) do
     sha = Github.get_repo!(state.repo_full_name) |> Github.get_latest_commit()
 
@@ -37,11 +49,12 @@ defmodule Fastrepl.Orchestrator do
     if not File.exists?(repo_root) do
       Task.start(fn ->
         url = Github.URL.clone_without_token(state.repo_full_name)
-        FS.git_clone(url, repo_root)
+        :ok = FS.git_clone(url, repo_root)
+        send(state.orchestrator_pid, {:init_vectordb, repo_root})
       end)
+    else
+      send(state.orchestrator_pid, {:init_vectordb, repo_root})
     end
-
-    send(self(), {:init_vectordb, repo_root})
 
     state =
       state
@@ -53,6 +66,10 @@ defmodule Fastrepl.Orchestrator do
 
   @impl true
   def handle_info({:init_vectordb, repo_root}, state) do
+    if state[:vectordb_pid] do
+      Vectordb.stop(state.vectordb_pid)
+    end
+
     {:ok, vectordb_pid} = Vectordb.start(state.thread_id)
 
     chunks =
@@ -93,7 +110,7 @@ defmodule Fastrepl.Orchestrator do
     Application.fetch_env!(:fastrepl, :orchestrator_registry)
   end
 
-  # defp sync_with_views(thread_id, state) when is_map(state) do
-  #   Phoenix.PubSub.broadcast(Fastrepl.PubSub, "thread:#{thread_id}", {:sync, state})
-  # end
+  defp sync_with_views(thread_id, state) when is_map(state) do
+    Phoenix.PubSub.broadcast(Fastrepl.PubSub, "thread:#{thread_id}", {:sync, state})
+  end
 end
