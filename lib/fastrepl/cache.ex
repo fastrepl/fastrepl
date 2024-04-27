@@ -1,6 +1,11 @@
 defmodule Fastrepl.Cache do
   @callback get(binary()) :: term()
   @callback set(binary(), term()) :: :ok | {:error, any()}
+
+  def get(key), do: impl().get(key)
+  def set(key, value), do: impl().set(key, value)
+
+  defp impl, do: Application.get_env(:fastrepl, :cache, Fastrepl.Cache.InMemory)
 end
 
 defmodule Fastrepl.Cache.Redis do

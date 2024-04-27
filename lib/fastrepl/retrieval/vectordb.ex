@@ -1,13 +1,10 @@
 defmodule Fastrepl.Retrieval.Vectordb do
   use Agent
+  alias Fastrepl.Retrieval.Embedding
 
   @default_tok_k 5
   @default_threshold 0.5
   @ingest_chunk_size 100
-
-  defp embedding_module() do
-    Application.fetch_env!(:fastrepl, :embedding)
-  end
 
   defp registry_module() do
     Application.fetch_env!(:fastrepl, :vectordb_registry)
@@ -44,7 +41,7 @@ defmodule Fastrepl.Retrieval.Vectordb do
     docs
     |> Stream.map(&to_string/1)
     |> Stream.chunk_every(@ingest_chunk_size)
-    |> Stream.each(&embedding_module().generate(&1))
+    |> Stream.each(&Embedding.generate(&1))
     |> Stream.run()
   end
 
@@ -55,7 +52,7 @@ defmodule Fastrepl.Retrieval.Vectordb do
     docs = Agent.get(pid, fn state -> state.docs end)
     texts = Enum.map(docs, &to_string/1)
 
-    {:ok, embeddings} = embedding_module().generate([q | texts])
+    {:ok, embeddings} = Embedding.generate([q | texts])
     embeddings = Nx.tensor(embeddings)
 
     {q_tensor, docs_tensor} = Nx.split(embeddings, 1, axis: 0)
