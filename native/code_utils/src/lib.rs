@@ -1,5 +1,5 @@
-mod ds;
 mod chunk;
+mod ds;
 mod query;
 
 #[cfg(test)]
@@ -36,14 +36,14 @@ fn _chunk_code<'a>(path: &'a str, code: &str) -> Vec<ds::Chunk<'a>> {
 
 #[rustler::nif(schedule = "DirtyCpu")]
 fn grep(path: &str, pattern: &str) -> Vec<usize> {
-    _grep(path, pattern)
-}
-
-fn _grep(path: &str, pattern: &str) -> Vec<usize> {
     let reader = std::fs::File::open(path);
 
     match reader {
-        Ok(reader) => query::grep(reader, pattern).unwrap_or(vec![]),
+        Ok(reader) => _grep(reader, pattern),
         Err(_) => vec![],
     }
+}
+
+fn _grep<R: std::io::Read>(reader: R, pattern: &str) -> Vec<usize> {
+    query::grep(reader, pattern).unwrap_or(vec![])
 }
