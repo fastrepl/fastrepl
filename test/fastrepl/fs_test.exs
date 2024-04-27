@@ -46,5 +46,34 @@ defmodule Fastrepl.FSTest do
                }
              ]
     end
+
+    test "multiple files in a folder" do
+      paths = ["src/folder/a.py", "src/folder/b.py", "src/folder/c/d.py", "src/folder/c/e.py"]
+
+      assert FS.build_tree(paths) == [
+               %{
+                 name: "src",
+                 path: "src",
+                 children: [
+                   %{
+                     name: "folder",
+                     path: "src/folder",
+                     children: [
+                       %{name: "a.py", path: "src/folder/a.py"},
+                       %{name: "b.py", path: "src/folder/b.py"},
+                       %{
+                         name: "c",
+                         path: "src/folder/c",
+                         children: [
+                           %{name: "d.py", path: "src/folder/c/d.py"},
+                           %{name: "e.py", path: "src/folder/c/e.py"}
+                         ]
+                       }
+                     ]
+                   }
+                 ]
+               }
+             ]
+    end
   end
 end

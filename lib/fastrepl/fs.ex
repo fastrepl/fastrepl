@@ -18,39 +18,32 @@ defmodule Fastrepl.FS do
   def build_tree(paths) do
     paths
     |> Enum.map(&Path.split/1)
-    |> build_tree([], "")
+    |> Enum.reduce([], &build_tree(&1, &2, ""))
   end
 
-  defp build_tree([], acc, _current_path), do: acc
-
-  defp build_tree([[filename] | rest], acc, current_path) do
-    build_tree(
-      rest,
-      acc ++ [%{name: filename, path: Path.join(current_path, filename)}],
-      current_path
-    )
+  defp build_tree([filename], acc, current_path) do
+    case Enum.find_index(acc, &(&1.name == filename)) do
+      nil -> acc ++ [%{name: filename, path: Path.join(current_path, filename)}]
+      _ -> acc
+    end
   end
 
-  defp build_tree([[dirname | path] | rest], acc, current_path) do
+  defp build_tree([dirname | path], acc, current_path) do
     case Enum.find_index(acc, &(&1.name == dirname)) do
       nil ->
-        build_tree(
-          rest,
-          acc ++
-            [
-              %{
-                name: dirname,
-                children: build_tree([path], [], Path.join(current_path, dirname)),
-                path: Path.join(current_path, dirname)
-              }
-            ],
-          current_path
-        )
+        acc ++
+          [
+            %{
+              name: dirname,
+              children: build_tree(path, [], Path.join(current_path, dirname)),
+              path: Path.join(current_path, dirname)
+            }
+          ]
 
       index ->
         {node, acc} = List.pop_at(acc, index)
-        children = node.children ++ build_tree([path], [], Path.join(current_path, dirname))
-        build_tree(rest, List.insert_at(acc, index, %{node | children: children}), current_path)
+        updated_children = build_tree(path, node.children, Path.join(current_path, dirname))
+        List.insert_at(acc, index, %{node | children: updated_children})
     end
   end
 
