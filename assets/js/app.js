@@ -47,7 +47,10 @@ const Highlight = {
   _fn() {
     window.hljs.highlightAll();
     if (window.hljs.initLineNumbersOnLoad) {
-      window.hljs.initLineNumbersOnLoad();
+      window.hljs.initLineNumbersOnLoad({
+        startFrom: 1,
+        singleLine: true,
+      });
     }
     if (window.hljs.highlightLinesElement) {
       const lines = JSON.parse(this.el.getAttribute("highlight-lines"));
