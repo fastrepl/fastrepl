@@ -1,9 +1,10 @@
 <script>
+  import clsx from "clsx";
+
   /**
    * @typedef {Object} Item
    * @property {string} name required
    * @property {string} path required
-   * @property {boolean} [current] optional
    * @property {Item[]} [children] optional
    */
 
@@ -18,8 +19,7 @@
     <li
       phx-click="tree:select"
       phx-value-path={item.path}
-      class={`${item.children?.length ? "" : "hover:bg-gray-50"}`}
-      class:current={item.current}
+      class={clsx(!item.children?.length && "hover:bg-gray-100")}
     >
       {#if item.children}
         <details open>
@@ -50,12 +50,3 @@
     </li>
   {/each}
 </ul>
-
-<style>
-  li.current {
-    padding-left: 0.5em;
-    padding-top: 0.1em;
-    padding-bottom: 0.1em;
-    background-color: rgb(243 244 246);
-  }
-</style>

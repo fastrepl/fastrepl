@@ -13,7 +13,7 @@ defmodule Fastrepl.Github do
     repo
   end
 
-  def get_latest_commit(%GitHub.Repository{} = repository) do
+  def get_latest_commit(repository) do
     [owner, repo] = String.split(repository.full_name, "/")
     branch_name = repository.default_branch
 
