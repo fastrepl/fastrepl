@@ -24,6 +24,8 @@ import topbar from "../vendor/topbar";
 import { getHooks } from "live_svelte";
 import * as Components from "../svelte/**/*.svelte";
 
+import tippy from "tippy.js";
+
 import hljs from "highlight.js";
 window.hljs = hljs;
 
@@ -68,6 +70,20 @@ const Highlight = {
   },
 };
 
+const Tooltip = {
+  mounted() {
+    this._fn();
+  },
+  updated() {
+    this._fn();
+  },
+  _fn() {
+    const content = this.el.getAttribute("phx-tooltip-content");
+    const placement = this.el.getAttribute("phx-tooltip-placement");
+    tippy(this.el, { content, placement });
+  },
+};
+
 const csrfToken = document
   .querySelector("meta[name='csrf-token']")
   .getAttribute("content");
@@ -76,6 +92,7 @@ const liveSocket = new LiveSocket("/live", Socket, {
   hooks: {
     ...getHooks(Components),
     Highlight,
+    Tooltip
   },
   params: { _csrf_token: csrfToken },
 });
