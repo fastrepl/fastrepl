@@ -22,6 +22,17 @@ defmodule Fastrepl.Retrieval.Chunker.Chunk do
   end
 end
 
+defimpl Jason.Encoder, for: Fastrepl.Retrieval.Chunker.Chunk do
+  alias Fastrepl.Retrieval.Chunker.Chunk
+
+  def encode(%Chunk{} = chunk, opts) do
+    chunk
+    |> Map.from_struct()
+    |> Map.replace_lazy(:spans, fn spans -> Enum.map(spans, &Tuple.to_list/1) end)
+    |> Jason.Encode.map(opts)
+  end
+end
+
 defimpl String.Chars, for: Fastrepl.Retrieval.Chunker.Chunk do
   def to_string(%Fastrepl.Retrieval.Chunker.Chunk{
         file_path: file_path,

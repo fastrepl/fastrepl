@@ -26,49 +26,11 @@ import * as Components from "../svelte/**/*.svelte";
 
 import tippy from "tippy.js";
 
-import hljs from "highlight.js";
-window.hljs = hljs;
-
 import posthog from "posthog-js";
 posthog.init("phc_qdLGlOK8YuOSe6dbBNlD3QbSzjASgIuJevfB9Xi4gKz", {
   api_host: "https://us.i.posthog.com",
 });
 window.posthog = posthog;
-
-const Highlight = {
-  mounted() {
-    this.el.style.display = "none";
-    this._fn();
-    setTimeout(() => {
-      this.el.style.display = "";
-    }, 100);
-  },
-  updated() {
-    this._fn();
-  },
-  _fn() {
-    window.hljs.highlightAll();
-    if (window.hljs.initLineNumbersOnLoad) {
-      window.hljs.initLineNumbersOnLoad();
-    }
-    if (window.hljs.highlightLinesElement) {
-      let lines = [];
-      try {
-        lines = JSON.parse(this.el.getAttribute("highlight-lines"));
-      } catch (_) {}
-
-      window.hljs.highlightLinesElement(
-        this.el,
-        lines.map(([start, end]) => ({
-          start,
-          end,
-          color: "rgba(255, 255, 255, 0.2)",
-        })),
-        true,
-      );
-    }
-  },
-};
 
 const Tooltip = {
   mounted() {
@@ -91,7 +53,6 @@ const csrfToken = document
 const liveSocket = new LiveSocket("/live", Socket, {
   hooks: {
     ...getHooks(Components),
-    Highlight,
     Tooltip,
   },
   params: { _csrf_token: csrfToken },

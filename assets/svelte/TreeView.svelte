@@ -1,27 +1,19 @@
-<script>
-  import clsx from "clsx";
+<script lang="ts">
+  import { clsx } from "clsx";
+  import type { TreeNode } from "$lib/utils/tree";
 
-  /**
-   * @typedef {Object} Item
-   * @property {string} name required
-   * @property {string} path required
-   * @property {Item[]} [children] optional
-   */
-
-  /**
-   * @type {Item[]}
-   */
-  export let items = [];
+  export let items: TreeNode[] = [];
+  export let current_file_path: string;
+  export let handleClickFile: (path: string) => void;
 </script>
 
 <ul class="text-sm text-gray-600 hover:text-gray-900">
   {#each items as item, i}
     <li
-      phx-click="tree:select"
-      phx-value-path={item.path}
       class={clsx(
         "max-w-[200px] truncate",
-        !item.children?.length && "hover:bg-gray-100",
+        !item.children?.length && "hover:bg-gray-200",
+        item.path === current_file_path && "bg-gray-200 px-0.5 rounded-sm",
       )}
     >
       {#if item.children}
@@ -36,12 +28,19 @@
             <div class="pl-4">
               <svelte:self
                 items={item.children}
+                {current_file_path}
+                {handleClickFile}
                 let:item
                 let:list={items}
                 let:id={i}
               >
                 <slot {item} list={items} id={i}>
-                  <span class="max-w-[200px] truncate">{item.name}</span>
+                  <button
+                    class="max-w-[200px] truncate"
+                    on:click={() => handleClickFile(item.path)}
+                  >
+                    {item.name}
+                  </button>
                 </slot>
               </svelte:self>
             </div>
@@ -49,7 +48,12 @@
         </details>
       {:else}
         <slot {item} list={items} id={i}>
-          <span class="max-w-[200px] truncate">{item.name}</span>
+          <button
+            class="max-w-[200px] truncate"
+            on:click={() => handleClickFile(item.path)}
+          >
+            {item.name}
+          </button>
         </slot>
       {/if}
     </li>
