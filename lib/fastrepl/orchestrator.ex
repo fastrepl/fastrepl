@@ -4,8 +4,9 @@ defmodule Fastrepl.Orchestrator do
 
   alias Fastrepl.FS
   alias Fastrepl.Github
-  alias Fastrepl.Retrieval.Chunker
   alias Fastrepl.Retrieval.Vectordb
+  alias Fastrepl.Retrieval.Chunker
+  alias Fastrepl.Retrieval.Chunker.Chunk
 
   def start(%{thread_id: thread_id, repo_full_name: _} = args) do
     GenServer.start(__MODULE__, args, name: via_registry(thread_id))
@@ -33,7 +34,7 @@ defmodule Fastrepl.Orchestrator do
         chunks =
           state.vectordb_pid
           |> Vectordb.query(instruction, top_k: 5, threshold: 0.3)
-          |> Enum.map(&%{&1 | file_path: Path.relative_to(&1.file_path, state.repo_root)})
+          |> Enum.map(&%Chunk{&1 | file_path: Path.relative_to(&1.file_path, state.repo_root)})
 
         sync_with_views(state.thread_id, %{chunks: chunks})
       end)
