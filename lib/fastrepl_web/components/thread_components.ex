@@ -40,10 +40,10 @@ defmodule FastreplWeb.ThreadComponents do
 
   def render_chunk(assigns) do
     ~H"""
-    <pre class="h-[450px] rounded-lg bg-[#0d1117]"><code
+    <pre class="h-[calc(100vh-300px)] rounded-lg bg-[#0d1117]"><code
         id={:crypto.hash(:sha, to_string(@chunk)) |> Base.encode16(case: :lower)}
         phx-hook="Highlight" highlight-lines={Jason.encode!(@highlight_lines)}
-        class="h-[450px] rounded-lg text-xs"
+        class="h-[calc(100vh-300px)] rounded-lg text-xs"
       ><%= @chunk.content %></code>
     </pre>
     """

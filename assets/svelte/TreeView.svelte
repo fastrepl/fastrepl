@@ -21,7 +21,7 @@
       phx-value-path={item.path}
       class={clsx(
         "max-w-[200px] truncate",
-        !item.children?.length && "hover:bg-gray-100"
+        !item.children?.length && "hover:bg-gray-100",
       )}
     >
       {#if item.children}
