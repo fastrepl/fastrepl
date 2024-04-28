@@ -5,21 +5,28 @@ defmodule FastreplWeb.MainLive do
 
   def render(assigns) do
     ~H"""
-    <div>
+    <h2 id="threads" class="text-lg font-semibold">
+      # Threads
+    </h2>
+    <p class="text-sm">List of all active threads</p>
+
+    <div class="flex flex-col gap-2 mt-4">
+      <%= for { id, _pid } <- @threads  do %>
+        <div class="w-[600px]">
+          <.thread
+            id={id}
+            description={id}
+            repo_full_name="langchain-ai/langchain"
+            delete_event_name="kill"
+          />
+        </div>
+      <% end %>
+    </div>
+
+    <div class="mt-10">
       <span>Demo:</span>
       <.link href={~p"/demo/new"}>Go</.link>
     </div>
-
-    <%= for { id, _pid } <- @threads  do %>
-      <div class="w-[600px]">
-        <.thread
-          id={id}
-          description={id}
-          repo_full_name="langchain-ai/langchain"
-          delete_event_name="kill"
-        />
-      </div>
-    <% end %>
     """
   end
 
