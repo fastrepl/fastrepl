@@ -3,7 +3,7 @@ use crate::ds;
 const NAIVE_CHUNKING_LINE_COUNT: usize = 50;
 const NAIVE_CHUNKING_OVERLAP: usize = 10;
 
-pub fn naive<'a>(path: &'a str, code: &str) -> Vec<ds::Chunk<'a>> {
+pub fn naive<'a>(path: &'a str, code: &'a str) -> Vec<ds::Chunk<'a>> {
     let mut chunks = vec![];
     let code_lines: Vec<&str> = code.split('\n').collect();
 
@@ -15,9 +15,8 @@ pub fn naive<'a>(path: &'a str, code: &str) -> Vec<ds::Chunk<'a>> {
 
         let chunk = ds::Chunk {
             file_path: path,
-            line_start: start + 1,
-            line_end: end,
-            content: code_lines[start..end].join("\n"),
+            spans: vec![(start + 1, end)],
+            content: code,
         };
 
         chunks.push(chunk);
@@ -31,7 +30,7 @@ pub fn naive<'a>(path: &'a str, code: &str) -> Vec<ds::Chunk<'a>> {
 
 pub fn language_aware<'a>(
     path: &'a str,
-    code: &str,
+    code: &'a str,
     _language: &tree_sitter::Language,
 ) -> Vec<ds::Chunk<'a>> {
     naive(path, code)

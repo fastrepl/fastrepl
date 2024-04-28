@@ -5,19 +5,14 @@ mod query;
 #[cfg(test)]
 mod tests;
 
-rustler::init!("Elixir.Fastrepl.Native.CodeUtils", [chunk_file, grep_file]);
+rustler::init!("Elixir.Fastrepl.Native.CodeUtils", [chunk_code, grep_file]);
 
 #[rustler::nif(schedule = "DirtyCpu")]
-fn chunk_file<'a>(path: &'a str) -> Vec<ds::Chunk<'a>> {
-    let code = std::fs::read_to_string(path);
-
-    match code {
-        Ok(code) => _chunk_code(path, &code),
-        Err(_) => vec![],
-    }
+fn chunk_code<'a>(path: &'a str, code: &'a str) -> Vec<ds::Chunk<'a>> {
+    _chunk_code(path, code)
 }
 
-fn _chunk_code<'a>(path: &'a str, code: &str) -> Vec<ds::Chunk<'a>> {
+fn _chunk_code<'a>(path: &'a str, code: &'a str) -> Vec<ds::Chunk<'a>> {
     let ext = path.split('.').last().unwrap_or("");
     let language = match ext {
         "js" | "mjs" | "cjs" => Some(rs_tree_sitter_languages::javascript::language()),
@@ -34,8 +29,8 @@ fn _chunk_code<'a>(path: &'a str, code: &str) -> Vec<ds::Chunk<'a>> {
     };
 
     match language {
-        Some(language) => chunk::language_aware(path, code, &language),
-        None => chunk::naive(path, code),
+        Some(language) => chunk::language_aware(path, &code, &language),
+        None => chunk::naive(path, &code),
     }
 }
 

@@ -12,20 +12,16 @@ fn markdown() {
 
     assert_eq!(result.len(), 4);
     assert_eq!(result[0].file_path, "test.md");
-    assert_eq!(result[0].line_start, 1);
-    assert_eq!(result[0].line_end, 50);
+    assert_eq!(result[0].spans, vec![(1, 50)]);
 
     assert_eq!(result[1].file_path, "test.md");
-    assert_eq!(result[1].line_start, 41);
-    assert_eq!(result[1].line_end, 90);
+    assert_eq!(result[1].spans, vec![(41, 90)]);
 
     assert_eq!(result[2].file_path, "test.md");
-    assert_eq!(result[2].line_start, 81);
-    assert_eq!(result[2].line_end, 130);
+    assert_eq!(result[2].spans, vec![(81, 130)]);
 
     assert_eq!(result[3].file_path, "test.md");
-    assert_eq!(result[3].line_start, 121);
-    assert_eq!(result[3].line_end, 137);
+    assert_eq!(result[3].spans, vec![(121, 137)]);
 
     assert_debug_snapshot!(result, @r###"
     [
@@ -81,6 +77,7 @@ fn markdown() {
         - **`langchain`**: Chains, agents, and retrieval strategies that make up an application's cognitive architecture.
         - **[LangGraph](https://python.langchain.com/docs/langgraph)**: A library for building robust and stateful multi-actor applications with LLMs by modeling steps as edges and nodes in a graph.
         ```
+        ---
         ,
         ```test.md#L41-L90
         - **Open-source libraries**: Build your applications using LangChain's [modular building blocks](https://python.langchain.com/docs/expression_language/) and [components](https://python.langchain.com/docs/modules/). Integrate with hundreds of [third-party providers](https://python.langchain.com/docs/integrations/platforms/).
@@ -134,6 +131,7 @@ fn markdown() {
         
         - **[Overview](https://python.langchain.com/docs/expression_language/)**: LCEL and its benefits
         ```
+        ---
         ,
         ```test.md#L81-L130
         1. **Components**: composable building blocks, tools and integrations for working with language models. Components are modular and easy-to-use, whether you are using the rest of the LangChain framework or not
@@ -187,6 +185,7 @@ fn markdown() {
         
         As an open-source project in a rapidly developing field, we are extremely open to contributions, whether it be in the form of a new feature, improved infrastructure, or better documentation.
         ```
+        ---
         ,
         ```test.md#L121-L137
         
@@ -205,8 +204,8 @@ fn markdown() {
         ## 🌟 Contributors
         
         [![langchain contributors](https://contrib.rocks/image?repo=langchain-ai/langchain&max=2000)](https://github.com/langchain-ai/langchain/graphs/contributors)
-        
         ```
+        ---
         ,
     ]
     "###);

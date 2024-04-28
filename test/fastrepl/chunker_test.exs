@@ -9,12 +9,11 @@ defmodule Fastrepl.ChunckerTest do
   alias Fastrepl.Retrieval.Chunker.Chunk
 
   describe "to_string/1" do
-    test "simple" do
+    test "single span" do
       chunk = %Chunk{
         file_path: "test.js",
         content: "const a = 1;",
-        line_start: 1,
-        line_end: 2
+        spans: [{1, 2}]
       }
 
       assert chunk |> to_string() ==
@@ -25,34 +24,50 @@ defmodule Fastrepl.ChunckerTest do
                """
                |> String.trim()
     end
+
+    test "multiple spans" do
+      chunk = %Chunk{
+        file_path: "test.js",
+        content: "const a = 1;\n" |> String.duplicate(100),
+        spans: [{1, 2}, {42, 43}]
+      }
+
+      assert chunk |> to_string() ==
+               """
+               ```test.js#L1-L2
+               const a = 1;
+               const a = 1;
+               ```
+               ---
+               ```test.js#L42-L43
+               const a = 1;
+               const a = 1;
+               ```
+               """
+               |> String.trim()
+    end
   end
 
-  describe "chunk_file/2" do
-    setup do
-      code = "const a = 1;\n" |> String.duplicate(100)
-      path_unknown = System.tmp_dir!() |> Path.join("test.unknown")
-      path_js = System.tmp_dir!() |> Path.join("test.js")
+  describe "merge/2" do
+    test "non-overlapping" do
+      chunk1 = %Chunk{file_path: "test.js", spans: [{1, 2}]}
+      chunk2 = %Chunk{file_path: "test.js", spans: [{3, 4}]}
 
-      File.write!(path_unknown, code)
-      File.write!(path_js, code)
-
-      on_exit(fn ->
-        File.rm!(path_unknown)
-        File.rm!(path_js)
-      end)
-
-      {:ok, %{path_unknown: path_unknown, path_js: path_js}}
+      assert Chunk.merge(chunk1, chunk2).spans == [{1, 2}, {3, 4}]
     end
+  end
 
-    test "it works 1", %{path_unknown: path_unknown} do
-      chunks = Chunker.chunk_file(path_unknown)
-      assert chunks |> get_in([Access.at(0), Access.key!(:file_path)]) == path_unknown
+  describe "chunk_code/2" do
+    test "it works 1" do
+      chunks = Chunker.chunk_code("test.unknown", "const a = 1;\n" |> String.duplicate(100))
+      assert chunks |> get_in([Access.at(0), Access.key!(:file_path)]) == "test.unknown"
       assert length(chunks) == 3
+      assert chunks |> get_in([Access.at(0), Access.key!(:spans)]) == [{1, 50}]
     end
 
-    test "it works 2", %{path_js: path_js} do
-      chunks = Chunker.chunk_file(path_js)
-      assert chunks |> get_in([Access.at(0), Access.key!(:file_path)]) == path_js
+    test "it works 2" do
+      chunks = Chunker.chunk_code("test.js", "const a = 1;\n" |> String.duplicate(100))
+      assert chunks |> get_in([Access.at(0), Access.key!(:file_path)]) == "test.js"
       assert length(chunks) == 3
     end
   end
