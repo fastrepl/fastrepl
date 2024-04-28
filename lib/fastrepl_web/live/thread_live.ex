@@ -43,7 +43,7 @@ defmodule FastreplWeb.ThreadLive do
 
   def render_chunks(assigns) do
     ~H"""
-    <div class="absolute left-10">
+    <div class="absolute left-10 max-h-[600px] overflow-y-auto">
       <.svelte
         name="TreeView"
         socket={@socket}
