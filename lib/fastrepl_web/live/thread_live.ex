@@ -10,17 +10,20 @@ defmodule FastreplWeb.ThreadLive do
   def render(assigns) do
     ~H"""
     <div class="flex gap-1 fixed -bottom-2 left-1/2 transform -translate-x-1/2">
-      <.svelte
-        name="ChatEditor"
-        socket={@socket}
-        ssr={false}
-        props={
-          %{
-            input_name: "instruction",
-            placeholder: "Reply here: "
+      <div class="flex flex-col gap-6">
+        <.svelte name="ActionPanel" socket={@socket} ssr={false} />
+        <.svelte
+          name="ChatEditor"
+          socket={@socket}
+          ssr={false}
+          props={
+            %{
+              input_name: "instruction",
+              placeholder: "Reply here: "
+            }
           }
-        }
-      />
+        />
+      </div>
       <form phx-submit="submit">
         <button
           type="submit"
@@ -28,7 +31,7 @@ defmodule FastreplWeb.ThreadLive do
           phx-hook="Tooltip"
           phx-tooltip-content="Submit"
           phx-tooltip-placement="right"
-          class="w-7 h-7 rounded-xl bg-blue-500 hover:bg-blue-600 top-2 right-2.5 absolute ml-2"
+          class="w-7 h-7 rounded-xl bg-blue-500 hover:bg-blue-600 bottom-[72px] right-2.5 absolute ml-2"
         >
           <.icon name="hero-arrow-up" class="h-3 w-3 bg-gray-100" />
         </button>
@@ -125,6 +128,11 @@ defmodule FastreplWeb.ThreadLive do
         {:noreply, socket}
       end
     end
+  end
+
+  def handle_event("action:run", %{"action" => action}, socket) do
+    IO.inspect(action)
+    {:noreply, socket}
   end
 
   defp find_existing_orchestrator(thread_id) do
