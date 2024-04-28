@@ -5,7 +5,7 @@
   const MAX_ACTIONS = 3;
 
   export let live: any;
-  export let actions = [];
+  export let actions = [{name: "New action 1"}, {name: "New action 2"}, {name: "New action 3"}];
 
   onMount(() => {
     live.handleEvent("action:add", (action: any) => {
@@ -25,7 +25,7 @@
     <button
       type="button"
       class="px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200"
-      transition:fly={{ duration: 200 }}
+      transition:fly={{ duration: 300, y: 30 }}
       on:click={() => handleClick(i)}
     >
       <span>{action.name}</span>
