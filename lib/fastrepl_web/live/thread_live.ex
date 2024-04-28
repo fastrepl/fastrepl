@@ -38,6 +38,10 @@ defmodule FastreplWeb.ThreadLive do
       </form>
     </div>
 
+    <div class="absolute left-10 bottom-10">
+      <.svelte name="TaskPanel" socket={@socket} ssr={false} />
+    </div>
+
     <%= if assigns[:chunks] do %>
       <.render_chunks socket={@socket} chunks={@chunks} current_chunk={@current_chunk} />
     <% end %>
@@ -99,7 +103,10 @@ defmodule FastreplWeb.ThreadLive do
         {:noreply, socket |> put_flash(:error, "Cannot connect to the server")}
 
       instruction not in ["", nil] ->
-        socket = socket |> push_event("tiptap:submit", %{})
+        socket =
+          socket
+          |> push_event("tiptap:submit", %{})
+          |> push_event("task:upsert", %{"task" => %{"name" => instruction}})
 
         state =
           GenServer.call(
