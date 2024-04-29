@@ -10,7 +10,7 @@
 
   export let chunk: Chunk;
   const highlightedLines = chunk.spans.flatMap(([from, to]) =>
-    Array.from({ length: to - from + 1 }, (_, i) => from + i),
+    Array.from({ length: to - from + 1 }, (_, i) => from + i - 1),
   );
 </script>
 
@@ -25,5 +25,7 @@
     {highlightedLines}
     startingLineNumber={1}
     class="rounded-lg"
+    --padding-left="0.2em"
+    --padding-right="1em"
   />
 </HighlightAuto>
