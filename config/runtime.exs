@@ -120,6 +120,7 @@ if config_env() == :prod do
   # See https://hexdocs.pm/swoosh/Swoosh.html#module-installation for details.
 
   config :fastrepl, :redis_url, System.get_env("REDIS_URL")
+  config :fastrepl, :clone_dir, System.get_env("REPO_DIR")
 end
 
 if config_env() != :test do
@@ -143,5 +144,6 @@ if config_env() != :test do
 
   config :oapi_github,
     app_name: "app.fastrepl.com",
-    apps: [{:fastrepl, System.get_env("GITHUB_APP_ID"), System.get_env("GITHUB_APP_SECRET")}]
+    apps: [{:fastrepl, System.get_env("GITHUB_APP_ID"), System.get_env("GITHUB_APP_SECRET")}],
+    default_auth: {System.get_env("GITHUB_CLIENT_ID"), System.get_env("GITHUB_CLIENT_SECRET")}
 end

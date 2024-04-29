@@ -16,6 +16,7 @@ kill_signal = 'SIGTERM'
 [env]
   PHX_HOST = 'app.fastrepl.com'
   PORT = '8080'
+  REPO_DIR = '/repos'
 
 [http_service]
   internal_port = 8080

@@ -21,7 +21,5 @@ config :fastrepl, Fastrepl.Native.CodeUtils,
   skip_compilation?: true,
   load_from: {:fastrepl, "priv/native/libcode_utils"}
 
-config :fastrepl, :clone_dir, "/repos"
-
 # Runtime production configuration, including reading
 # of environment variables, is done on config/runtime.exs.
