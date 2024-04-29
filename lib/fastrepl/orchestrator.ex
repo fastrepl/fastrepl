@@ -48,7 +48,7 @@ defmodule Fastrepl.Orchestrator do
     sha = Github.get_repo!(state.repo_full_name) |> Github.get_latest_commit()
 
     repo_root =
-      Application.get_env(:fastrepl, :clone_dir, "./tmp/repos")
+      Application.fetch_env!(:fastrepl, :clone_dir)
       |> Path.join("#{state.repo_full_name}-#{sha}")
 
     if not File.exists?(repo_root) do

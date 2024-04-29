@@ -80,7 +80,7 @@ RUN mix release
 FROM ${RUNNER_IMAGE}
 
 RUN apt-get update -y && \
-  apt-get install -y libstdc++6 openssl libncurses5 locales ca-certificates curl \
+  apt-get install -y libstdc++6 openssl libncurses5 locales ca-certificates curl git \
   && apt-get clean && rm -f /var/lib/apt/lists/*_*
 
 RUN curl -fsSL https://deb.nodesource.com/setup_19.x | bash - && apt-get install -y nodejs

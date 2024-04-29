@@ -83,3 +83,5 @@ config :phoenix_live_view, :debug_heex_annotations, true
 config :swoosh, :api_client, false
 
 config :fastrepl, :redis_url, "redis://default:password@localhost:6379"
+
+config :fastrepl, :clone_dir, "./tmp/repos"
