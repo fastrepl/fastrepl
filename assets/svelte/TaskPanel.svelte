@@ -12,7 +12,7 @@
   });
 </script>
 
-<div class="flex flex-col gap-2 text-xs w-fit max-h-[200px] overflow-y-auto">
+<div class="flex flex-col gap-2 text-xs w-fit max-h-[160px] overflow-y-auto">
   {#each tasks as task (task.name)}
     <div
       in:fly={{ duration: 300, y: 30 }}
