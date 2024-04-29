@@ -39,15 +39,20 @@
       <TreeView items={tree} {handleClickFile} {current_file_path} />
     </div>
 
-    <div
-      bind:this={scrollableElement}
-      class="text-sm h-[calc(100vh-300px)] overflow-y-auto rounded-lg relative scrollbar-hide"
-    >
-      <CodeSnippet chunk={current_chunk} />
+    <div class="flex flex-col">
+      <span class="text-xs rounded-t-md bg-slate-200 p-0.5 w-full">
+        {current_file_path}
+      </span>
+      <div
+        bind:this={scrollableElement}
+        class="text-sm h-[calc(100vh-300px)] overflow-y-auto rounded-b-md relative scrollbar-hide"
+      >
+        <CodeSnippet chunk={current_chunk} />
+      </div>
     </div>
 
     {#if scrollableElement}
-      <div class="absolute right-0 top-0">
+      <div class="absolute right-0 top-7">
         <Minimap root={scrollableElement} />
       </div>
     {/if}

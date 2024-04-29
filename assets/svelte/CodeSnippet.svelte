@@ -24,7 +24,7 @@
     hideBorder
     {highlightedLines}
     startingLineNumber={1}
-    class="rounded-lg"
+    class="rounded-b-md"
     --padding-left="0.2em"
     --padding-right="1em"
   />
