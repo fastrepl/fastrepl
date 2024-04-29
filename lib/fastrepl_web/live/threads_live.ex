@@ -1,4 +1,4 @@
-defmodule FastreplWeb.MainLive do
+defmodule FastreplWeb.ThreadsLive do
   use FastreplWeb, :live_view
 
   import FastreplWeb.ThreadComponents, only: [thread: 1]
@@ -6,26 +6,19 @@ defmodule FastreplWeb.MainLive do
   def render(assigns) do
     ~H"""
     <h2 id="threads" class="text-lg font-semibold">
-      # Threads
+      Fastrepl
     </h2>
-    <p class="text-sm">List of all active threads</p>
+
+    <p class="mt-2">
+      You can try out the demo <.link href={~p"/demo"} class="underline text-blue-500 font-semibold">here</.link>.
+    </p>
 
     <div class="flex flex-col gap-2 mt-4">
       <%= for { id, _pid } <- @threads  do %>
         <div class="w-[600px]">
-          <.thread
-            id={id}
-            description={id}
-            repo_full_name="langchain-ai/langchain"
-            delete_event_name="kill"
-          />
+          <.thread id={id} description={id} repo_full_name={id} delete_event_name="kill" />
         </div>
       <% end %>
-    </div>
-
-    <div class="mt-10">
-      <span>Demo:</span>
-      <.link href={~p"/demo/new"}>Go</.link>
     </div>
     """
   end

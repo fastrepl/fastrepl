@@ -1,10 +1,7 @@
 defmodule FastreplWeb.ThreadLive do
   use FastreplWeb, :live_view
 
-  alias Fastrepl.Orchestrator
   alias Fastrepl.Retrieval.Chunker
-
-  @demo_repo_full_name "brainlid/langchain"
 
   def render(assigns) do
     ~H"""
@@ -53,31 +50,32 @@ defmodule FastreplWeb.ThreadLive do
     end
 
     cond do
-      socket.assigns[:live_action] != :demo and socket.assigns[:current_user] ->
+      socket.assigns[:live_action] != :demo and socket.assigns[:current_user] == nil ->
         {:ok, socket |> redirect(to: "/auth/github")}
 
       true ->
-        socket =
-          case find_existing_orchestrator(thread_id) do
-            pid when is_pid(pid) ->
-              socket |> assign(thread_id: thread_id, orchestrator_pid: pid)
+        case find_existing_orchestrator(thread_id) do
+          pid when is_pid(pid) ->
+            if socket.assigns[:live_action] == :demo do
+              send(self(), :demo)
+            end
 
-            _ ->
-              {:ok, pid} =
-                Orchestrator.start(%{
-                  thread_id: thread_id,
-                  repo_full_name: @demo_repo_full_name
-                })
+            {:ok, socket |> assign(thread_id: thread_id, orchestrator_pid: pid)}
 
-              socket |> assign(thread_id: thread_id, orchestrator_pid: pid)
-          end
-
-        {:ok, socket}
+          nil ->
+            dest = if socket.assigns[:live_action] == :demo, do: "/demo", else: "/"
+            {:ok, socket |> redirect(to: dest)}
+        end
     end
   end
 
   def handle_info({:sync, state}, socket) do
     {:noreply, socket |> update_socket(state)}
+  end
+
+  def handle_info(:demo, socket) do
+    Process.link(socket.assigns.orchestrator_pid)
+    {:noreply, socket}
   end
 
   def handle_event("submit", params, socket) do
