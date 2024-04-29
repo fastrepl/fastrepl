@@ -61,6 +61,7 @@ end
 
 defmodule Fastrepl.Retrieval.Chunker do
   alias Fastrepl.Native.CodeUtils
+  alias Fastrepl.Retrieval.Chunker.Chunk
 
   def chunk_code(path, code) do
     CodeUtils.chunk_code(path, code)
@@ -73,6 +74,49 @@ defmodule Fastrepl.Retrieval.Chunker do
       chunk_code(path, code)
     else
       []
+    end
+  end
+
+  def dedupe(chunks) do
+    dedupe(chunks, [])
+  end
+
+  defp dedupe([], acc), do: Enum.reverse(acc)
+
+  defp dedupe([current | rest], acc) do
+    acc
+    |> Enum.find_index(fn %Chunk{file_path: file_path} -> file_path == current.file_path end)
+    |> case do
+      nil ->
+        dedupe(rest, [current | acc])
+
+      index ->
+        existing = Enum.at(acc, index)
+
+        dedupe(
+          rest,
+          [
+            %Chunk{existing | spans: concat_tuples(existing.spans ++ current.spans)}
+            | List.delete_at(acc, index)
+          ]
+        )
+    end
+  end
+
+  defp concat_tuples(list) do
+    list
+    |> Enum.reduce([], fn tuple, acc -> concat_tuple(tuple, acc) end)
+    |> Enum.reverse()
+  end
+
+  defp concat_tuple({a, b}, []), do: [{a, b}]
+
+  defp concat_tuple({a, b}, [{c, d} | rest]) do
+    cond do
+      a <= c && b >= d -> [{a, b} | rest]
+      a >= c && b <= d -> [{c, d} | rest]
+      a <= d + 1 -> [{min(a, c), max(b, d)} | rest]
+      true -> [{a, b}, {c, d} | rest]
     end
   end
 end

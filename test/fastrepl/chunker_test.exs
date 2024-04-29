@@ -71,4 +71,66 @@ defmodule Fastrepl.ChunckerTest do
       assert length(chunks) == 3
     end
   end
+
+  describe "dedupe/1" do
+    test "noop" do
+      chunks = [
+        %Chunk{file_path: "test1.js", spans: [{1, 2}]},
+        %Chunk{file_path: "test2.js", spans: [{9, 10}]}
+      ]
+
+      assert Chunker.dedupe(chunks) == chunks
+    end
+
+    test "no overlap" do
+      from = [
+        %Chunk{file_path: "test1.js", spans: [{1, 2}]},
+        %Chunk{file_path: "test1.js", spans: [{4, 6}]}
+      ]
+
+      to = [
+        %Chunk{file_path: "test1.js", spans: [{1, 2}, {4, 6}]}
+      ]
+
+      assert Chunker.dedupe(from) == to
+    end
+
+    test "overlap_1" do
+      from = [
+        %Chunk{file_path: "test1.js", spans: [{1, 2}]},
+        %Chunk{file_path: "test1.js", spans: [{3, 4}]}
+      ]
+
+      to = [%Chunk{file_path: "test1.js", spans: [{1, 4}]}]
+
+      assert Chunker.dedupe(from) == to
+    end
+
+    test "overlap_2" do
+      from = [
+        %Chunk{file_path: "test1.js", spans: [{1, 4}]},
+        %Chunk{file_path: "test1.js", spans: [{2, 6}]}
+      ]
+
+      to = [%Chunk{file_path: "test1.js", spans: [{1, 6}]}]
+
+      assert Chunker.dedupe(from) == to
+    end
+
+    test "complex" do
+      from = [
+        %Chunk{file_path: "test1.js", spans: [{1, 2}]},
+        %Chunk{file_path: "test2.js", spans: [{2, 5}]},
+        %Chunk{file_path: "test1.js", spans: [{4, 6}]},
+        %Chunk{file_path: "test2.js", spans: [{1, 7}]}
+      ]
+
+      to = [
+        %Chunk{file_path: "test1.js", spans: [{1, 2}, {4, 6}]},
+        %Chunk{file_path: "test2.js", spans: [{1, 7}]}
+      ]
+
+      assert Chunker.dedupe(from) == to
+    end
+  end
 end

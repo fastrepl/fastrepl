@@ -2,6 +2,7 @@ defmodule FastreplWeb.ThreadLive do
   use FastreplWeb, :live_view
 
   alias Fastrepl.Orchestrator
+  alias Fastrepl.Retrieval.Chunker
 
   @demo_repo_full_name "brainlid/langchain"
 
@@ -120,10 +121,20 @@ defmodule FastreplWeb.ThreadLive do
   end
 
   defp update_socket(socket, state) do
-    socket = state |> Enum.reduce(socket, fn {k, v}, acc -> assign(acc, k, v) end)
+    socket =
+      state
+      |> Enum.reduce(socket, fn {k, v}, acc ->
+        if k == :chunks do
+          acc
+          |> assign(:chunks, Chunker.dedupe((socket.assigns[:chunks] || []) ++ v))
+          |> assign(:current_chunk, v |> Enum.at(0))
+        else
+          assign(acc, k, v)
+        end
+      end)
 
     cond do
-      socket.assigns[:chunks] != nil ->
+      socket.assigns[:chunks] != nil and socket.assigns[:current_chunk] == nil ->
         socket |> assign(:current_chunk, socket.assigns.chunks |> Enum.at(0))
 
       true ->

@@ -13,24 +13,12 @@
   export let chunks: Chunk[] = [];
   let scrollableElement: HTMLElement;
 
-  $: merged_chunks = Object.values(
-    chunks.reduce((acc, chunk) => {
-      if (!acc[chunk.file_path]) {
-        acc[chunk.file_path] = chunk;
-        return acc;
-      }
-
-      acc[chunk.file_path].spans.push(...chunk.spans);
-      return acc;
-    }, []),
-  );
-  $: tree = buildTree(merged_chunks.map((chunk) => chunk.file_path));
-  $: current_file_path =
-    merged_chunks.length > 0 ? merged_chunks[0].file_path : null;
-  $: current_chunk = merged_chunks.length > 0 ? merged_chunks[0] : null;
+  $: tree = buildTree(chunks.map((chunk) => chunk.file_path));
+  $: current_file_path = chunks.length > 0 ? chunks[0].file_path : null;
+  $: current_chunk = chunks.length > 0 ? chunks[0] : null;
 
   const handleClickFile = (path: string) => {
-    const next_chunk = merged_chunks.find((chunk) => chunk.file_path === path);
+    const next_chunk = chunks.find((chunk) => chunk.file_path === path);
 
     if (next_chunk) {
       current_file_path = path;
@@ -39,7 +27,7 @@
   };
 </script>
 
-{#if merged_chunks.length === 0}
+{#if chunks.length === 0}
   <div
     class="h-[calc(100vh-300px)] bg-gray-500 flex items-center justify-center text-gray-200 text-sm"
   >
