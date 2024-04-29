@@ -5,7 +5,7 @@ defmodule FastreplWeb.ThreadsLive do
 
   def render(assigns) do
     ~H"""
-    <h2 id="threads" class="text-lg font-semibold">
+    <h2 class="text-lg font-semibold">
       Fastrepl
     </h2>
 

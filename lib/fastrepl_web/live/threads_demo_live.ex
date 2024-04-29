@@ -1,13 +1,33 @@
 defmodule FastreplWeb.ThreadsDemoLive do
   use FastreplWeb, :live_view
+  import FastreplWeb.GithubComponents, only: [repo: 1, issue: 1]
 
+  alias Phoenix.LiveView.AsyncResult
   alias Fastrepl.Orchestrator
+  alias Fastrepl.Github
 
-  @demo_repo_full_name "brainlid/langchain"
+  @repos [
+    {
+      "BerriAI/litellm",
+      "Call all LLM APIs using the OpenAI format. Use Bedrock, Azure, OpenAI, Cohere, Anthropic, Ollama, Sagemaker, HuggingFace, Replicate (100+ LLMs)"
+    },
+    {
+      "explodinggradients/ragas",
+      "Evaluation framework for your Retrieval Augmented Generation (RAG) pipelines"
+    },
+    {
+      "honojs/hono",
+      "Web Framework built on Web Standards"
+    },
+    {
+      "brainlid/langchain",
+      "Elixir implementation of a LangChain style framework."
+    }
+  ]
 
   def render(assigns) do
     ~H"""
-    <h2 id="threads" class="text-lg font-semibold">
+    <h2 class="text-lg font-semibold">
       Fastrepl Demo
     </h2>
     <p class="mt-2">
@@ -38,20 +58,51 @@ defmodule FastreplWeb.ThreadsDemoLive do
       Github Repos
     </h2>
 
-    <button phx-click="submit" class="mt-4 underline text-lg">
-      Go
-    </button>
+    <div class="mt-4 grid grid-cols-2 grid-rows-2 gap-4">
+      <%= for {name, description} <- @repos do %>
+        <.repo full_name={name} selected={name == @selected_repo} description={description} />
+      <% end %>
+    </div>
+
+    <%= if @selected_repo do %>
+      <h2 class="text-lg font-semibold mt-12">
+        Github Issues
+      </h2>
+
+      <%= if @async_result_issues.loading do %>
+        <div class="mt-4 grid grid-cols-3 gap-4">
+          <%= for _ <- 1..9 do %>
+            <.issue repo_full_name={@selected_repo} title="..." number={0} />
+          <% end %>
+        </div>
+      <% else %>
+        <div class="mt-4 grid grid-cols-3 gap-4">
+          <%= for issue <- @async_result_issues.result do %>
+            <.issue
+              repo_full_name={@selected_repo}
+              title={issue.title}
+              number={issue.number}
+              selected={issue.number == @selected_issue}
+            />
+          <% end %>
+        </div>
+      <% end %>
+    <% end %>
+
+    <%= if @selected_repo && @selected_issue do %>
+      <.button phx-click="submit" class="w-full text-lg mt-8">
+        Start thread
+      </.button>
+    <% end %>
     """
   end
 
   def mount(_params, _session, socket) do
-    threads =
-      Registry.select(Application.fetch_env!(:fastrepl, :orchestrator_registry), [
-        {{:"$1", :"$2", :_}, [], [{{:"$1", :"$2"}}]}
-      ])
-
     socket =
-      socket |> assign(:threads, threads)
+      socket
+      |> assign(:repos, @repos)
+      |> assign(:selected_repo, nil)
+      |> assign(:selected_issue, nil)
 
     {:ok, socket}
   end
@@ -62,9 +113,42 @@ defmodule FastreplWeb.ThreadsDemoLive do
     {:ok, _} =
       Orchestrator.start(%{
         thread_id: thread_id,
-        repo_full_name: @demo_repo_full_name
+        repo_full_name: socket.assigns.selected_repo,
+        issue_number: @selected_issue
       })
 
     {:noreply, socket |> redirect(to: "/demo/thread/#{thread_id}")}
+  end
+
+  def handle_event("repo:select", %{"name" => name}, socket) do
+    socket =
+      socket
+      |> assign(:selected_repo, name)
+      |> assign(:selected_issue, nil)
+      |> start_fetching_issues(name)
+
+    {:noreply, socket}
+  end
+
+  def handle_event("issue:select", %{"number" => number}, socket) do
+    {:noreply, socket |> assign(:selected_issue, number |> String.to_integer())}
+  end
+
+  def handle_async(:fetch_issues, {:ok, issues}, socket) do
+    {:noreply, socket |> assign(:async_result_issues, AsyncResult.ok(%AsyncResult{}, issues))}
+  end
+
+  def handle_async(:fetch_issues, {:exit, reason}, socket) do
+    {:noreply, socket |> assign(:async_result_issues, AsyncResult.failed(%AsyncResult{}, reason))}
+  end
+
+  defp start_fetching_issues(socket, repo_full_name) do
+    socket
+    |> assign(:async_result_issues, AsyncResult.loading())
+    |> start_async(:fetch_issues, fn ->
+      Github.list_open_issues!(repo_full_name)
+      |> Enum.reject(fn issue -> issue.pull_request != nil end)
+      |> Enum.take(9)
+    end)
   end
 end

@@ -8,7 +8,7 @@ defmodule Fastrepl.Orchestrator do
   alias Fastrepl.Retrieval.Chunker
   alias Fastrepl.Retrieval.Chunker.Chunk
 
-  def start(%{thread_id: thread_id, repo_full_name: _} = args) do
+  def start(%{thread_id: thread_id, repo_full_name: _, issue_number: _} = args) do
     GenServer.start(__MODULE__, args, name: via_registry(thread_id))
   end
 
@@ -23,6 +23,7 @@ defmodule Fastrepl.Orchestrator do
       |> Map.put(:orchestrator_pid, self())
       |> Map.put(:thread_id, args.thread_id)
       |> Map.put(:repo_full_name, args.repo_full_name)
+      |> Map.put(:issue_number, args.issue_number)
 
     {:ok, state}
   end

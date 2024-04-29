@@ -13,6 +13,34 @@ defmodule Fastrepl.Github do
     repo
   end
 
+  def get_issue(repo_full_name, issue_number) do
+    [owner, repo] = String.split(repo_full_name, "/")
+    GitHub.Issues.get(owner, repo, issue_number)
+  end
+
+  def get_issue!(repo_full_name, issue_number) do
+    {:ok, result} = get_issue(repo_full_name, issue_number)
+    result
+  end
+
+  def list_open_issues(full_name) do
+    [owner, repo] = String.split(full_name, "/")
+
+    GitHub.Issues.list_for_repo(
+      owner,
+      repo,
+      page: 1,
+      per_page: 20,
+      state: "open",
+      since: DateTime.utc_now() |> DateTime.add(-365, :day) |> DateTime.to_iso8601()
+    )
+  end
+
+  def list_open_issues!(full_name) do
+    {:ok, result} = list_open_issues(full_name)
+    result
+  end
+
   def get_latest_commit(repository) do
     [owner, repo] = String.split(repository.full_name, "/")
     branch_name = repository.default_branch

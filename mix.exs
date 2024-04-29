@@ -70,7 +70,7 @@ defmodule Fastrepl.MixProject do
       {:assent, "~> 0.2.9"},
       {:rustler, "~> 0.32.1"},
       {:live_svelte, "~> 0.13.1"},
-      {:oapi_github, "~> 0.3.1"},
+      {:oapi_github, "~> 0.3.3"},
       {:httpoison, "~> 2.0"},
       {:posthog, "~> 0.1"},
       {:langchain,
