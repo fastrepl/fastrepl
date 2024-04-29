@@ -30,6 +30,7 @@
     "phoenix_live_view": "file:../deps/phoenix_live_view",
     "posthog-js": "^1.129.0",
     "svelte-tiptap": "^1.1.2",
+    "tailwind-scrollbar-hide": "^1.1.7",
     "tippy.js": "^6.3.7",
     "turndown": "^7.1.3"
   },

@@ -1,6 +1,7 @@
 <script lang="ts">
   import TreeView from "$components/TreeView.svelte";
   import CodeSnippet from "$components/CodeSnippet.svelte";
+  import Minimap from "$components/Minimap.svelte";
   import { buildTree } from "$lib/utils/tree";
 
   type Chunk = {
@@ -10,8 +11,9 @@
   };
 
   export let chunks: Chunk[] = [];
+  let scrollableElement: HTMLElement;
 
-  const merged_chunks = Object.values(
+  $: merged_chunks = Object.values(
     chunks.reduce((acc, chunk) => {
       if (!acc[chunk.file_path]) {
         acc[chunk.file_path] = chunk;
@@ -22,21 +24,44 @@
       return acc;
     }, []),
   );
-  const tree = buildTree(merged_chunks.map((chunk) => chunk.file_path));
+  $: tree = buildTree(merged_chunks.map((chunk) => chunk.file_path));
+  $: current_file_path =
+    merged_chunks.length > 0 ? merged_chunks[0].file_path : null;
+  $: current_chunk = merged_chunks.length > 0 ? merged_chunks[0] : null;
 
-  let current_file_path = merged_chunks[0].file_path;
-  let current_chunk = merged_chunks[0];
   const handleClickFile = (path: string) => {
-    current_file_path = path;
-    current_chunk = merged_chunks.find((chunk) => chunk.file_path === path);
+    const next_chunk = merged_chunks.find((chunk) => chunk.file_path === path);
+
+    if (next_chunk) {
+      current_file_path = path;
+      current_chunk = next_chunk;
+    }
   };
 </script>
 
-<div class="relative">
-  <div class="absolute -left-[240px] -top-30">
-    <TreeView items={tree} {handleClickFile} {current_file_path} />
+{#if merged_chunks.length === 0}
+  <div
+    class="h-[calc(100vh-300px)] bg-gray-500 flex items-center justify-center text-gray-200 text-sm"
+  >
+    No code snippets found
   </div>
-  <div class="text-sm h-[calc(100vh-300px)] overflow-y-auto rounded-lg">
-    <CodeSnippet chunk={current_chunk} />
+{:else}
+  <div class="relative">
+    <div class="absolute -left-[240px] -top-30">
+      <TreeView items={tree} {handleClickFile} {current_file_path} />
+    </div>
+
+    <div
+      bind:this={scrollableElement}
+      class="text-sm h-[calc(100vh-300px)] overflow-y-auto rounded-lg relative scrollbar-hide"
+    >
+      <CodeSnippet chunk={current_chunk} />
+    </div>
+
+    {#if scrollableElement}
+      <div class="absolute right-0 top-0">
+        <Minimap root={scrollableElement} />
+      </div>
+    {/if}
   </div>
-</div>
+{/if}

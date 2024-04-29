@@ -1,5 +1,7 @@
 <script lang="ts">
+  import { slide } from "svelte/transition";
   import { clsx } from "clsx";
+
   import type { TreeNode } from "$lib/utils/tree";
 
   export let items: TreeNode[] = [];
@@ -8,13 +10,14 @@
 </script>
 
 <ul class="text-sm text-gray-600 hover:text-gray-900">
-  {#each items as item, i}
+  {#each items as item, i (item.path)}
     <li
       class={clsx(
         "max-w-[200px] truncate",
         !item.children?.length && "hover:bg-gray-200",
         item.path === current_file_path && "bg-gray-200 px-0.5 rounded-sm",
       )}
+      transition:slide={{ duration: 600 }}
     >
       {#if item.children}
         <details open>

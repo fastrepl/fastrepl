@@ -9,7 +9,7 @@
   };
 
   export let chunk: Chunk;
-  const highlightedLines = chunk.spans.flatMap(([from, to]) =>
+  $: highlightedLines = chunk.spans.flatMap(([from, to]) =>
     Array.from({ length: to - from + 1 }, (_, i) => from + i - 1),
   );
 </script>
