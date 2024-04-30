@@ -43,7 +43,7 @@ defmodule FastreplWeb.ThreadComponents do
     ~H"""
     <div
       id={@task.id}
-      class="hidden"
+      class="hidden max-w-[350px] truncate"
       phx-mounted={
         JS.show(
           transition: {
@@ -57,13 +57,17 @@ defmodule FastreplWeb.ThreadComponents do
     >
       <%= cond do %>
         <% @task.async_result.loading -> %>
-          <span class="w-4 truncate bg-gray-200 px-2 py-1 rounded-md pulse">
+          <span class="bg-gray-200 px-2 py-1 rounded-md pulse">
             <%= @task.name %>
           </span>
         <% @task.async_result.ok? -> %>
-          <span class="w-4 truncate bg-green-100 px-2 py-1 rounded-md"><%= @task.name %></span>
+          <span class="bg-green-100 px-2 py-1 rounded-md">
+            <%= @task.name %>
+          </span>
         <% true -> %>
-          <span class="w-4 truncate bg-red-100 px-2 py-1 rounded-md"><%= @task.name %></span>
+          <span class="bg-red-100 px-2 py-1 rounded-md">
+            <%= @task.name %>
+          </span>
       <% end %>
     </div>
     """
