@@ -1,6 +1,20 @@
 defmodule Fastrepl.Retrieval.Chunker.Chunk do
   defstruct file_path: "", content: "", spans: []
 
+  def from(root, path, lines \\ []) do
+    content =
+      case File.read(path) do
+        {:ok, content} -> content
+        {:error, _} -> ""
+      end
+
+    %__MODULE__{
+      file_path: Path.relative_to(path, root),
+      content: content,
+      spans: lines |> Enum.map(&{&1, &1})
+    }
+  end
+
   def merge(
         %__MODULE__{file_path: file_path1} = chunk1,
         %__MODULE__{file_path: file_path2} = chunk2

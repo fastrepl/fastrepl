@@ -4,6 +4,8 @@ defmodule Fastrepl.Orchestrator do
 
   alias Fastrepl.FS
   alias Fastrepl.Github
+
+  alias Fastrepl.Retrieval.Grep
   alias Fastrepl.Retrieval.Chunker
   alias Fastrepl.Retrieval.Chunker.Chunk
   alias Fastrepl.Retrieval.Vectordb
@@ -56,15 +58,18 @@ defmodule Fastrepl.Orchestrator do
     plans
     |> Enum.each(fn plan ->
       case plan do
-        {"semantic_search", args} ->
+        {"semantic_search", %{"query" => query}} ->
           if state[:vectordb_pid] do
             task_id = Nanoid.generate()
-            sync_with_views(state.thread_id, %{task: {task_id, "Running semantic search"}})
+
+            sync_with_views(state.thread_id, %{
+              task: {task_id, "Running semantic search: '#{query}'"}
+            })
 
             Task.start(fn ->
               chunks =
                 state.vectordb_pid
-                |> Vectordb.query(args["query"], top_k: 5, threshold: 0.3)
+                |> Vectordb.query(query, top_k: 5, threshold: 0.3)
                 |> Enum.map(
                   &%Chunk{&1 | file_path: Path.relative_to(&1.file_path, state.repo_root)}
                 )
@@ -73,8 +78,38 @@ defmodule Fastrepl.Orchestrator do
             end)
           end
 
-        {"keyword_search", _} ->
-          nil
+        {"keyword_search", %{"query" => query}} ->
+          task_id = Nanoid.generate()
+
+          sync_with_views(state.thread_id, %{
+            task: {task_id, "Running keyword search: '#{query}'"}
+          })
+
+          Task.start(fn ->
+            chunks =
+              state.repo_root
+              |> FS.list_informative_files()
+              |> Enum.map(fn path ->
+                lines = path |> Grep.grep_file(query)
+                if Enum.empty?(lines), do: nil, else: Chunk.from(state.repo_root, path, lines)
+              end)
+              |> Enum.reject(&is_nil/1)
+
+            sync_with_views(state.thread_id, %{chunks: chunks, task: task_id})
+          end)
+
+        {"search_file_path", %{"query" => query}} ->
+          task_id = Nanoid.generate()
+          sync_with_views(state.thread_id, %{task: {task_id, "Running path search: '#{query}'"}})
+
+          Task.start(fn ->
+            chunks =
+              state.repo_root
+              |> FS.search_paths(query)
+              |> Enum.map(&Chunk.from(state.repo_root, &1))
+
+            sync_with_views(state.thread_id, %{chunks: chunks, task: task_id})
+          end)
       end
     end)
 

@@ -52,7 +52,18 @@ defmodule Fastrepl.FS do
     is_banned_dir = &(Path.basename(&1) in ["node_modules", "dist", "venv"])
     is_banned_extension = &(Path.extname(&1) in ["", ".lock", ".pyc", ".ipynb"])
     is_banned_filename = &(Path.basename(&1) in ["package-lock.json"])
-    is_media_extension = &(Path.extname(&1) in [".mp4", ".png", ".jpg", ".gif"])
+
+    is_media_extension =
+      &(Path.extname(&1) in [
+          ".mp3",
+          ".mp4",
+          ".png",
+          ".jpg",
+          ".gif",
+          ".webp",
+          ".wav",
+          ".svg"
+        ])
 
     walk_dir(root, fn
       {:dir, path} ->
@@ -91,11 +102,10 @@ defmodule Fastrepl.FS do
         path = Path.relative_to(path, root)
 
         String.contains?(
-          String.downcase(path),
-          String.downcase(query)
+          path |> Path.basename() |> String.downcase(),
+          query |> String.downcase()
         )
     end)
-    |> Enum.map(&Path.relative_to(&1, root))
   end
 
   defp walk_dir(root, cb, acc \\ []) do

@@ -90,6 +90,7 @@ defmodule Fastrepl.FSTest do
         Application.fetch_env!(:fastrepl, :root)
         |> Path.join("/lib")
         |> FS.search_paths("thread")
+        |> Enum.map(&Path.relative_to(&1, root))
 
       expected = [
         "fastrepl_web/live/threads_demo_live.ex",
