@@ -75,6 +75,29 @@ defmodule Fastrepl.FS do
     end)
   end
 
+  def read_lines(path, {line_from, line_to}) do
+    File.stream!(path, :line)
+    |> Stream.drop(line_from - 1)
+    |> Stream.take(line_to - line_from + 1)
+    |> Enum.join()
+  end
+
+  def search_paths(root, query) do
+    walk_dir(root, fn
+      {:dir, _} ->
+        true
+
+      {:file, path} ->
+        path = Path.relative_to(path, root)
+
+        String.contains?(
+          String.downcase(path),
+          String.downcase(query)
+        )
+    end)
+    |> Enum.map(&Path.relative_to(&1, root))
+  end
+
   defp walk_dir(root, cb, acc \\ []) do
     File.ls!(root)
     |> Enum.reduce(acc, fn path, acc ->
@@ -96,12 +119,5 @@ defmodule Fastrepl.FS do
           end
       end
     end)
-  end
-
-  def read_lines(path, {line_from, line_to}) do
-    File.stream!(path, :line)
-    |> Stream.drop(line_from - 1)
-    |> Stream.take(line_to - line_from + 1)
-    |> Enum.join()
   end
 end

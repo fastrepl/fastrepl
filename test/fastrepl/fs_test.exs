@@ -4,13 +4,11 @@ defmodule Fastrepl.FSTest do
   alias Fastrepl.FS
 
   describe "list_informative_files/1" do
-    test "simple" do
-      root = System.tmp_dir!() |> Path.join("langchainjs")
-      FS.git_clone("https://github.com/langchain-ai/langchainjs.git", root)
-
-      assert FS.list_informative_files(root) |> length() > 3000
-
-      File.rm_rf!(root)
+    test "it works" do
+      assert Application.fetch_env!(:fastrepl, :root)
+             |> Path.join("/lib")
+             |> FS.list_informative_files()
+             |> length() > 10
     end
   end
 
@@ -83,6 +81,24 @@ defmodule Fastrepl.FSTest do
       File.write!(path, 1..100 |> Enum.map(&Integer.to_string/1) |> Enum.join("\n"))
 
       assert FS.read_lines(path, {42, 46}) == Enum.join(["42\n", "43\n", "44\n", "45\n", "46\n"])
+    end
+  end
+
+  describe "search_paths/2" do
+    test "simple" do
+      actual =
+        Application.fetch_env!(:fastrepl, :root)
+        |> Path.join("/lib")
+        |> FS.search_paths("thread")
+
+      expected = [
+        "fastrepl_web/live/threads_demo_live.ex",
+        "fastrepl_web/live/thread_live.ex",
+        "fastrepl_web/live/threads_live.ex",
+        "fastrepl_web/components/thread_components.ex"
+      ]
+
+      assert actual == expected
     end
   end
 end

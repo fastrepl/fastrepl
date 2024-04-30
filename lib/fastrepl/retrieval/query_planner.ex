@@ -27,6 +27,25 @@ defmodule Fastrepl.Retrieval.QueryPlanner do
     end
   end
 
+  @path %{
+    type: "function",
+    function: %{
+      name: "search_file_path",
+      description: "search files with path",
+      parameters: %{
+        type: "object",
+        properties: %{
+          query: %{
+            type: "string",
+            description:
+              "Exact filename, path, or partial keyword that might be included in the file path."
+          }
+        },
+        required: ["query"]
+      }
+    }
+  }
+
   @embedding %{
     type: "function",
     function: %{
@@ -55,7 +74,8 @@ defmodule Fastrepl.Retrieval.QueryPlanner do
         properties: %{
           query: %{
             type: "string",
-            description: "The specific keyword or valid ripgrep regex to search for."
+            description:
+              "This is not filename or path, but keyword or valid ripgrep regex that might be included in the code snippets."
           }
         },
         required: ["query"]
@@ -71,7 +91,7 @@ defmodule Fastrepl.Retrieval.QueryPlanner do
           """
           You are a helpful code retrieval planner.
           Based on the user's query and context, use one or multiple tools to retrieve relevant code snippets.
-          Always use tools and do something.
+          Use as many tools as needed.
           """
           |> String.trim()
       },
@@ -92,7 +112,7 @@ defmodule Fastrepl.Retrieval.QueryPlanner do
         model: @model_id,
         stream: false,
         temperature: 0,
-        tools: [@embedding, @grep],
+        tools: [@path, @embedding, @grep],
         tool_choice: "auto",
         messages: messages
       }
