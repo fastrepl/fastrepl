@@ -1,8 +1,29 @@
+defmodule FastreplWeb.ThreadComponents.Task do
+  alias Phoenix.LiveView.AsyncResult
+
+  @type id :: String.t()
+  @type name :: String.t()
+  @type async_result :: AsyncResult.t()
+
+  defstruct [:id, :name, :async_result]
+  @type t :: %__MODULE__{id: id, name: name, async_result: async_result}
+
+  def loading(name) do
+    %__MODULE__{id: Nanoid.generate(), name: name, async_result: AsyncResult.loading()}
+  end
+
+  def ok(%__MODULE__{} = task) do
+    %__MODULE__{task | async_result: task.async_result |> AsyncResult.ok()}
+  end
+end
+
 defmodule FastreplWeb.ThreadComponents do
   use Phoenix.Component
 
   import FastreplWeb.CoreComponents, only: [icon: 1]
+
   alias Phoenix.LiveView.JS
+  alias FastreplWeb.ThreadComponents.Task
 
   attr :id, :string, required: true
   attr :repo_full_name, :string, required: true
@@ -35,13 +56,13 @@ defmodule FastreplWeb.ThreadComponents do
     """
   end
 
-  attr :name, :string, required: true
+  attr :task, Task, required: true
 
   def task(assigns) do
     ~H"""
     <div
-      id={@name}
-      class="hidden rounded-md bg-gray-100 px-2 py-1"
+      id={@task.id}
+      class="hidden"
       phx-mounted={
         JS.show(
           transition: {
@@ -53,18 +74,27 @@ defmodule FastreplWeb.ThreadComponents do
         )
       }
     >
-      <span class="w-4 truncate"><%= @name %></span>
+      <%= cond do %>
+        <% @task.async_result.loading -> %>
+          <span class="w-4 truncate bg-gray-200 px-2 py-1 rounded-md pulse">
+            <%= @task.name %>
+          </span>
+        <% @task.async_result.ok? -> %>
+          <span class="w-4 truncate bg-green-100 px-2 py-1 rounded-md"><%= @task.name %></span>
+        <% true -> %>
+          <span class="w-4 truncate bg-red-100 px-2 py-1 rounded-md"><%= @task.name %></span>
+      <% end %>
     </div>
     """
   end
 
-  attr :names, :list, required: true
+  attr :tasks, :list, required: true
 
   def tasks(assigns) do
     ~H"""
-    <div class="flex flex-col gap-2 text-xs w-fit max-h-[160px]">
-      <%= for name <- @names do %>
-        <.task name={name} />
+    <div class="flex flex-col gap-4 text-xs w-fit max-h-[160px]">
+      <%= for task <- @tasks do %>
+        <.task task={task} />
       <% end %>
     </div>
     """

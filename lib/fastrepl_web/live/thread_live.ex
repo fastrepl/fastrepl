@@ -3,6 +3,7 @@ defmodule FastreplWeb.ThreadLive do
   import FastreplWeb.ThreadComponents, only: [tasks: 1]
 
   alias Fastrepl.Retrieval.Chunker
+  alias FastreplWeb.ThreadComponents.Task
 
   def render(assigns) do
     ~H"""
@@ -36,7 +37,7 @@ defmodule FastreplWeb.ThreadLive do
     </div>
 
     <div class="absolute left-10 bottom-10">
-      <.tasks names={@tasks} />
+      <.tasks tasks={@tasks} />
     </div>
 
     <%= if assigns[:chunks] do %>
@@ -89,15 +90,17 @@ defmodule FastreplWeb.ThreadLive do
         {:noreply, socket |> put_flash(:error, "Cannot connect to the server")}
 
       instruction not in ["", nil] ->
+        new_task = Task.loading(instruction)
+
         socket =
           socket
           |> push_event("tiptap:submit", %{})
-          |> assign(:tasks, [instruction | socket.assigns.tasks])
+          |> assign(:tasks, [new_task | socket.assigns.tasks])
 
         state =
           GenServer.call(
             socket.assigns.orchestrator_pid,
-            {:submit, %{instruction: instruction}}
+            {:submit, %{id: new_task.id, instruction: instruction}}
           )
 
         {:noreply, socket |> update_socket(state)}
@@ -121,25 +124,28 @@ defmodule FastreplWeb.ThreadLive do
     end
   end
 
-  defp update_socket(socket, state) do
-    socket =
-      state
-      |> Enum.reduce(socket, fn {k, v}, acc ->
-        if k == :chunks do
-          acc
-          |> assign(:chunks, Chunker.dedupe((socket.assigns[:chunks] || []) ++ v))
-          |> assign(:current_chunk, v |> Enum.at(0))
-        else
-          assign(acc, k, v)
-        end
+  defp update_socket(socket, state) when is_map(state) do
+    state
+    |> Enum.reduce(socket, fn {k, v}, acc -> acc |> update_socket({k, v}) end)
+  end
+
+  defp update_socket(socket, {:chunks, chunks}) do
+    socket
+    |> assign(:chunks, Chunker.dedupe((socket.assigns[:chunks] || []) ++ chunks))
+    |> assign(:current_chunk, chunks |> Enum.at(0))
+  end
+
+  defp update_socket(socket, {:task, %{id: id}}) do
+    socket
+    |> assign(
+      :tasks,
+      Enum.map(socket.assigns.tasks, fn task ->
+        if task.id == id, do: Task.ok(task), else: task
       end)
+    )
+  end
 
-    cond do
-      socket.assigns[:chunks] != nil and socket.assigns[:current_chunk] == nil ->
-        socket |> assign(:current_chunk, socket.assigns.chunks |> Enum.at(0))
-
-      true ->
-        socket
-    end
+  defp update_socket(socket, {k, v}) do
+    socket |> assign(k, v)
   end
 end

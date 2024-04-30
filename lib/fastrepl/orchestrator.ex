@@ -29,7 +29,7 @@ defmodule Fastrepl.Orchestrator do
   end
 
   @impl true
-  def handle_call({:submit, %{instruction: instruction}}, _from, state) do
+  def handle_call({:submit, %{id: id, instruction: instruction}}, _from, state) do
     if state[:vectordb_pid] do
       Task.start(fn ->
         chunks =
@@ -37,7 +37,7 @@ defmodule Fastrepl.Orchestrator do
           |> Vectordb.query(instruction, top_k: 5, threshold: 0.3)
           |> Enum.map(&%Chunk{&1 | file_path: Path.relative_to(&1.file_path, state.repo_root)})
 
-        sync_with_views(state.thread_id, %{chunks: chunks})
+        sync_with_views(state.thread_id, %{chunks: chunks, task: %{id: id}})
       end)
     end
 
