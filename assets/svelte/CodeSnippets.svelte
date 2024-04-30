@@ -35,7 +35,7 @@
   </div>
 {:else}
   <div class="relative">
-    <div class="absolute -left-[240px] -top-30">
+    <div class="absolute -left-[320px] -top-30">
       <TreeView items={tree} {handleClickFile} {current_file_path} />
     </div>
 
