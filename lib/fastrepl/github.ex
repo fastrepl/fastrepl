@@ -23,8 +23,8 @@ defmodule Fastrepl.Github do
     result
   end
 
-  def list_open_issues(full_name) do
-    [owner, repo] = String.split(full_name, "/")
+  def list_open_issues(repo_full_name) do
+    [owner, repo] = String.split(repo_full_name, "/")
 
     GitHub.Issues.list_for_repo(
       owner,
@@ -36,8 +36,18 @@ defmodule Fastrepl.Github do
     )
   end
 
-  def list_open_issues!(full_name) do
-    {:ok, result} = list_open_issues(full_name)
+  def list_open_issues!(repo_full_name) do
+    {:ok, result} = list_open_issues(repo_full_name)
+    result
+  end
+
+  def list_issue_comments(repo_full_name, issue_number) do
+    [owner, repo] = String.split(repo_full_name, "/")
+    GitHub.Issues.list_comments(owner, repo, issue_number, page: 1, per_page: 50)
+  end
+
+  def list_issue_comments!(repo_full_name, issue_number) do
+    {:ok, result} = list_issue_comments(repo_full_name, issue_number)
     result
   end
 
