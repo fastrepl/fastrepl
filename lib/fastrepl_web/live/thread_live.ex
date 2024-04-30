@@ -17,7 +17,7 @@ defmodule FastreplWeb.ThreadLive do
           props={
             %{
               input_name: "instruction",
-              placeholder: "Reply here: "
+              placeholder: "Instruction here: "
             }
           }
         />
