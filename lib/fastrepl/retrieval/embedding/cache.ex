@@ -37,8 +37,10 @@ defmodule Fastrepl.Retrieval.Embedding.Cache do
       end
 
       defp get_key(text) do
-        key = :crypto.hash(:sha256, text) |> Base.encode16(case: :lower)
-        "fastrepl:embedding:#{key}"
+        hash = :crypto.hash(:sha256, text) |> Base.encode16(case: :lower)
+        chunker_version = Fastrepl.Retrieval.Chunker.version()
+
+        "fastrepl:embedding:#{hash}#{chunker_version}"
       end
 
       defp get_cache(text) do

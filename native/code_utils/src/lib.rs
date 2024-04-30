@@ -5,7 +5,15 @@ mod query;
 #[cfg(test)]
 mod tests;
 
-rustler::init!("Elixir.Fastrepl.Native.CodeUtils", [chunk_code, grep_file]);
+rustler::init!(
+    "Elixir.Fastrepl.Native.CodeUtils",
+    [chunker_version, chunk_code, grep_file]
+);
+
+#[rustler::nif]
+fn chunker_version() -> u8 {
+    0
+}
 
 #[rustler::nif(schedule = "DirtyCpu")]
 fn chunk_code<'a>(path: &'a str, code: &'a str) -> Vec<ds::Chunk<'a>> {

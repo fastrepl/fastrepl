@@ -77,6 +77,8 @@ defmodule Fastrepl.Retrieval.Chunker do
   alias Fastrepl.Native.CodeUtils
   alias Fastrepl.Retrieval.Chunker.Chunk
 
+  def version(), do: CodeUtils.chunker_version()
+
   def chunk_code(path, code) do
     CodeUtils.chunk_code(path, code)
   end

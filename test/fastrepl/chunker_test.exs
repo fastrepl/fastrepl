@@ -133,4 +133,10 @@ defmodule Fastrepl.ChunckerTest do
       assert Chunker.dedupe(from) == to
     end
   end
+
+  describe "version/0" do
+    test "it works" do
+      assert Chunker.version() == 0
+    end
+  end
 end
