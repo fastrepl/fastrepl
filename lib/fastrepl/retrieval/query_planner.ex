@@ -4,39 +4,28 @@ defmodule Fastrepl.Retrieval.QueryPlanner do
 
   use Retry
 
-  def run(%{query: query}) do
+  def run(query) do
     retry with:
             exponential_backoff()
             |> randomize
             |> cap(1_000)
             |> expiry(4_000) do
-      request(%{query: query})
+      request(query)
     after
       {:ok, res} ->
-        tool_calls = res.body |> get_in(["choices", Access.at(0), "message", "tool_calls"])
+        tool_calls =
+          res.body
+          |> get_in(["choices", Access.at(0), "message", "tool_calls"]) || []
+
+        tool_calls =
+          tool_calls
+          |> Enum.map(fn %{"function" => f} -> {f["name"], Jason.decode!(f["arguments"])} end)
+
         {:ok, tool_calls}
     else
       error -> error
     end
   end
-
-  @path %{
-    type: "function",
-    function: %{
-      name: "fuzzy_path_search",
-      description: "use fuzzy search to find relevant code snippets",
-      parameters: %{
-        type: "object",
-        properties: %{
-          query: %{
-            type: "string",
-            description: "Partial or complete path to search for."
-          }
-        },
-        required: ["query"]
-      }
-    }
-  }
 
   @embedding %{
     type: "function",
@@ -74,7 +63,7 @@ defmodule Fastrepl.Retrieval.QueryPlanner do
     }
   }
 
-  defp request(%{query: query}) do
+  defp request(query) do
     messages = [
       %{
         role: "system",
@@ -103,7 +92,7 @@ defmodule Fastrepl.Retrieval.QueryPlanner do
         model: @model_id,
         stream: false,
         temperature: 0,
-        tools: [@path, @embedding, @grep],
+        tools: [@embedding, @grep],
         tool_choice: "auto",
         messages: messages
       }

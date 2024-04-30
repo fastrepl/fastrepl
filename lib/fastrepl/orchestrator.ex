@@ -4,9 +4,10 @@ defmodule Fastrepl.Orchestrator do
 
   alias Fastrepl.FS
   alias Fastrepl.Github
-  alias Fastrepl.Retrieval.Vectordb
   alias Fastrepl.Retrieval.Chunker
   alias Fastrepl.Retrieval.Chunker.Chunk
+  alias Fastrepl.Retrieval.Vectordb
+  alias Fastrepl.Retrieval.QueryPlanner
 
   def start(%{thread_id: thread_id, repo_full_name: _, issue_number: _} = args) do
     GenServer.start(__MODULE__, args, name: via_registry(thread_id))
@@ -29,19 +30,55 @@ defmodule Fastrepl.Orchestrator do
   end
 
   @impl true
-  def handle_call({:submit, %{id: id, instruction: instruction}}, _from, state) do
-    if state[:vectordb_pid] do
-      Task.start(fn ->
-        chunks =
-          state.vectordb_pid
-          |> Vectordb.query(instruction, top_k: 5, threshold: 0.3)
-          |> Enum.map(&%Chunk{&1 | file_path: Path.relative_to(&1.file_path, state.repo_root)})
+  def handle_cast({:submit, instruction}, state) do
+    task_id = Nanoid.generate()
 
-        sync_with_views(state.thread_id, %{chunks: chunks, task: %{id: id}})
-      end)
-    end
+    send(self(), {:planning, %{id: task_id, query: instruction}})
+    sync_with_views(state.thread_id, %{task: {task_id, "Generate queries"}})
 
-    {:reply, %{}, state}
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_info({:planning, %{id: id, query: query}}, state) do
+    Task.start(fn ->
+      {:ok, plans} = QueryPlanner.run(query)
+      send(state.orchestrator_pid, {:run_plans, plans})
+
+      sync_with_views(state.thread_id, %{task: id})
+    end)
+
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_info({:run_plans, plans}, state) do
+    plans
+    |> Enum.each(fn plan ->
+      case plan do
+        {"semantic_search", args} ->
+          if state[:vectordb_pid] do
+            task_id = Nanoid.generate()
+            sync_with_views(state.thread_id, %{task: {task_id, "Running semantic search"}})
+
+            Task.start(fn ->
+              chunks =
+                state.vectordb_pid
+                |> Vectordb.query(args["query"], top_k: 5, threshold: 0.3)
+                |> Enum.map(
+                  &%Chunk{&1 | file_path: Path.relative_to(&1.file_path, state.repo_root)}
+                )
+
+              sync_with_views(state.thread_id, %{chunks: chunks, task: task_id})
+            end)
+          end
+
+        {"keyword_search", _} ->
+          nil
+      end
+    end)
+
+    {:noreply, state}
   end
 
   @impl true

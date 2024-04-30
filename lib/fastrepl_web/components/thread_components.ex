@@ -1,29 +1,10 @@
-defmodule FastreplWeb.ThreadComponents.Task do
-  alias Phoenix.LiveView.AsyncResult
-
-  @type id :: String.t()
-  @type name :: String.t()
-  @type async_result :: AsyncResult.t()
-
-  defstruct [:id, :name, :async_result]
-  @type t :: %__MODULE__{id: id, name: name, async_result: async_result}
-
-  def loading(name) do
-    %__MODULE__{id: Nanoid.generate(), name: name, async_result: AsyncResult.loading()}
-  end
-
-  def ok(%__MODULE__{} = task) do
-    %__MODULE__{task | async_result: task.async_result |> AsyncResult.ok()}
-  end
-end
-
 defmodule FastreplWeb.ThreadComponents do
   use Phoenix.Component
 
   import FastreplWeb.CoreComponents, only: [icon: 1]
 
   alias Phoenix.LiveView.JS
-  alias FastreplWeb.ThreadComponents.Task
+  alias FastreplWeb.Utils.SharedTask
 
   attr :id, :string, required: true
   attr :repo_full_name, :string, required: true
@@ -56,7 +37,7 @@ defmodule FastreplWeb.ThreadComponents do
     """
   end
 
-  attr :task, Task, required: true
+  attr :task, SharedTask, required: true
 
   def task(assigns) do
     ~H"""
@@ -92,7 +73,7 @@ defmodule FastreplWeb.ThreadComponents do
 
   def tasks(assigns) do
     ~H"""
-    <div class="flex flex-col gap-4 text-xs w-fit max-h-[160px]">
+    <div class="flex flex-col gap-4 text-xs w-fit max-h-[100px]">
       <%= for task <- @tasks do %>
         <.task task={task} />
       <% end %>

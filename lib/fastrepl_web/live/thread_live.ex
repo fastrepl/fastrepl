@@ -3,7 +3,7 @@ defmodule FastreplWeb.ThreadLive do
   import FastreplWeb.ThreadComponents, only: [tasks: 1]
 
   alias Fastrepl.Retrieval.Chunker
-  alias FastreplWeb.ThreadComponents.Task
+  alias FastreplWeb.Utils.SharedTask
 
   def render(assigns) do
     ~H"""
@@ -37,7 +37,7 @@ defmodule FastreplWeb.ThreadLive do
     </div>
 
     <div class="absolute left-10 bottom-10">
-      <.tasks tasks={@tasks} />
+      <.tasks tasks={@shared_tasks} />
     </div>
 
     <%= if assigns[:chunks] do %>
@@ -51,7 +51,7 @@ defmodule FastreplWeb.ThreadLive do
       Phoenix.PubSub.subscribe(Fastrepl.PubSub, "thread:#{thread_id}")
     end
 
-    socket = socket |> assign(:tasks, [])
+    socket = socket |> assign(:shared_tasks, [])
 
     cond do
       socket.assigns[:live_action] != :demo and socket.assigns[:current_user] == nil ->
@@ -90,20 +90,12 @@ defmodule FastreplWeb.ThreadLive do
         {:noreply, socket |> put_flash(:error, "Cannot connect to the server")}
 
       instruction not in ["", nil] ->
-        new_task = Task.loading(instruction)
+        GenServer.cast(
+          socket.assigns.orchestrator_pid,
+          {:submit, instruction}
+        )
 
-        socket =
-          socket
-          |> push_event("tiptap:submit", %{})
-          |> assign(:tasks, [new_task | socket.assigns.tasks])
-
-        state =
-          GenServer.call(
-            socket.assigns.orchestrator_pid,
-            {:submit, %{id: new_task.id, instruction: instruction}}
-          )
-
-        {:noreply, socket |> update_socket(state)}
+        {:noreply, socket |> push_event("tiptap:submit", %{})}
 
       true ->
         {:noreply, socket}
@@ -126,7 +118,7 @@ defmodule FastreplWeb.ThreadLive do
 
   defp update_socket(socket, state) when is_map(state) do
     state
-    |> Enum.reduce(socket, fn {k, v}, acc -> acc |> update_socket({k, v}) end)
+    |> Enum.reduce(socket, fn {k, v}, acc -> update_socket(acc, {k, v}) end)
   end
 
   defp update_socket(socket, {:chunks, chunks}) do
@@ -135,14 +127,24 @@ defmodule FastreplWeb.ThreadLive do
     |> assign(:current_chunk, chunks |> Enum.at(0))
   end
 
-  defp update_socket(socket, {:task, %{id: id}}) do
+  defp update_socket(socket, {:task, {id, name}}) do
     socket
-    |> assign(
-      :tasks,
-      Enum.map(socket.assigns.tasks, fn task ->
-        if task.id == id, do: Task.ok(task), else: task
-      end)
-    )
+    |> assign(:shared_tasks, [SharedTask.loading(id, name) | socket.assigns.shared_tasks])
+  end
+
+  defp update_socket(socket, {:task, id}) do
+    Enum.find_index(socket.assigns.shared_tasks, fn task -> task.id == id end)
+    |> case do
+      nil ->
+        socket
+
+      index ->
+        socket
+        |> assign(
+          :shared_tasks,
+          List.update_at(socket.assigns.shared_tasks, index, &SharedTask.ok(&1, %{}))
+        )
+    end
   end
 
   defp update_socket(socket, {k, v}) do
