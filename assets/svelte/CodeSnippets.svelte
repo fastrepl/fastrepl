@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { clsx } from "clsx";
+
   import TreeView from "$components/TreeView.svelte";
   import CodeSnippet from "$components/CodeSnippet.svelte";
   import Minimap from "$components/Minimap.svelte";
@@ -35,7 +37,12 @@
   </div>
 {:else}
   <div class="relative">
-    <div class="absolute -left-[320px] -top-30">
+    <div
+      class={clsx([
+        "absolute -left-[320px] -top-30",
+        "max-h-[calc(100vh-300px)] overflow-y-hidden hover:overflow-y-auto",
+      ])}
+    >
       <TreeView items={tree} {handleClickFile} {current_file_path} />
     </div>
 
@@ -45,7 +52,7 @@
       </span>
       <div
         bind:this={scrollableElement}
-        class="text-sm h-[calc(100vh-300px)] overflow-y-auto rounded-b-md relative scrollbar-hide"
+        class="text-sm h-[calc(100vh-300px)] rounded-b-md relative overflow-y-auto scrollbar-hide"
       >
         <CodeSnippet chunk={current_chunk} />
       </div>
