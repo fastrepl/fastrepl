@@ -2,6 +2,7 @@ defmodule FastreplWeb.ThreadComponents do
   use Phoenix.Component
 
   import FastreplWeb.CoreComponents, only: [icon: 1]
+  alias Phoenix.LiveView.JS
 
   attr :id, :string, required: true
   attr :repo_full_name, :string, required: true
@@ -30,6 +31,41 @@ defmodule FastreplWeb.ThreadComponents do
       <div class="cursor-pointer mx-2" phx-click={@delete_event_name} phx-value-id={@id}>
         <.icon name="hero-x-mark" class="h-4 w-4 text-gray-500 hover:text-black" />
       </div>
+    </div>
+    """
+  end
+
+  attr :name, :string, required: true
+
+  def task(assigns) do
+    ~H"""
+    <div
+      id={@name}
+      class="hidden rounded-md bg-gray-100 px-2 py-1"
+      phx-mounted={
+        JS.show(
+          transition: {
+            "cubic-bezier(0.4, 0, 0.2, 1) duration-500",
+            "opacity-0 translate-y-10",
+            "opacity-100 translate-y-0"
+          },
+          time: 500
+        )
+      }
+    >
+      <span class="w-4 truncate"><%= @name %></span>
+    </div>
+    """
+  end
+
+  attr :names, :list, required: true
+
+  def tasks(assigns) do
+    ~H"""
+    <div class="flex flex-col gap-2 text-xs w-fit max-h-[160px]">
+      <%= for name <- @names do %>
+        <.task name={name} />
+      <% end %>
     </div>
     """
   end

@@ -1,5 +1,6 @@
 defmodule FastreplWeb.ThreadLive do
   use FastreplWeb, :live_view
+  import FastreplWeb.ThreadComponents, only: [tasks: 1]
 
   alias Fastrepl.Retrieval.Chunker
 
@@ -35,7 +36,7 @@ defmodule FastreplWeb.ThreadLive do
     </div>
 
     <div class="absolute left-10 bottom-10">
-      <.svelte name="TaskPanel" socket={@socket} ssr={false} />
+      <.tasks names={@tasks} />
     </div>
 
     <%= if assigns[:chunks] do %>
@@ -48,6 +49,8 @@ defmodule FastreplWeb.ThreadLive do
     if connected?(socket) do
       Phoenix.PubSub.subscribe(Fastrepl.PubSub, "thread:#{thread_id}")
     end
+
+    socket = socket |> assign(:tasks, [])
 
     cond do
       socket.assigns[:live_action] != :demo and socket.assigns[:current_user] == nil ->
@@ -89,7 +92,7 @@ defmodule FastreplWeb.ThreadLive do
         socket =
           socket
           |> push_event("tiptap:submit", %{})
-          |> push_event("task:upsert", %{"task" => %{"name" => instruction}})
+          |> assign(:tasks, [instruction | socket.assigns.tasks])
 
         state =
           GenServer.call(
