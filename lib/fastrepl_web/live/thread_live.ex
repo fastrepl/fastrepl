@@ -7,6 +7,12 @@ defmodule FastreplWeb.ThreadLive do
 
   def render(assigns) do
     ~H"""
+    <%= if assigns[:indexing_total] do %>
+      <%= if assigns[:indexing_progress] != assigns[:indexing_total] do %>
+        <div>Indexing: <%= @indexing_progress %> / <%= @indexing_total %></div>
+      <% end %>
+    <% end %>
+
     <div class="flex gap-1 fixed -bottom-2 left-1/2 transform -translate-x-1/2">
       <div class="flex flex-col gap-6">
         <.svelte name="ActionPanel" socket={@socket} ssr={false} />
@@ -144,6 +150,19 @@ defmodule FastreplWeb.ThreadLive do
           :shared_tasks,
           List.update_at(socket.assigns.shared_tasks, index, &SharedTask.ok(&1, %{}))
         )
+    end
+  end
+
+  defp update_socket(socket, {:indexing, {type, value}}) do
+    case type do
+      :start ->
+        socket |> assign(:indexing_progress, 0) |> assign(:indexing_total, value)
+
+      :progress ->
+        socket |> assign(:indexing_progress, socket.assigns.indexing_progress + value)
+
+      :done ->
+        socket |> assign(:indexing_progress, value)
     end
   end
 

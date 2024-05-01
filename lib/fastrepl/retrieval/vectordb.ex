@@ -4,7 +4,7 @@ defmodule Fastrepl.Retrieval.Vectordb do
 
   @default_tok_k 5
   @default_threshold 0.5
-  @ingest_chunk_size 100
+  @ingest_chunk_size 25
 
   defp registry_module() do
     Application.fetch_env!(:fastrepl, :vectordb_registry)
@@ -35,13 +35,16 @@ defmodule Fastrepl.Retrieval.Vectordb do
     Agent.update(pid, fn state -> %{state | docs: []} end)
   end
 
-  def ingest(pid, docs) do
+  def ingest(pid, docs, cb \\ fn _ -> :ok end) do
     Agent.update(pid, fn state -> state |> Map.put(:docs, state.docs ++ docs) end)
 
     docs
     |> Stream.map(&to_string/1)
     |> Stream.chunk_every(@ingest_chunk_size)
-    |> Stream.each(&Embedding.generate(&1))
+    |> Stream.each(fn chunks ->
+      Embedding.generate(chunks)
+      cb.(length(chunks))
+    end)
     |> Stream.run()
   end
 

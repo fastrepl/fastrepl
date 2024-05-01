@@ -156,7 +156,15 @@ defmodule Fastrepl.Orchestrator do
       |> Enum.flat_map(&Chunker.chunk_file/1)
 
     Task.start(fn ->
-      Vectordb.ingest(vectordb_pid, chunks)
+      sync_with_views(state.thread_id, %{indexing: {:start, length(chunks)}})
+
+      Vectordb.ingest(
+        vectordb_pid,
+        chunks,
+        fn n -> sync_with_views(state.thread_id, %{indexing: {:progress, n}}) end
+      )
+
+      sync_with_views(state.thread_id, %{indexing: {:done, length(chunks)}})
     end)
 
     {:noreply, state |> Map.put(:vectordb_pid, vectordb_pid)}

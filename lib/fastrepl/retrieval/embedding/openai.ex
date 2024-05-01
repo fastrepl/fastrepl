@@ -20,9 +20,8 @@ defmodule Fastrepl.Retrieval.Embedding.OpenAI do
     retry with:
             exponential_backoff()
             |> randomize
-            |> cap(1_000)
-            |> expiry(6_000),
-          atoms: [:error] do
+            |> cap(3_000)
+            |> expiry(12_000) do
       request(texts)
     after
       {:ok, result} ->

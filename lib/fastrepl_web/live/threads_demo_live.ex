@@ -147,7 +147,7 @@ defmodule FastreplWeb.ThreadsDemoLive do
     |> assign(:async_result_issues, AsyncResult.loading())
     |> start_async(:fetch_issues, fn ->
       Github.list_open_issues!(repo_full_name)
-      |> Enum.reject(fn issue -> issue.pull_request != nil end)
+      |> Enum.reject(fn issue -> get_in(issue, [Access.key(:pull_request)]) != nil end)
       |> Enum.take(9)
     end)
   end
