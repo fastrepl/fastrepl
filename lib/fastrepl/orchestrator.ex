@@ -36,7 +36,7 @@ defmodule Fastrepl.Orchestrator do
     task_id = Nanoid.generate()
 
     send(self(), {:planning, %{id: task_id, query: instruction}})
-    sync_with_views(state.thread_id, %{task: {task_id, "Generate queries"}})
+    sync_with_views(state.thread_id, %{task: {task_id, "Query understanding: running..."}})
 
     {:noreply, state}
   end
@@ -47,7 +47,7 @@ defmodule Fastrepl.Orchestrator do
       {:ok, plans} = QueryPlanner.run(query)
       send(state.orchestrator_pid, {:run_plans, plans})
 
-      sync_with_views(state.thread_id, %{task: id})
+      sync_with_views(state.thread_id, %{task: {id, "Query understanding"}})
     end)
 
     {:noreply, state}
@@ -63,7 +63,7 @@ defmodule Fastrepl.Orchestrator do
             task_id = Nanoid.generate()
 
             sync_with_views(state.thread_id, %{
-              task: {task_id, "Running semantic search: '#{query}'"}
+              task: {task_id, "Semantic search - '#{query}': running..."}
             })
 
             Task.start(fn ->
@@ -74,7 +74,10 @@ defmodule Fastrepl.Orchestrator do
                   &%Chunk{&1 | file_path: Path.relative_to(&1.file_path, state.repo_root)}
                 )
 
-              sync_with_views(state.thread_id, %{chunks: chunks, task: task_id})
+              sync_with_views(state.thread_id, %{
+                chunks: chunks,
+                task: {task_id, "Semantic search - '#{query}'"}
+              })
             end)
           end
 
@@ -82,7 +85,7 @@ defmodule Fastrepl.Orchestrator do
           task_id = Nanoid.generate()
 
           sync_with_views(state.thread_id, %{
-            task: {task_id, "Running keyword search: '#{query}'"}
+            task: {task_id, "Keyword search - '#{query}': running..."}
           })
 
           Task.start(fn ->
@@ -95,12 +98,18 @@ defmodule Fastrepl.Orchestrator do
               end)
               |> Enum.reject(&is_nil/1)
 
-            sync_with_views(state.thread_id, %{chunks: chunks, task: task_id})
+            sync_with_views(state.thread_id, %{
+              chunks: chunks,
+              task: {task_id, "Keyword search - '#{query}'"}
+            })
           end)
 
         {"search_file_path", %{"query" => query}} ->
           task_id = Nanoid.generate()
-          sync_with_views(state.thread_id, %{task: {task_id, "Running path search: '#{query}'"}})
+
+          sync_with_views(state.thread_id, %{
+            task: {task_id, "Path search - '#{query}': running..."}
+          })
 
           Task.start(fn ->
             chunks =
@@ -108,7 +117,10 @@ defmodule Fastrepl.Orchestrator do
               |> FS.search_paths(query)
               |> Enum.map(&Chunk.from(state.repo_root, &1))
 
-            sync_with_views(state.thread_id, %{chunks: chunks, task: task_id})
+            sync_with_views(state.thread_id, %{
+              chunks: chunks,
+              task: {task_id, "Path search - '#{query}'"}
+            })
           end)
       end
     end)

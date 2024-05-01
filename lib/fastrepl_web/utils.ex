@@ -26,7 +26,7 @@ defmodule FastreplWeb.Utils.SharedTask do
     }
   end
 
-  def ok(%__MODULE__{} = task, data) do
-    %__MODULE__{task | async_result: task.async_result |> AsyncResult.ok(data)}
+  def ok(%__MODULE__{} = task, name) do
+    %__MODULE__{task | name: name, async_result: task.async_result |> AsyncResult.ok()}
   end
 end

@@ -134,21 +134,20 @@ defmodule FastreplWeb.ThreadLive do
   end
 
   defp update_socket(socket, {:task, {id, name}}) do
-    socket
-    |> assign(:shared_tasks, [SharedTask.loading(id, name) | socket.assigns.shared_tasks])
-  end
-
-  defp update_socket(socket, {:task, id}) do
     Enum.find_index(socket.assigns.shared_tasks, fn task -> task.id == id end)
     |> case do
       nil ->
         socket
+        |> assign(
+          :shared_tasks,
+          [SharedTask.loading(id, name) | socket.assigns.shared_tasks]
+        )
 
       index ->
         socket
         |> assign(
           :shared_tasks,
-          List.update_at(socket.assigns.shared_tasks, index, &SharedTask.ok(&1, %{}))
+          List.update_at(socket.assigns.shared_tasks, index, &SharedTask.ok(&1, name))
         )
     end
   end
