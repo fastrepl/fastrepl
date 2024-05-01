@@ -1,5 +1,13 @@
 defmodule Fastrepl.Repository do
-  defstruct [:full_name, :sha, :root_path, :vectordb_pid, :indexing_progress, :indexing_total]
+  defstruct [
+    :full_name,
+    :description,
+    :sha,
+    :root_path,
+    :vectordb_pid,
+    :indexing_progress,
+    :indexing_total
+  ]
 
   alias Fastrepl.Retrieval.Vectordb
 

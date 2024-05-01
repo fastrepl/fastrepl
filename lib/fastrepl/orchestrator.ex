@@ -27,7 +27,7 @@ defmodule Fastrepl.Orchestrator do
       |> Map.put(:orchestrator_pid, self())
       |> Map.put(:thread_id, args.thread_id)
       |> Map.put(:repo, %Repository{full_name: args.repo_full_name})
-      |> Map.put(:issue_number, args.issue_number)
+      |> Map.put(:issue, %{title: "", number: args.issue_number})
 
     {:ok, state}
   end
@@ -134,10 +134,9 @@ defmodule Fastrepl.Orchestrator do
 
   @impl true
   def handle_info(:init_repo, state) do
-    sha =
-      state.repo.full_name
-      |> Github.get_repo!()
-      |> Github.get_latest_commit()
+    repo = state.repo.full_name |> Github.get_repo!()
+    sha = repo |> Github.get_latest_commit()
+    issue = Github.get_issue!(repo.full_name, state.issue.number)
 
     root_path =
       Application.fetch_env!(:fastrepl, :clone_dir)
@@ -153,7 +152,19 @@ defmodule Fastrepl.Orchestrator do
       send(state.orchestrator_pid, {:init_vectordb, root_path})
     end
 
-    {:noreply, state |> Map.update!(:repo, &%{&1 | root_path: root_path, sha: sha})}
+    state =
+      state
+      |> Map.put(:repo, %{
+        state.repo
+        | root_path: root_path,
+          sha: sha,
+          description: repo.description
+      })
+      |> Map.put(:issue, %{state.issue | title: issue.title})
+
+    sync_with_views(state.thread_id, %{repo: state.repo, issue: state.issue})
+
+    {:noreply, state}
   end
 
   @impl true
@@ -181,7 +192,7 @@ defmodule Fastrepl.Orchestrator do
       sync_with_views(state.thread_id, %{indexing: {:done, length(chunks)}})
     end)
 
-    {:noreply, state |> Map.update!(:repo, &%{&1 | vectordb_pid: vectordb_pid})}
+    {:noreply, state |> Map.put(:repo, %{state.repo | vectordb_pid: vectordb_pid})}
   end
 
   @impl true

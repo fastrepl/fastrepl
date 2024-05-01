@@ -1,6 +1,8 @@
 defmodule FastreplWeb.ThreadLive do
   use FastreplWeb, :live_view
+
   import FastreplWeb.ThreadComponents, only: [tasks: 1]
+  import FastreplWeb.GithubComponents, only: [repo: 1, issue: 1]
 
   alias Fastrepl.Retrieval.Chunker
   alias FastreplWeb.Utils.SharedTask
@@ -8,12 +10,6 @@ defmodule FastreplWeb.ThreadLive do
   def render(assigns) do
     ~H"""
     <.svelte name="CodeSnippets" socket={@socket} ssr={false} props={%{chunks: @chunks}} />
-
-    <%= if assigns[:indexing_total] do %>
-      <%= if assigns[:indexing_progress] != assigns[:indexing_total] do %>
-        <div>Indexing: <%= @indexing_progress %> / <%= @indexing_total %></div>
-      <% end %>
-    <% end %>
 
     <div class="fixed -bottom-2 self-center">
       <div class="flex flex-col gap-6">
@@ -47,6 +43,18 @@ defmodule FastreplWeb.ThreadLive do
     <div class="fixed left-10 bottom-10">
       <.tasks tasks={@shared_tasks} />
     </div>
+
+    <%= if assigns[:repo] && assigns[:issue] do %>
+      <div class="absolute right-10 top-20 flex flex-col gap-4">
+        <.repo
+          full_name={@repo.full_name}
+          description={@repo.description}
+          indexing_total={assigns[:indexing_total]}
+          indexing_progress={assigns[:indexing_progress]}
+        />
+        <.issue repo_full_name={@repo.full_name} title={@issue.title} number={@issue.number} />
+      </div>
+    <% end %>
     """
   end
 
@@ -132,6 +140,14 @@ defmodule FastreplWeb.ThreadLive do
     socket
     |> assign(:chunks, Chunker.dedupe((socket.assigns[:chunks] || []) ++ chunks))
     |> assign(:current_chunk, chunks |> Enum.at(0))
+  end
+
+  defp update_socket(socket, {:issue, issue}) do
+    socket |> assign(:issue, issue)
+  end
+
+  defp update_socket(socket, {:repo, repo}) do
+    socket |> assign(:repo, repo)
   end
 
   defp update_socket(socket, {:task, {id, name}}) do

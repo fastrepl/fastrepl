@@ -4,7 +4,7 @@ defmodule Fastrepl.Retrieval.Vectordb do
 
   @default_tok_k 5
   @default_threshold 0.5
-  @ingest_chunk_size 25
+  @ingest_chunk_size 40
 
   defp registry_module() do
     Application.fetch_env!(:fastrepl, :vectordb_registry)

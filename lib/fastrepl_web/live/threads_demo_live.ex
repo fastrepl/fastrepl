@@ -1,6 +1,7 @@
 defmodule FastreplWeb.ThreadsDemoLive do
   use FastreplWeb, :live_view
-  import FastreplWeb.GithubComponents, only: [repo: 1, issue: 1]
+
+  import FastreplWeb.GithubComponents, only: [selectable_repo: 1, selectable_issue: 1]
 
   alias Phoenix.LiveView.AsyncResult
   alias Fastrepl.Orchestrator
@@ -60,7 +61,11 @@ defmodule FastreplWeb.ThreadsDemoLive do
 
     <div class="mt-4 grid grid-cols-2 grid-rows-2 gap-4">
       <%= for {name, description} <- @repos do %>
-        <.repo full_name={name} selected={name == @selected_repo} description={description} />
+        <.selectable_repo
+          full_name={name}
+          selected={name == @selected_repo}
+          description={description}
+        />
       <% end %>
     </div>
 
@@ -72,13 +77,13 @@ defmodule FastreplWeb.ThreadsDemoLive do
       <%= if @async_result_issues.loading do %>
         <div class="mt-4 grid grid-cols-3 gap-4">
           <%= for _ <- 1..9 do %>
-            <.issue repo_full_name={@selected_repo} title="..." number={0} />
+            <.selectable_issue repo_full_name={@selected_repo} title="..." number={0} />
           <% end %>
         </div>
       <% else %>
         <div class="mt-4 grid grid-cols-3 gap-4">
           <%= for issue <- @async_result_issues.result do %>
-            <.issue
+            <.selectable_issue
               repo_full_name={@selected_repo}
               title={issue.title}
               number={issue.number}
