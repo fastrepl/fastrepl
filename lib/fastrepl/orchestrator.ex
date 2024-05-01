@@ -4,6 +4,7 @@ defmodule Fastrepl.Orchestrator do
 
   alias Fastrepl.FS
   alias Fastrepl.Github
+  alias Fastrepl.Repository
 
   alias Fastrepl.Retrieval.Grep
   alias Fastrepl.Retrieval.Chunker
@@ -25,7 +26,7 @@ defmodule Fastrepl.Orchestrator do
       %{}
       |> Map.put(:orchestrator_pid, self())
       |> Map.put(:thread_id, args.thread_id)
-      |> Map.put(:repo_full_name, args.repo_full_name)
+      |> Map.put(:repo, %Repository{full_name: args.repo_full_name})
       |> Map.put(:issue_number, args.issue_number)
 
     {:ok, state}
@@ -59,7 +60,7 @@ defmodule Fastrepl.Orchestrator do
     |> Enum.each(fn plan ->
       case plan do
         {"semantic_search", %{"query" => query}} ->
-          if state[:vectordb_pid] do
+          if state.repo.vectordb_pid do
             task_id = Nanoid.generate()
 
             sync_with_views(state.thread_id, %{
@@ -68,10 +69,10 @@ defmodule Fastrepl.Orchestrator do
 
             Task.start(fn ->
               chunks =
-                state.vectordb_pid
+                state.repo.vectordb_pid
                 |> Vectordb.query(query, top_k: 5, threshold: 0.3)
                 |> Enum.map(
-                  &%Chunk{&1 | file_path: Path.relative_to(&1.file_path, state.repo_root)}
+                  &%Chunk{&1 | file_path: Path.relative_to(&1.file_path, state.repo.root_path)}
                 )
 
               sync_with_views(state.thread_id, %{
@@ -90,11 +91,14 @@ defmodule Fastrepl.Orchestrator do
 
           Task.start(fn ->
             chunks =
-              state.repo_root
+              state.repo.root_path
               |> FS.list_informative_files()
               |> Enum.map(fn path ->
                 lines = path |> Grep.grep_file(query)
-                if Enum.empty?(lines), do: nil, else: Chunk.from(state.repo_root, path, lines)
+
+                if Enum.empty?(lines),
+                  do: nil,
+                  else: Chunk.from(state.repo.root_path, path, lines)
               end)
               |> Enum.reject(&is_nil/1)
 
@@ -113,9 +117,9 @@ defmodule Fastrepl.Orchestrator do
 
           Task.start(fn ->
             chunks =
-              state.repo_root
+              state.repo.root_path
               |> FS.search_paths(query)
-              |> Enum.map(&Chunk.from(state.repo_root, &1))
+              |> Enum.map(&Chunk.from(state.repo.root_path, &1))
 
             sync_with_views(state.thread_id, %{
               chunks: chunks,
@@ -130,34 +134,32 @@ defmodule Fastrepl.Orchestrator do
 
   @impl true
   def handle_info(:init_repo, state) do
-    sha = Github.get_repo!(state.repo_full_name) |> Github.get_latest_commit()
+    sha =
+      state.repo.full_name
+      |> Github.get_repo!()
+      |> Github.get_latest_commit()
 
-    repo_root =
+    root_path =
       Application.fetch_env!(:fastrepl, :clone_dir)
-      |> Path.join("#{state.repo_full_name}-#{sha}")
+      |> Path.join("#{state.repo.full_name}-#{sha}")
 
-    if not File.exists?(repo_root) do
+    if not File.exists?(root_path) do
       Task.start(fn ->
-        url = Github.URL.clone_without_token(state.repo_full_name)
-        :ok = FS.git_clone(url, repo_root)
-        send(state.orchestrator_pid, {:init_vectordb, repo_root})
+        url = Github.URL.clone_without_token(state.repo.full_name)
+        :ok = FS.git_clone(url, root_path)
+        send(state.orchestrator_pid, {:init_vectordb, root_path})
       end)
     else
-      send(state.orchestrator_pid, {:init_vectordb, repo_root})
+      send(state.orchestrator_pid, {:init_vectordb, root_path})
     end
 
-    state =
-      state
-      |> Map.put(:repo_root, repo_root)
-      |> Map.put(:repo_sha, sha)
-
-    {:noreply, state}
+    {:noreply, state |> Map.update!(:repo, &%{&1 | root_path: root_path, sha: sha})}
   end
 
   @impl true
   def handle_info({:init_vectordb, repo_root}, state) do
-    if state[:vectordb_pid] do
-      Vectordb.stop(state.vectordb_pid)
+    if state.repo.vectordb_pid do
+      Vectordb.stop(state.repo.vectordb_pid)
     end
 
     {:ok, vectordb_pid} = Vectordb.start(state.thread_id)
@@ -179,7 +181,7 @@ defmodule Fastrepl.Orchestrator do
       sync_with_views(state.thread_id, %{indexing: {:done, length(chunks)}})
     end)
 
-    {:noreply, state |> Map.put(:vectordb_pid, vectordb_pid)}
+    {:noreply, state |> Map.update!(:repo, &%{&1 | vectordb_pid: vectordb_pid})}
   end
 
   @impl true
@@ -193,10 +195,7 @@ defmodule Fastrepl.Orchestrator do
       Registry.unregister(registry_module(), state.thread_id)
     end
 
-    if state[:vectordb_pid] do
-      Vectordb.stop(state.vectordb_pid)
-    end
-
+    state.repo |> Repository.clean_up()
     :ok
   end
 
