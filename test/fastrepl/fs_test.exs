@@ -86,9 +86,10 @@ defmodule Fastrepl.FSTest do
 
   describe "search_paths/2" do
     test "simple" do
+      root = Application.fetch_env!(:fastrepl, :root) |> Path.join("/lib")
+
       actual =
-        Application.fetch_env!(:fastrepl, :root)
-        |> Path.join("/lib")
+        root
         |> FS.search_paths("thread")
         |> Enum.map(&Path.relative_to(&1, root))
 
@@ -99,7 +100,7 @@ defmodule Fastrepl.FSTest do
         "fastrepl_web/components/thread_components.ex"
       ]
 
-      assert actual == expected
+      assert Enum.sort(actual) == Enum.sort(expected)
     end
   end
 end
