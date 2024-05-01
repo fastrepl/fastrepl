@@ -31,31 +31,28 @@
 
 {#if chunks.length === 0}
   <div
-    class="h-[calc(100vh-300px)] bg-gray-500 flex items-center justify-center text-gray-200 text-sm"
+    class="h-[calc(100vh-300px)] bg-gray-100 flex items-center justify-center text-gray-800 text-sm"
   >
-    No code snippets found
+    No code snippets found.
   </div>
 {:else}
-  <div class="relative">
+  <div class="flex flex-col relative w-[750px]">
     <div
       class={clsx([
-        "absolute -left-[320px] -top-30",
+        "absolute -left-[300px] -top-30",
         "max-h-[calc(100vh-300px)] overflow-y-hidden hover:overflow-y-auto",
       ])}
     >
       <TreeView items={tree} {handleClickFile} {current_file_path} />
     </div>
-
-    <div class="flex flex-col">
-      <span class="text-xs rounded-t-md bg-slate-200 p-0.5 w-full">
-        {current_file_path}
-      </span>
-      <div
-        bind:this={scrollableElement}
-        class="text-sm h-[calc(100vh-300px)] rounded-b-md relative overflow-y-auto scrollbar-hide"
-      >
-        <CodeSnippet chunk={current_chunk} />
-      </div>
+    <span class="text-xs rounded-t-md bg-slate-200 p-0.5 w-full">
+      {current_file_path}
+    </span>
+    <div
+      bind:this={scrollableElement}
+      class="text-sm h-[calc(100vh-300px)] rounded-b-md overflow-y-auto scrollbar-hide"
+    >
+      <CodeSnippet chunk={current_chunk} />
     </div>
 
     {#if scrollableElement}

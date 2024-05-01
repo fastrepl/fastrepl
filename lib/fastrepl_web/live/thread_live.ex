@@ -7,13 +7,15 @@ defmodule FastreplWeb.ThreadLive do
 
   def render(assigns) do
     ~H"""
+    <.svelte name="CodeSnippets" socket={@socket} ssr={false} props={%{chunks: @chunks}} />
+
     <%= if assigns[:indexing_total] do %>
       <%= if assigns[:indexing_progress] != assigns[:indexing_total] do %>
         <div>Indexing: <%= @indexing_progress %> / <%= @indexing_total %></div>
       <% end %>
     <% end %>
 
-    <div class="flex gap-1 fixed -bottom-2 left-1/2 transform -translate-x-1/2">
+    <div class="fixed -bottom-2 self-center">
       <div class="flex flex-col gap-6">
         <.svelte name="ActionPanel" socket={@socket} ssr={false} />
         <.svelte
@@ -42,13 +44,9 @@ defmodule FastreplWeb.ThreadLive do
       </form>
     </div>
 
-    <div class="absolute left-10 bottom-10">
+    <div class="fixed left-10 bottom-10">
       <.tasks tasks={@shared_tasks} />
     </div>
-
-    <%= if assigns[:chunks] do %>
-      <.svelte name="CodeSnippets" socket={@socket} ssr={false} props={%{chunks: @chunks}} />
-    <% end %>
     """
   end
 
@@ -57,7 +55,10 @@ defmodule FastreplWeb.ThreadLive do
       Phoenix.PubSub.subscribe(Fastrepl.PubSub, "thread:#{thread_id}")
     end
 
-    socket = socket |> assign(:shared_tasks, [])
+    socket =
+      socket
+      |> assign(:shared_tasks, [])
+      |> assign(:chunks, [])
 
     cond do
       socket.assigns[:live_action] != :demo and socket.assigns[:current_user] == nil ->
