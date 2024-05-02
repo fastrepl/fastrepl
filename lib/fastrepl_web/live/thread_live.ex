@@ -30,23 +30,12 @@ defmodule FastreplWeb.ThreadLive do
           props={
             %{
               input_name: "instruction",
+              phx_submit: "submit",
               placeholder: "Instruction here: "
             }
           }
         />
       </div>
-      <form phx-submit="submit">
-        <button
-          type="submit"
-          id="submit-button"
-          phx-hook="Tooltip"
-          phx-tooltip-content="Submit"
-          phx-tooltip-placement="right"
-          class="w-7 h-7 rounded-xl bg-blue-500 hover:bg-blue-600 bottom-[72px] right-2.5 absolute ml-2"
-        >
-          <.icon name="hero-arrow-up" class="h-3 w-3 bg-gray-100" />
-        </button>
-      </form>
     </div>
 
     <div class="fixed left-10 bottom-10">

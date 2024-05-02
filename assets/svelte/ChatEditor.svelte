@@ -11,13 +11,17 @@
 
   export let live: any;
   export let input_name: string;
+  export let phx_submit = "submit";
   export let placeholder = "Type something...";
 
   let editor: Readable<Editor>;
+  let mdContent = "";
+
+  const FORM_ID = "chat-editor-form";
 
   const keydownListener = (e: KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
-      const [form] = document.getElementsByTagName("form");
+      const form = document.getElementById(FORM_ID);
       form.dispatchEvent(
         new Event("submit", { bubbles: true, cancelable: true }),
       );
@@ -25,6 +29,9 @@
   };
 
   onMount(() => {
+    const form = document.getElementById(FORM_ID);
+    form.setAttribute("phx-submit", phx_submit);
+
     editor = createEditor({
       extensions: [
         ...Shared,
@@ -37,20 +44,7 @@
       content: "",
       onUpdate: (e) => {
         const html = e.editor.getHTML();
-        const md = turndownService.turndown(html);
-
-        const inputs = document.querySelectorAll("input[type=hidden]");
-        if (inputs.length > 0) {
-          const input = inputs[0] as HTMLInputElement;
-          input.value = md;
-        } else {
-          const input = document.createElement("input");
-          input.type = "hidden";
-          input.name = input_name;
-          const [form] = document.getElementsByTagName("form");
-          form.appendChild(input);
-          input.value = md;
-        }
+        mdContent = turndownService.turndown(html);
       },
       editorProps: {
         attributes: {
@@ -59,27 +53,31 @@
         },
       },
     });
-
     $editor.commands.focus();
-
-    window.addEventListener("keydown", keydownListener);
 
     live.handleEvent("tiptap:submit", () => {
       $editor.commands.clearContent();
       $editor.commands.focus();
     });
-
     live.handleEvent("tiptap:append", ({ content }) => {
       const { size } = $editor.view.state.doc.content;
       $editor.commands.insertContentAt(size, content);
     });
   });
 
+  window.addEventListener("keydown", keydownListener);
   onDestroy(() => {
     window.removeEventListener("keydown", keydownListener);
   });
 </script>
 
-<div class="w-[750px]">
+<form id={FORM_ID} class="w-[750px]">
+  <input type="hidden" name={input_name} value={mdContent} />
   <EditorContent editor={$editor} />
-</div>
+  <button
+    type="submit"
+    class="w-7 h-7 rounded-xl bg-blue-500 hover:bg-blue-600 bottom-[72px] right-2.5 absolute ml-2 text-white text-md"
+  >
+    ↑
+  </button>
+</form>
