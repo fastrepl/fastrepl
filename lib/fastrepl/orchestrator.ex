@@ -34,21 +34,34 @@ defmodule Fastrepl.Orchestrator do
 
   @impl true
   def handle_cast({:submit, instruction}, state) do
-    task_id = Nanoid.generate()
+    send(self(), {:planning, %{query: instruction}})
+    {:noreply, state}
+  end
 
-    send(self(), {:planning, %{id: task_id, query: instruction}})
+  @impl true
+  def handle_info({:planning, %{query: query}}, state) do
+    task_id = Nanoid.generate()
     sync_with_views(state.thread_id, %{task: {task_id, "Query understanding: running..."}})
+
+    Task.start(fn ->
+      {:ok, plans} = QueryPlanner.from_chat(query)
+      send(state.orchestrator_pid, {:run_plans, plans})
+      sync_with_views(state.thread_id, %{task: {task_id, "Query understanding"}})
+    end)
 
     {:noreply, state}
   end
 
   @impl true
-  def handle_info({:planning, %{id: id, query: query}}, state) do
+  def handle_info({:planning, %{issue: issue}}, state) do
+    task_id = Nanoid.generate()
+    sync_with_views(state.thread_id, %{task: {task_id, "Query understanding: running..."}})
+
     Task.start(fn ->
-      {:ok, plans} = QueryPlanner.run(query)
+      {:ok, plans} = QueryPlanner.from_issue(issue)
       send(state.orchestrator_pid, {:run_plans, plans})
 
-      sync_with_views(state.thread_id, %{task: {id, "Query understanding"}})
+      sync_with_views(state.thread_id, %{task: {task_id, "Query understanding"}})
     end)
 
     {:noreply, state}
@@ -136,7 +149,9 @@ defmodule Fastrepl.Orchestrator do
   def handle_info(:init_repo, state) do
     repo = state.repo.full_name |> Github.get_repo!()
     sha = repo |> Github.get_latest_commit()
+
     issue = Github.get_issue!(repo.full_name, state.issue.number)
+    send(self(), {:planning, %{issue: issue}})
 
     root_path =
       Application.fetch_env!(:fastrepl, :clone_dir)
