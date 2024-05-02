@@ -4,7 +4,7 @@
   import TreeView from "$components/TreeView.svelte";
   import CodeSnippet from "$components/CodeSnippet.svelte";
   import Minimap from "$components/Minimap.svelte";
-  import { buildTree } from "$lib/utils/tree";
+  import { addRoot, buildTree } from "$lib/utils/tree";
 
   type Chunk = {
     file_path: string;
@@ -12,10 +12,11 @@
     spans: number[][];
   };
 
+  export let root = "repo";
   export let chunks: Chunk[] = [];
   let scrollableElement: HTMLElement;
 
-  $: tree = buildTree(chunks.map((chunk) => chunk.file_path));
+  $: tree = addRoot(root, buildTree(chunks.map((chunk) => chunk.file_path)));
   $: current_file_path = chunks.length > 0 ? chunks[0].file_path : null;
   $: current_chunk = chunks.length > 0 ? chunks[0] : null;
 

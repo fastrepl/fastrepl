@@ -9,7 +9,17 @@ defmodule FastreplWeb.ThreadLive do
 
   def render(assigns) do
     ~H"""
-    <.svelte name="CodeSnippets" socket={@socket} ssr={false} props={%{chunks: @chunks}} />
+    <.svelte
+      name="CodeSnippets"
+      socket={@socket}
+      ssr={false}
+      props={
+        %{
+          root: if(assigns[:repo], do: @repo.full_name, else: "repo"),
+          chunks: @chunks
+        }
+      }
+    />
 
     <div class="fixed -bottom-2 self-center">
       <div class="flex flex-col gap-6">

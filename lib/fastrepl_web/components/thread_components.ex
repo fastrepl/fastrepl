@@ -43,7 +43,7 @@ defmodule FastreplWeb.ThreadComponents do
     ~H"""
     <div
       id={@task.id}
-      class="hidden max-w-[350px] truncate"
+      class="hidden max-w-[350px] truncate rounded-md"
       phx-mounted={
         JS.show(
           transition: {

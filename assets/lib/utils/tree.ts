@@ -4,6 +4,16 @@ export interface TreeNode {
   children?: TreeNode[];
 }
 
+export const addRoot = (name, tree: TreeNode[]): TreeNode[] => {
+  return [
+    {
+      name,
+      path: "/",
+      children: tree,
+    },
+  ];
+};
+
 export const buildTree = (paths: string[]): TreeNode[] => {
   return paths
     .map((path) => path.split("/"))
