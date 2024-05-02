@@ -4,7 +4,6 @@ defmodule FastreplWeb.ThreadLive do
   import FastreplWeb.ThreadComponents, only: [tasks: 1]
   import FastreplWeb.GithubComponents, only: [repo: 1, issue: 1]
 
-  alias Fastrepl.Retrieval.Chunker
   alias FastreplWeb.Utils.SharedTask
 
   def render(assigns) do
@@ -16,7 +15,7 @@ defmodule FastreplWeb.ThreadLive do
       props={
         %{
           root: if(assigns[:repo], do: @repo.full_name, else: "repo"),
-          chunks: @chunks
+          chunks: if(assigns[:repo], do: @repo.chunks, else: [])
         }
       }
     />
@@ -76,7 +75,6 @@ defmodule FastreplWeb.ThreadLive do
     socket =
       socket
       |> assign(:shared_tasks, [])
-      |> assign(:chunks, [])
 
     cond do
       socket.assigns[:live_action] != :demo and socket.assigns[:current_user] == nil ->
@@ -147,9 +145,7 @@ defmodule FastreplWeb.ThreadLive do
   end
 
   defp update_socket(socket, {:chunks, chunks}) do
-    socket
-    |> assign(:chunks, Chunker.dedupe((socket.assigns[:chunks] || []) ++ chunks))
-    |> assign(:current_chunk, chunks |> Enum.at(0))
+    socket |> assign(:repo, %{socket.assigns.repo | chunks: chunks})
   end
 
   defp update_socket(socket, {:issue, issue}) do
