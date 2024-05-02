@@ -44,7 +44,7 @@ defmodule Fastrepl.Orchestrator do
     sync_with_views(state.thread_id, %{task: {task_id, "Query understanding: running..."}})
 
     Task.start(fn ->
-      {:ok, plans} = QueryPlanner.from_chat(query)
+      {:ok, plans} = QueryPlanner.from_query(query)
       send(state.orchestrator_pid, {:run_plans, plans})
       sync_with_views(state.thread_id, %{task: {task_id, "Query understanding"}})
     end)
@@ -53,12 +53,12 @@ defmodule Fastrepl.Orchestrator do
   end
 
   @impl true
-  def handle_info({:planning, %{issue: issue}}, state) do
+  def handle_info({:planning, %{issue: issue, comments: comments}}, state) do
     task_id = Nanoid.generate()
     sync_with_views(state.thread_id, %{task: {task_id, "Query understanding: running..."}})
 
     Task.start(fn ->
-      {:ok, plans} = QueryPlanner.from_issue(issue)
+      {:ok, plans} = QueryPlanner.from_issue(issue, comments)
       send(state.orchestrator_pid, {:run_plans, plans})
 
       sync_with_views(state.thread_id, %{task: {task_id, "Query understanding"}})
@@ -148,10 +148,11 @@ defmodule Fastrepl.Orchestrator do
   @impl true
   def handle_info(:init_repo, state) do
     repo = state.repo.full_name |> Github.get_repo!()
-    sha = repo |> Github.get_latest_commit()
+    sha = repo |> Github.get_latest_commit!()
 
     issue = Github.get_issue!(repo.full_name, state.issue.number)
-    send(self(), {:planning, %{issue: issue}})
+    comments = Github.list_issue_comments!(repo.full_name, state.issue.number)
+    send(self(), {:planning, %{issue: issue, comments: comments}})
 
     root_path =
       Application.fetch_env!(:fastrepl, :clone_dir)

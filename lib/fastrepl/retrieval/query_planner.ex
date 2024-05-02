@@ -3,9 +3,11 @@ defmodule Fastrepl.Retrieval.QueryPlanner do
   @model_id "gpt-4-turbo-2024-04-09"
 
   use Retry
-  alias GitHub.Issue
 
-  def from_chat(chat) do
+  alias Fastrepl.LLM
+
+  @spec from_query(String.t()) :: {:ok, [{String.t(), map()}]}
+  def from_query(chat) do
     messages = [
       %{
         role: "system",
@@ -26,7 +28,8 @@ defmodule Fastrepl.Retrieval.QueryPlanner do
     request(messages)
   end
 
-  def from_issue(%Issue{} = issue) do
+  @spec from_issue(GitHub.Issue.t(), [GitHub.Issue.Comment.t()]) :: {:ok, [{String.t(), map()}]}
+  def from_issue(issue, comments \\ []) do
     messages = [
       %{
         role: "system",
@@ -44,10 +47,10 @@ defmodule Fastrepl.Retrieval.QueryPlanner do
           """
           This is a github issue to be solved:
 
-          ##{issue.number} #{issue.title}
-          (#{issue.url})
+          #{LLM.render(issue)}
           ---
-          #{issue.body}
+
+          #{comments |> Enum.map(&LLM.render/1) |> Enum.join("\n")}
           """
           |> String.trim()
       }
