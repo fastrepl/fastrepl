@@ -1,10 +1,13 @@
-defmodule Fastrepl.Retrieval.QueryPlanner do
+defmodule Fastrepl.Retrieval.Planner do
   @base_url "https://api.openai.com/v1"
   @model_id "gpt-4-turbo-2024-04-09"
 
   use Retry
 
   alias Fastrepl.LLM
+  alias Fastrepl.Tool.KeywordSearch
+  alias Fastrepl.Tool.SemanticSearch
+  alias Fastrepl.Tool.PathSearch
 
   @spec from_query(String.t()) :: {:ok, [{String.t(), map()}]}
   def from_query(chat) do
@@ -59,63 +62,13 @@ defmodule Fastrepl.Retrieval.QueryPlanner do
     request(messages)
   end
 
-  @path %{
-    type: "function",
-    function: %{
-      name: "search_file_path",
-      description: "search files with path",
-      parameters: %{
-        type: "object",
-        properties: %{
-          query: %{
-            type: "string",
-            description:
-              "Exact filename, path, or partial keyword that might be included in the file path."
-          }
-        },
-        required: ["query"]
-      }
-    }
-  }
-
-  @embedding %{
-    type: "function",
-    function: %{
-      name: "semantic_search",
-      description: "use embedding and cosine similarity to find relevant code snippets",
-      parameters: %{
-        type: "object",
-        properties: %{
-          query: %{
-            type: "string",
-            description: "Description about the code snippets to retrieve."
-          }
-        },
-        required: ["query"]
-      }
-    }
-  }
-
-  @grep %{
-    type: "function",
-    function: %{
-      name: "keyword_search",
-      description: "use grep to find relevant code snippets",
-      parameters: %{
-        type: "object",
-        properties: %{
-          query: %{
-            type: "string",
-            description:
-              "This is not filename or path, but keyword or valid ripgrep regex that might be included in the code snippets."
-          }
-        },
-        required: ["query"]
-      }
-    }
-  }
-
   defp request(messages) do
+    tools = [
+      KeywordSearch.openai_tool_format(),
+      SemanticSearch.openai_tool_format(),
+      PathSearch.openai_tool_format()
+    ]
+
     retry with:
             exponential_backoff()
             |> randomize
@@ -132,7 +85,7 @@ defmodule Fastrepl.Retrieval.QueryPlanner do
           model: @model_id,
           stream: false,
           temperature: 0,
-          tools: [@path, @embedding, @grep],
+          tools: tools,
           tool_choice: "auto",
           messages: messages
         }

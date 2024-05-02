@@ -6,11 +6,13 @@ defmodule Fastrepl.Orchestrator do
   alias Fastrepl.Github
   alias Fastrepl.Repository
 
-  alias Fastrepl.Retrieval.Grep
   alias Fastrepl.Retrieval.Chunker
-  alias Fastrepl.Retrieval.Chunker.Chunk
   alias Fastrepl.Retrieval.Vectordb
-  alias Fastrepl.Retrieval.QueryPlanner
+  alias Fastrepl.Retrieval.Planner
+
+  alias Fastrepl.Tool.KeywordSearch
+  alias Fastrepl.Tool.SemanticSearch
+  alias Fastrepl.Tool.PathSearch
 
   def start(%{thread_id: thread_id, repo_full_name: _, issue_number: _} = args) do
     GenServer.start(__MODULE__, args, name: via_registry(thread_id))
@@ -109,7 +111,7 @@ defmodule Fastrepl.Orchestrator do
     sync_with_views(state.thread_id, %{task: {task_id, "Query understanding: running..."}})
 
     Task.start(fn ->
-      {:ok, plans} = QueryPlanner.from_query(query)
+      {:ok, plans} = Planner.from_query(query)
       send(state.orchestrator_pid, {:run_plans, plans})
       sync_with_views(state.thread_id, %{task: {task_id, "Query understanding"}})
     end)
@@ -123,7 +125,7 @@ defmodule Fastrepl.Orchestrator do
     sync_with_views(state.thread_id, %{task: {task_id, "Issue understanding: running..."}})
 
     Task.start(fn ->
-      {:ok, plans} = QueryPlanner.from_issue(issue, comments)
+      {:ok, plans} = Planner.from_issue(issue, comments)
       send(state.orchestrator_pid, {:run_plans, plans})
       sync_with_views(state.thread_id, %{task: {task_id, "Issue understanding"}})
     end)
@@ -136,7 +138,7 @@ defmodule Fastrepl.Orchestrator do
     plans
     |> Enum.each(fn plan ->
       case plan do
-        {"semantic_search", %{"query" => query}} ->
+        {"semantic_search", %{"query" => query} = args} ->
           if state.repo.vectordb_pid do
             task_id = Nanoid.generate()
 
@@ -146,18 +148,17 @@ defmodule Fastrepl.Orchestrator do
 
             Task.start(fn ->
               chunks =
-                state.repo.vectordb_pid
-                |> Vectordb.query(query, top_k: 5, threshold: 0.3)
-                |> Enum.map(
-                  &%Chunk{&1 | file_path: Path.relative_to(&1.file_path, state.repo.root_path)}
-                )
+                SemanticSearch.run(args, %{
+                  vectordb_pid: state.repo.vectordb_pid,
+                  root_path: state.repo.root_path
+                })
 
               send(state.orchestrator_pid, {:chunks, chunks})
               sync_with_views(state.thread_id, %{task: {task_id, "Semantic search - '#{query}'"}})
             end)
           end
 
-        {"keyword_search", %{"query" => query}} ->
+        {"keyword_search", %{"query" => query} = args} ->
           task_id = Nanoid.generate()
 
           sync_with_views(state.thread_id, %{
@@ -165,23 +166,12 @@ defmodule Fastrepl.Orchestrator do
           })
 
           Task.start(fn ->
-            chunks =
-              state.repo.root_path
-              |> FS.list_informative_files()
-              |> Enum.map(fn path ->
-                lines = path |> Grep.grep_file(query)
-
-                if Enum.empty?(lines),
-                  do: nil,
-                  else: Chunk.from(state.repo.root_path, path, lines)
-              end)
-              |> Enum.reject(&is_nil/1)
-
+            chunks = KeywordSearch.run(args, %{root_path: state.repo.root_path})
             send(state.orchestrator_pid, {:chunks, chunks})
             sync_with_views(state.thread_id, %{task: {task_id, "Keyword search - '#{query}'"}})
           end)
 
-        {"search_file_path", %{"query" => query}} ->
+        {"path_search", %{"query" => query} = args} ->
           task_id = Nanoid.generate()
 
           sync_with_views(state.thread_id, %{
@@ -189,11 +179,7 @@ defmodule Fastrepl.Orchestrator do
           })
 
           Task.start(fn ->
-            chunks =
-              state.repo.root_path
-              |> FS.search_paths(query)
-              |> Enum.map(&Chunk.from(state.repo.root_path, &1))
-
+            chunks = PathSearch.run(args, %{root_path: state.repo.root_path})
             send(state.orchestrator_pid, {:chunks, chunks})
             sync_with_views(state.thread_id, %{task: {task_id, "Path search - '#{query}'"}})
           end)
