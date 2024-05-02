@@ -1,4 +1,6 @@
 defmodule Fastrepl.Repository do
+  alias Fastrepl.Retrieval.Chunker.Chunk
+
   defstruct full_name: "",
             description: "",
             sha: "",
@@ -7,6 +9,17 @@ defmodule Fastrepl.Repository do
             vectordb_pid: nil,
             indexing_progress: nil,
             indexing_total: nil
+
+  @type t :: %__MODULE__{
+          full_name: String.t(),
+          description: String.t(),
+          sha: String.t(),
+          root_path: String.t(),
+          chunks: [Chunk.t()],
+          vectordb_pid: pid() | nil,
+          indexing_progress: integer() | nil,
+          indexing_total: integer() | nil
+        }
 
   alias Fastrepl.Retrieval.Vectordb
 
@@ -19,4 +32,8 @@ defmodule Fastrepl.Repository do
       File.rm_rf(repo.root_path)
     end
   end
+end
+
+defmodule Fastrepl.Repository.Mutation do
+  @callback apply(Fastrepl.Repository.t()) :: Fastrepl.Repository.t()
 end
