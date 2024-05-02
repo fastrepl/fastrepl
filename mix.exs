@@ -39,7 +39,8 @@ defmodule Fastrepl.MixProject do
       {:phoenix_html, "~> 4.0"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:phoenix_live_view, "~> 0.20.2"},
-      {:floki, ">= 0.30.0", only: :test},
+      # {:floki, ">= 0.30.0", only: :test},
+      {:floki, "~> 0.24"},
       # {:esbuild, "~> 0.8", runtime: Mix.env() == :dev},
       {:tailwind, "~> 0.2", runtime: Mix.env() == :dev},
       {:heroicons,
@@ -75,7 +76,8 @@ defmodule Fastrepl.MixProject do
       {:posthog, "~> 0.1"},
       {:langchain,
        git: "https://github.com/brainlid/langchain.git",
-       rev: "a76854aae40eb601112a0e425dd8e782addb0a29"}
+       rev: "a76854aae40eb601112a0e425dd8e782addb0a29"},
+      {:readability, "~> 0.12"}
     ]
   end
 
