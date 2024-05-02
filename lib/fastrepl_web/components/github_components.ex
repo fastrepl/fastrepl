@@ -99,10 +99,7 @@ defmodule FastreplWeb.GithubComponents do
 
   def issue(assigns) do
     ~H"""
-    <div
-      phx-click="issue:select"
-      class="flex flex-col gap-1 p-2 border border-black rounded-xl bg-gray-100 text-sm"
-    >
+    <div class="flex flex-col gap-1 p-2 border border-black rounded-xl bg-gray-100 text-sm">
       <.link
         href={"https://github.com/#{@repo_full_name}/issues/#{@number}"}
         class="text-sm font-semibold hover:underline w-fit px-1"
