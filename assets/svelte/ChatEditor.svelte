@@ -25,7 +25,12 @@
       form.dispatchEvent(
         new Event("submit", { bubbles: true, cancelable: true }),
       );
+      handleSubmit();
     }
+  };
+
+  const handleSubmit = () => {
+    $editor.commands.clearContent();
   };
 
   onMount(() => {
@@ -76,6 +81,7 @@
   <EditorContent editor={$editor} />
   <button
     type="submit"
+    on:click={handleSubmit}
     class="w-7 h-7 rounded-xl bg-blue-500 hover:bg-blue-600 bottom-[72px] right-2.5 absolute ml-2 text-white text-md"
   >
     ↑

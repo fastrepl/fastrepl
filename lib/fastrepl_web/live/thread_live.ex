@@ -107,7 +107,7 @@ defmodule FastreplWeb.ThreadLive do
           {:submit, instruction}
         )
 
-        {:noreply, socket |> push_event("tiptap:submit", %{})}
+        {:noreply, socket}
 
       true ->
         {:noreply, socket}
