@@ -1,11 +1,11 @@
 defmodule Fastrepl.Tokenizer do
   @tokenizer_ids %{
-    llama: "NousResearch/Llama-2-7b-hf"
+    llama_3: "NousResearch/Meta-Llama-3-8B"
   }
 
-  def load(:llama), do: load_tokenizer(@tokenizer_ids.llama)
+  def load!(:llama_3), do: load_tokenizer!(@tokenizer_ids.llama_3)
 
-  defp load_tokenizer(id) do
+  defp load_tokenizer!(id) do
     {:ok, tokenizer} = Bumblebee.load_tokenizer({:hf, id, cache_dir: "./.cache"})
     tokenizer
   end
@@ -24,6 +24,7 @@ defmodule Fastrepl.Tokenizer do
     tokenizer
     |> Bumblebee.Tokenizer.decode(truncated_ids)
     |> get_in([Access.at(0)])
+    |> String.trim()
   end
 
   def count_tokens(text, tokenizer) do

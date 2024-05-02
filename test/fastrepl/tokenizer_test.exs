@@ -4,7 +4,7 @@ defmodule Fastrepl.TokenizerTest do
 
   describe "count_tokens/2" do
     test "llama" do
-      tok = Tokenizer.load(:llama)
+      tok = Tokenizer.load!(:llama_3)
 
       num = "Hello world" |> Tokenizer.count_tokens(tok)
       assert num == 3
@@ -13,7 +13,7 @@ defmodule Fastrepl.TokenizerTest do
 
   describe "truncate/3" do
     test "positive" do
-      tok = Tokenizer.load(:llama)
+      tok = Tokenizer.load!(:llama_3)
 
       result =
         "I apologize for the confusion. Let's take a closer look at the updated truncate function and fix the issue."
@@ -26,7 +26,7 @@ defmodule Fastrepl.TokenizerTest do
     end
 
     test "negative" do
-      tok = Tokenizer.load(:llama)
+      tok = Tokenizer.load!(:llama_3)
 
       num = "Hello world" |> Tokenizer.truncate(tok, -1)
       assert num == ""
