@@ -20,7 +20,7 @@ defmodule FastreplWeb.GithubComponents do
     >
       <.link
         href={"https://github.com/#{@full_name}"}
-        class="text-md font-semibold hover:underline w-fit"
+        class="text-sm font-semibold hover:underline w-fit"
       >
         <%= @full_name %>
       </.link>
@@ -36,10 +36,10 @@ defmodule FastreplWeb.GithubComponents do
 
   def repo(assigns) do
     ~H"""
-    <div class="flex flex-col items-center gap-2 p-2 border border-black rounded-xl bg-gray-100 hover:bg-gray-200 relative">
+    <div class="flex flex-col items-center gap-2 p-2 border border-black rounded-xl bg-gray-100 relative">
       <.link
         href={"https://github.com/#{@full_name}"}
-        class="text-md font-semibold hover:underline w-fit"
+        class="text-sm font-semibold hover:underline w-fit"
       >
         <%= @full_name %>
       </.link>
@@ -76,17 +76,17 @@ defmodule FastreplWeb.GithubComponents do
       class={
         clsx([
           @selected && "bg-gray-300",
-          "flex flex-col gap-2 p-2 border border-black rounded-xl bg-gray-100 hover:bg-gray-200 text-sm"
+          "flex flex-row gap-2 p-2 border border-black rounded-xl bg-gray-100 hover:bg-gray-200 text-sm"
         ])
       }
     >
       <.link
         href={"https://github.com/#{@repo_full_name}/issues/#{@number}"}
-        class="text-md font-semibold hover:underline flex flex-col w-fit"
+        class="text-sm font-semibold hover:underline w-fit"
       >
         #<%= @number %>
       </.link>
-      <span class="max-w-48 truncate">
+      <span class="text-sm max-w-48 truncate">
         <%= @title %>
       </span>
     </div>
@@ -101,15 +101,15 @@ defmodule FastreplWeb.GithubComponents do
     ~H"""
     <div
       phx-click="issue:select"
-      class="flex flex-col gap-1 p-2 border border-black rounded-xl bg-gray-100 hover:bg-gray-200 text-sm"
+      class="flex flex-col gap-1 p-2 border border-black rounded-xl bg-gray-100 text-sm"
     >
       <.link
         href={"https://github.com/#{@repo_full_name}/issues/#{@number}"}
-        class="text-md font-semibold hover:underline flex flex-col w-fit px-1"
+        class="text-sm font-semibold hover:underline w-fit px-1"
       >
         #<%= @number %>
       </.link>
-      <span class="truncate max-w-72">
+      <span class="text-sm truncate max-w-72">
         <%= @title %>
       </span>
     </div>
