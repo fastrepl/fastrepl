@@ -29,7 +29,8 @@ defmodule Fastrepl.Orchestrator do
       |> Map.put(:repo, %Repository{full_name: args.repo_full_name})
       |> Map.put(:issue, %{title: "", number: args.issue_number})
 
-    send(state.orchestrator_pid, :init)
+    send(state.orchestrator_pid, :fetch_issue)
+    send(state.orchestrator_pid, :clone_repo)
 
     {:ok, state}
   end
@@ -41,13 +42,22 @@ defmodule Fastrepl.Orchestrator do
   end
 
   @impl true
-  def handle_info(:init, state) do
+  def handle_info(:fetch_issue, state) do
+    issue = Github.get_issue!(state.repo.full_name, state.issue.number)
+    comments = Github.list_issue_comments!(state.repo.full_name, state.issue.number)
+
+    state = state |> Map.put(:issue, %{state.issue | title: issue.title})
+
+    sync_with_views(state.thread_id, %{issue: state.issue})
+    send(state.orchestrator_pid, {:planning, %{issue: issue, comments: comments}})
+
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_info(:clone_repo, state) do
     repo = state.repo.full_name |> Github.get_repo!()
     sha = repo |> Github.get_latest_commit!()
-
-    issue = Github.get_issue!(repo.full_name, state.issue.number)
-    comments = Github.list_issue_comments!(repo.full_name, state.issue.number)
-    send(state.orchestrator_pid, {:planning, %{issue: issue, comments: comments}})
 
     root_path =
       Application.fetch_env!(:fastrepl, :clone_dir)
@@ -57,10 +67,10 @@ defmodule Fastrepl.Orchestrator do
       Task.start(fn ->
         url = Github.URL.clone_without_token(state.repo.full_name)
         :ok = FS.git_clone(url, root_path)
-        send(state.orchestrator_pid, {:init_vectordb, root_path})
+        send(state.orchestrator_pid, {:post_clone_repo, root_path})
       end)
     else
-      send(state.orchestrator_pid, {:init_vectordb, root_path})
+      send(state.orchestrator_pid, {:post_clone_repo, root_path})
     end
 
     state =
@@ -71,22 +81,26 @@ defmodule Fastrepl.Orchestrator do
           sha: sha,
           description: repo.description
       })
-      |> Map.put(:issue, %{state.issue | title: issue.title})
 
-    sync_with_views(state.thread_id, %{repo: state.repo, issue: state.issue})
+    sync_with_views(state.thread_id, %{repo: state.repo})
     {:noreply, state}
   end
 
   @impl true
-  def handle_info({:init_vectordb, repo_root}, state) do
+  def handle_info({:post_clone_repo, root_path}, state) do
     if state.repo.vectordb_pid do
       Vectordb.stop(state.repo.vectordb_pid)
     end
 
     {:ok, vectordb_pid} = Vectordb.start(state.thread_id)
 
+    paths =
+      root_path
+      |> FS.list_informative_files()
+      |> Enum.map(&Path.relative_to(&1, root_path))
+
     chunks =
-      repo_root
+      root_path
       |> FS.list_informative_files()
       |> Enum.flat_map(&Chunker.chunk_file/1)
 
@@ -102,7 +116,17 @@ defmodule Fastrepl.Orchestrator do
       sync_with_views(state.thread_id, %{indexing: {:done, length(chunks)}})
     end)
 
-    {:noreply, state |> Map.put(:repo, %{state.repo | vectordb_pid: vectordb_pid})}
+    state =
+      state
+      |> Map.put(:repo, %{
+        state.repo
+        | root_path: root_path,
+          paths: paths,
+          vectordb_pid: vectordb_pid
+      })
+
+    sync_with_views(state.thread_id, %{repo: state.repo})
+    {:noreply, state}
   end
 
   @impl true

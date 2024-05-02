@@ -4,6 +4,8 @@
   import TreeView from "$components/TreeView.svelte";
   import CodeSnippet from "$components/CodeSnippet.svelte";
   import Minimap from "$components/Minimap.svelte";
+  import SearchEditor from "$components//SearchEditor.svelte";
+
   import { addRoot, buildTree } from "$lib/utils/tree";
 
   type Chunk = {
@@ -14,6 +16,11 @@
 
   export let root = "repo";
   export let chunks: Chunk[] = [];
+  export let paths: string[] = [];
+
+  export let phx_submit = "submit";
+  export let input_name = "text";
+
   let scrollableElement: HTMLElement;
 
   $: tree = addRoot(root, buildTree(chunks.map((chunk) => chunk.file_path)));
@@ -41,10 +48,12 @@
     <div
       class={clsx([
         "absolute -left-[300px] -top-30",
+        "flex flex-col gap-2",
         "max-h-[calc(100vh-300px)] overflow-y-hidden hover:overflow-y-auto",
       ])}
     >
       <TreeView items={tree} {handleClickFile} {current_file_path} />
+      <SearchEditor {paths} {phx_submit} {input_name} />
     </div>
     <span class="text-xs rounded-t-md bg-slate-200 p-0.5 w-full">
       {current_file_path}

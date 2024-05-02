@@ -14,8 +14,11 @@ defmodule FastreplWeb.ThreadLive do
       ssr={false}
       props={
         %{
+          phx_submit: "searchEditor",
+          input_name: "text",
           root: if(assigns[:repo], do: @repo.full_name, else: "repo"),
-          chunks: if(assigns[:repo], do: @repo.chunks, else: [])
+          chunks: if(assigns[:repo], do: @repo.chunks, else: []),
+          paths: if(assigns[:repo], do: @repo.paths, else: [])
         }
       }
     />
@@ -29,8 +32,8 @@ defmodule FastreplWeb.ThreadLive do
           ssr={false}
           props={
             %{
-              input_name: "instruction",
-              phx_submit: "submit",
+              phx_submit: "chatEditor",
+              input_name: "text",
               placeholder: "Instruction here: "
             }
           }
@@ -94,17 +97,15 @@ defmodule FastreplWeb.ThreadLive do
     {:noreply, socket}
   end
 
-  def handle_event("submit", params, socket) do
-    instruction = params["instruction"]
-
+  def handle_event("chatEditor", %{"text" => text}, socket) do
     cond do
       not connected?(socket) ->
         {:noreply, socket |> put_flash(:error, "Cannot connect to the server")}
 
-      instruction not in ["", nil] ->
+      text not in ["", nil] ->
         GenServer.cast(
           socket.assigns.orchestrator_pid,
-          {:submit, instruction}
+          {:submit, text}
         )
 
         {:noreply, socket}
@@ -114,8 +115,8 @@ defmodule FastreplWeb.ThreadLive do
     end
   end
 
-  def handle_event("action:run", %{"action" => action}, socket) do
-    IO.inspect(action)
+  def handle_event("searchEditor", %{"text" => text}, socket) do
+    IO.inspect(text)
     {:noreply, socket}
   end
 
