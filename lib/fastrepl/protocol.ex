@@ -7,24 +7,54 @@ defimpl Fastrepl.LLM, for: String do
 end
 
 defimpl Fastrepl.LLM, for: GitHub.Issue do
-  def render(%{title: title, number: number, body: body, user: %{name: name}}) do
-    """
+  alias Fastrepl.Reader
+
+  def render(%{
+        title: title,
+        number: number,
+        body: body,
+        url: issue_url,
+        user: %{name: name}
+      }) do
+    text = """
     ##{number}: #{title} (#{name})
     ---
 
     #{body}
     """
+
+    body
+    |> Reader.urls_from_text()
+    |> Enum.reject(&String.contains?(&1, issue_url))
+    |> Enum.reduce(text, fn url, acc ->
+      content = Reader.text_from_url(url)
+      String.replace(acc, url, "```#{url}\n#{content}\n```")
+    end)
     |> String.trim()
   end
 end
 
 defimpl Fastrepl.LLM, for: GitHub.Issue.Comment do
-  def render(%{body: body, user: %{name: name}}) do
-    """
+  alias Fastrepl.Reader
+
+  def render(%{
+        body: body,
+        issue_url: issue_url,
+        user: %{name: name}
+      }) do
+    text = """
     #{name}:
 
     #{body}
     """
+
+    body
+    |> Reader.urls_from_text()
+    |> Enum.reject(&String.contains?(&1, issue_url))
+    |> Enum.reduce(text, fn url, acc ->
+      content = Reader.text_from_url(url)
+      String.replace(acc, url, "```#{url}\n#{content}\n```")
+    end)
     |> String.trim()
   end
 end
