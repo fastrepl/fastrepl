@@ -11,6 +11,7 @@ defmodule Fastrepl.Writer do
     func =
       Function.new!(%{
         name: "save",
+        function: fn _args, _context -> :noop end,
         parameters_schema: %{
           type: "object",
           properties: %{
@@ -39,12 +40,13 @@ defmodule Fastrepl.Writer do
 
     {:ok, _, %Message{} = message} =
       LLMChain.new!(%{llm: ChatModel.new!(%{model: @model_id, stream: false})})
-      |> LLMChain.add_functions(func)
+      |> LLMChain.add_tools(func)
       |> LLMChain.add_message(Message.new_user!(instruction))
       |> LLMChain.run()
 
-    if message.arguments do
-      message.arguments["description"]
+    if length(message.tool_calls) > 0 do
+      message
+      |> get_in([Access.key!(:tool_calls), Access.at(0), Access.key!(:arguments), "description"])
     else
       info |> to_string() |> String.trim() |> String.slice(0..20)
     end
