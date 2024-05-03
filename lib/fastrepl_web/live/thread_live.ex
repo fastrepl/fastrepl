@@ -173,7 +173,7 @@ defmodule FastreplWeb.ThreadLive do
         socket |> assign(:indexing_progress, 0) |> assign(:indexing_total, value)
 
       :progress ->
-        socket |> assign(:indexing_progress, socket.assigns.indexing_progress + value)
+        socket |> assign(:indexing_progress, (socket.assigns[:indexing_progress] || 0) + value)
 
       :done ->
         socket |> assign(:indexing_progress, value)
