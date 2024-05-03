@@ -1,6 +1,6 @@
 use crate::ds;
 
-const NAIVE_CHUNKING_LINE_COUNT: usize = 50;
+const NAIVE_CHUNKING_LINE_COUNT: usize = 200;
 const NAIVE_CHUNKING_OVERLAP: usize = 10;
 
 pub fn naive<'a>(path: &'a str, code: &'a str) -> Vec<ds::Chunk<'a>> {
