@@ -37,16 +37,16 @@ const suggestion = (
   trigger: string,
   names: string[],
 ): Omit<SuggestionOptions, "editor"> => {
-  const fuse = new Fuse(names);
+  const fuse = new Fuse(names, { threshold: 0.4 });
 
   return {
     char: trigger,
     items: ({ query }) => {
       if (!query) {
-        return names.slice(0, 20);
+        return [];
       }
 
-      const results = fuse.search(query);
+      const results = fuse.search(query, { limit: 20 });
       return results.map(({ item }) => item);
     },
     render: () => {
