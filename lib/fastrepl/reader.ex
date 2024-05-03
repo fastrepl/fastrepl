@@ -1,7 +1,7 @@
 defmodule Fastrepl.Reader do
-  alias Readability
+  use Memoize
 
-  def text_from_url(url, timeout \\ 1_000) do
+  defmemo text_from_url(url, timeout \\ 2_000) do
     case Req.get(url: url, receive_timeout: timeout) do
       {:ok, %{body: body}} -> text_from_html(body)
       _ -> ""

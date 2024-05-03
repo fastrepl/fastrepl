@@ -79,7 +79,8 @@ defmodule Fastrepl.MixProject do
       {:langchain,
        git: "https://github.com/brainlid/langchain.git",
        rev: "8befbd25d3b1c065a7c4d8ec402c04601833052f"},
-      {:readability, "~> 0.12"}
+      {:readability, "~> 0.12"},
+      {:memoize, "~> 1.4"}
     ]
   end
 
