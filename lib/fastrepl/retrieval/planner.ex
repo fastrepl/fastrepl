@@ -12,7 +12,6 @@ defmodule Fastrepl.Retrieval.Planner do
   alias Fastrepl.Tool.SemanticSearch
   alias Fastrepl.Tool.PathSearch
 
-  @spec from_query(String.t()) :: {:ok, [{String.t(), map()}]}
   def from_query(chat) do
     messages = [
       Message.new_system!(
@@ -35,19 +34,21 @@ defmodule Fastrepl.Retrieval.Planner do
       Message.new_system!(
         """
         You are a helpful code retrieval planner.
-        When user provides a github issue, use tools to retrieve code snippets that are useful to understand or solve the issue.
-        Use as many tools as needed.
         """
         |> String.trim()
       ),
       Message.new_user!(
         """
-        This is a github issue to be solved:
+        [Github issue]
 
         #{LLM.render(issue)}
         ---
 
         #{comments |> Enum.map(&LLM.render/1) |> Enum.join("\n")}
+        ---
+
+        Based on the issue above, use tools to retrieve code snippets that are useful to understand or solve the issue.
+        Use as many tools as needed.
         """
         |> String.trim()
       )
