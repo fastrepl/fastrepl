@@ -57,16 +57,31 @@ defmodule Fastrepl.ChunckerTest do
     end
   end
 
+  describe "contains?/2" do
+    test "simple" do
+      chunk = %Chunk{file_path: "test.js", spans: [{3, 5}]}
+
+      refute Chunk.contains?(chunk, 2)
+
+      assert Chunk.contains?(chunk, 3)
+      assert Chunk.contains?(chunk, 4)
+      assert Chunk.contains?(chunk, 5)
+
+      refute Chunk.contains?(chunk, 6)
+    end
+  end
+
   describe "chunk_code/2" do
     test "it works 1" do
-      chunks = Chunker.chunk_code("test.unknown", "const a = 1;\n" |> String.duplicate(100))
+      chunks = Chunker.chunk_code("test.unknown", "const a = 1;\n" |> String.duplicate(500))
       assert chunks |> get_in([Access.at(0), Access.key!(:file_path)]) == "test.unknown"
+
       assert length(chunks) == 3
-      assert chunks |> get_in([Access.at(0), Access.key!(:spans)]) == [{1, 50}]
+      assert(chunks |> get_in([Access.at(0), Access.key!(:spans)]) == [{1, 200}])
     end
 
     test "it works 2" do
-      chunks = Chunker.chunk_code("test.js", "const a = 1;\n" |> String.duplicate(100))
+      chunks = Chunker.chunk_code("test.js", "const a = 1;\n" |> String.duplicate(500))
       assert chunks |> get_in([Access.at(0), Access.key!(:file_path)]) == "test.js"
       assert length(chunks) == 3
     end

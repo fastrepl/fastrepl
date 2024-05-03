@@ -15,6 +15,14 @@ defmodule Fastrepl.Retrieval.Chunker.Chunk do
     }
   end
 
+  def contains?(chunk, lines) when is_list(lines) do
+    Enum.any?(lines, &contains?(chunk, &1))
+  end
+
+  def contains?(chunk, line) when is_integer(line) do
+    Enum.any?(chunk.spans, fn {start, end_} -> start <= line and line <= end_ end)
+  end
+
   def merge(
         %__MODULE__{file_path: file_path1} = chunk1,
         %__MODULE__{file_path: file_path2} = chunk2
