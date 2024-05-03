@@ -23,7 +23,7 @@ defmodule FastreplWeb.ThreadComponents do
         </.link>
 
         <.link
-          navigate={"/demo/#{@id}"}
+          navigate={"/demo/thread/#{@id}"}
           class="hover:font-semibold overflow-hidden overflow-ellipsis whitespace-nowrap max-w-[330px]"
         >
           <%= @description %>

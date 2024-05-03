@@ -36,6 +36,11 @@ defmodule Fastrepl.Orchestrator do
   end
 
   @impl true
+  def handle_call(:state, _from, state) do
+    {:reply, %{repo: state.repo, issue: state.issue}, state}
+  end
+
+  @impl true
   def handle_cast({:submit, instruction}, state) do
     send(self(), {:planning, %{query: instruction}})
     {:noreply, state}
@@ -216,8 +221,10 @@ defmodule Fastrepl.Orchestrator do
   @impl true
   def handle_info({:chunks, chunks}, state) do
     chunks = Chunker.dedupe(state.repo.chunks ++ chunks)
-    sync_with_views(state.thread_id, %{chunks: chunks})
-    {:noreply, state |> Map.put(:repo, %{state.repo | chunks: chunks})}
+    repo = state.repo |> Map.put(:chunks, chunks)
+
+    sync_with_views(state.thread_id, %{repo: repo})
+    {:noreply, state |> Map.put(:repo, repo)}
   end
 
   @impl true

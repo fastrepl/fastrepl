@@ -79,6 +79,9 @@ defmodule FastreplWeb.ThreadLive do
               send(self(), :demo)
             end
 
+            state = GenServer.call(pid, :state)
+            send(self(), {:sync, state})
+
             {:ok, socket |> assign(thread_id: thread_id, orchestrator_pid: pid)}
 
           nil ->
@@ -93,7 +96,10 @@ defmodule FastreplWeb.ThreadLive do
   end
 
   def handle_info(:demo, socket) do
-    Process.link(socket.assigns.orchestrator_pid)
+    if Application.get_env(:fastrepl, :env) == :prod do
+      Process.link(socket.assigns.orchestrator_pid)
+    end
+
     {:noreply, socket}
   end
 
@@ -132,10 +138,6 @@ defmodule FastreplWeb.ThreadLive do
   defp update_socket(socket, state) when is_map(state) do
     state
     |> Enum.reduce(socket, fn {k, v}, acc -> update_socket(acc, {k, v}) end)
-  end
-
-  defp update_socket(socket, {:chunks, chunks}) do
-    socket |> assign(:repo, %{socket.assigns.repo | chunks: chunks})
   end
 
   defp update_socket(socket, {:issue, issue}) do
