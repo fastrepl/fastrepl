@@ -1,8 +1,11 @@
 defmodule Fastrepl.Retrieval.Planner do
-  @base_url "https://api.openai.com/v1"
   @model_id "gpt-4-turbo-2024-04-09"
 
   use Retry
+
+  alias LangChain.Chains.LLMChain
+  alias LangChain.ChatModels.ChatOpenAI, as: ChatModel
+  alias LangChain.Message
 
   alias Fastrepl.LLM
   alias Fastrepl.Tool.KeywordSearch
@@ -12,20 +15,15 @@ defmodule Fastrepl.Retrieval.Planner do
   @spec from_query(String.t()) :: {:ok, [{String.t(), map()}]}
   def from_query(chat) do
     messages = [
-      %{
-        role: "system",
-        content:
-          """
-          You are a helpful code retrieval planner.
-          Based on the user's query and context, use tools to retrieve relevant code snippets.
-          Use as many tools as needed.
-          """
-          |> String.trim()
-      },
-      %{
-        role: "user",
-        content: chat |> String.trim()
-      }
+      Message.new_system!(
+        """
+        You are a helpful code retrieval planner.
+        Based on the user's query and context, use tools to retrieve relevant code snippets.
+        Use as many tools as needed.
+        """
+        |> String.trim()
+      ),
+      Message.new_user!(chat |> String.trim())
     ]
 
     request(messages)
@@ -34,29 +32,25 @@ defmodule Fastrepl.Retrieval.Planner do
   @spec from_issue(GitHub.Issue.t(), [GitHub.Issue.Comment.t()]) :: {:ok, [{String.t(), map()}]}
   def from_issue(issue, comments \\ []) do
     messages = [
-      %{
-        role: "system",
-        content:
-          """
-          You are a helpful code retrieval planner.
-          When user provides a github issue, use tools to retrieve code snippets that are useful to understand or solve the issue.
-          Use as many tools as needed.
-          """
-          |> String.trim()
-      },
-      %{
-        role: "user",
-        content:
-          """
-          This is a github issue to be solved:
+      Message.new_system!(
+        """
+        You are a helpful code retrieval planner.
+        When user provides a github issue, use tools to retrieve code snippets that are useful to understand or solve the issue.
+        Use as many tools as needed.
+        """
+        |> String.trim()
+      ),
+      Message.new_user!(
+        """
+        This is a github issue to be solved:
 
-          #{LLM.render(issue)}
-          ---
+        #{LLM.render(issue)}
+        ---
 
-          #{comments |> Enum.map(&LLM.render/1) |> Enum.join("\n")}
-          """
-          |> String.trim()
-      }
+        #{comments |> Enum.map(&LLM.render/1) |> Enum.join("\n")}
+        """
+        |> String.trim()
+      )
     ]
 
     request(messages)
@@ -64,9 +58,9 @@ defmodule Fastrepl.Retrieval.Planner do
 
   defp request(messages) do
     tools = [
-      KeywordSearch.openai_tool_format(),
-      SemanticSearch.openai_tool_format(),
-      PathSearch.openai_tool_format()
+      KeywordSearch.as_function(),
+      SemanticSearch.as_function(),
+      PathSearch.as_function()
     ]
 
     retry with:
@@ -74,31 +68,15 @@ defmodule Fastrepl.Retrieval.Planner do
             |> randomize
             |> cap(1_000)
             |> expiry(4_000) do
-      Req.post(
-        base_url: @base_url,
-        url: "/chat/completions",
-        headers: [
-          {"Authorization", "Bearer #{Application.fetch_env!(:langchain, :openai_key)}"},
-          {"Content-Type", "application/json"}
-        ],
-        json: %{
-          model: @model_id,
-          stream: false,
-          temperature: 0,
-          tools: tools,
-          tool_choice: "auto",
-          messages: messages
-        }
-      )
+      LLMChain.new!(%{llm: ChatModel.new!(%{model: @model_id, stream: false, temperature: 0})})
+      |> LLMChain.add_tools(tools)
+      |> LLMChain.add_messages(messages)
+      |> LLMChain.run()
     after
-      {:ok, res} ->
+      {:ok, _, %Message{} = message} ->
         tool_calls =
-          res.body
-          |> get_in(["choices", Access.at(0), "message", "tool_calls"]) || []
-
-        tool_calls =
-          tool_calls
-          |> Enum.map(fn %{"function" => f} -> {f["name"], Jason.decode!(f["arguments"])} end)
+          message.tool_calls
+          |> Enum.map(fn %{name: name, arguments: arguments} -> {name, arguments} end)
 
         {:ok, tool_calls}
     else

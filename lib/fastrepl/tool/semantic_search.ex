@@ -9,23 +9,20 @@ defmodule Fastrepl.Tool.SemanticSearch do
     |> Enum.map(&%Chunk{&1 | file_path: Path.relative_to(&1.file_path, root_path)})
   end
 
-  def openai_tool_format() do
-    %{
-      type: "function",
-      function: %{
-        name: "semantic_search",
-        description: "use embedding and cosine similarity to find relevant code snippets",
-        parameters: %{
-          type: "object",
-          properties: %{
-            query: %{
-              type: "string",
-              description: "Description about the code snippets to retrieve."
-            }
-          },
-          required: ["query"]
-        }
+  def as_function() do
+    LangChain.Function.new!(%{
+      name: "semantic_search",
+      function: fn _args, _context -> :noop end,
+      parameters_schema: %{
+        type: "object",
+        properties: %{
+          query: %{
+            type: "string",
+            description: "Description about the code snippets to retrieve."
+          }
+        },
+        required: ["query"]
       }
-    }
+    })
   end
 end
