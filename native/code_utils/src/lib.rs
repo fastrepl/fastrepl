@@ -1,5 +1,6 @@
 mod chunk;
 mod ds;
+mod git;
 mod query;
 
 #[cfg(test)]
