@@ -29,7 +29,7 @@ defmodule Fastrepl.Retrieval.Embedding.OpenAI do
         {:ok, embedding}
 
       :context_length_exceeded ->
-        tok = Tokenizer.load!(:llama_3)
+        tok = Tokenizer.load!(:gpt_3_5)
 
         texts
         |> Enum.map(&Tokenizer.truncate(&1, tok, @max_input_tokens - 200))
