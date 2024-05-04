@@ -26,6 +26,30 @@
   let scrollableElement: HTMLElement;
   let contextMenuInstance: TippyInstance | null = null;
 
+  $: tree = addRoot(root, buildTree(chunks.map((chunk) => chunk.file_path)));
+  $: current_file_path = chunks.length > 0 ? chunks[0].file_path : null;
+  $: current_chunk = chunks.length > 0 ? chunks[0] : null;
+  $: {
+    if (scrollableElement && !contextMenuInstance) {
+      contextMenuInstance = tippy(scrollableElement, {
+        placement: "auto",
+        onCreate: (instance) => {
+          const target = instance.popper.querySelector(".tippy-content");
+          new SelectableList({
+            target,
+            props: {
+              items: Object.keys(contextMenuCommands),
+              command: handleSelectCommand,
+            },
+          });
+        },
+        trigger: "manual",
+        interactive: true,
+        appendTo: () => document.body,
+      });
+    }
+  }
+
   const contextMenuCommands = {
     Comment: () => {
       live.pushEvent("comment", {
@@ -43,32 +67,6 @@
     }
     contextMenuInstance.hide();
   };
-
-  onMount(() => {
-    contextMenuInstance = tippy(scrollableElement, {
-      placement: "auto",
-      onCreate: (instance) => {
-        const target = instance.popper.querySelector(".tippy-content");
-        new SelectableList({
-          target,
-          props: {
-            items: Object.keys(contextMenuCommands),
-            command: handleSelectCommand,
-          },
-        });
-      },
-      trigger: "manual",
-      interactive: true,
-    });
-
-    return () => {
-      contextMenuInstance.destroy();
-    };
-  });
-
-  $: tree = addRoot(root, buildTree(chunks.map((chunk) => chunk.file_path)));
-  $: current_file_path = chunks.length > 0 ? chunks[0].file_path : null;
-  $: current_chunk = chunks.length > 0 ? chunks[0] : null;
 
   const handleClickFile = (path: string) => {
     document.getSelection().empty();
