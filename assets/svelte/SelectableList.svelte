@@ -53,7 +53,7 @@
 </script>
 
 <div
-  class="bg-gray-100 rounded-lg shadow-[0_0_0_1px_rgba(0,0,0,0.05),0px_10px_20px_rgba(0,0,0,0.1)] text-opacity-80 text-black text-xs overflow-hidden p-1 relative"
+  class="bg-gray-100 rounded-lg shadow-[0_0_0_1px_rgba(0,0,0,0.05),0px_10px_20px_rgba(0,0,0,0.1)] text-opacity-80 text-black text-sm overflow-hidden p-1 relative"
 >
   {#if items.length}
     {#each items as item, index}

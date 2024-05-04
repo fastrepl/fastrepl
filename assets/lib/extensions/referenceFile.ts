@@ -5,7 +5,7 @@ import { type SuggestionOptions } from "@tiptap/suggestion";
 import tippy from "tippy.js";
 import Fuse from "fuse.js";
 
-import MentionList from "$components/MentionList.svelte";
+import SelectableList from "$components/SelectableList.svelte";
 
 export const ReferenceFile = ({
   trigger,
@@ -64,7 +64,10 @@ const suggestion = (
             onCreate: (instance) => {
               const target = instance.popper.querySelector(".tippy-content");
               renderer = new SvelteRenderer(
-                new MentionList({ target, props: { command: props.command } }),
+                new SelectableList({
+                  target,
+                  props: { command: props.command },
+                }),
                 { element: document.createElement("span") },
               );
             },
@@ -91,7 +94,7 @@ const suggestion = (
             return true;
           }
 
-          return (renderer.component as MentionList).onKeyDown(props.event);
+          return (renderer.component as SelectableList).onKeyDown(props.event);
         },
         onExit() {
           popup[0].destroy();
