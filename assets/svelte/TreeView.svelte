@@ -9,7 +9,7 @@
   export let handleClickFile: (path: string) => void;
 </script>
 
-<ul class="text-sm text-gray-600 hover:text-gray-900">
+<ul class="text-xs text-gray-600 hover:text-gray-900">
   {#each items as item, i (item.path)}
     <li
       class={clsx(
@@ -28,7 +28,7 @@
           </summary>
 
           {#if item.children}
-            <div class="pl-4">
+            <div class="pl-2">
               <svelte:self
                 items={item.children}
                 {current_file_path}
