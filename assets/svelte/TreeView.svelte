@@ -2,8 +2,9 @@
   import { slide } from "svelte/transition";
   import { clsx } from "clsx";
 
-  import type { TreeNode } from "$lib/utils/tree";
+  import { type TreeNode } from "$lib/utils/tree";
 
+  export let root: string;
   export let items: TreeNode[] = [];
   export let current_file_path: string;
   export let handleClickFile: (path: string) => void;
@@ -21,7 +22,13 @@
     >
       {#if item.children}
         <details open>
-          <summary class="flex hover:underline p-0.5" tabindex="0">
+          <summary
+            tabindex="0"
+            class={clsx([
+              "flex hover:underline p-0.5",
+              item.name === root && "font-semibold",
+            ])}
+          >
             <slot {item} list={items} id={i}>
               <span class="max-w-[180px] truncate">{item.name}</span>
             </slot>

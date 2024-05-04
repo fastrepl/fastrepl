@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { clsx } from "clsx";
   import { onMount } from "svelte";
   import tippy, { type Instance as TippyInstance } from "tippy.js";
 
@@ -198,9 +199,9 @@
         </span>
       </div>
     {:else}
-      <div class="flex flex-row">
+      <div class="flex flex-row gap-2">
         <div class="flex flex-col relative">
-          <span class="text-xs rounded-t-md bg-slate-200 p-0.5">
+          <span class="text-xs rounded-t-md bg-slate-200 py-0.5 px-2">
             {current_file_path}
           </span>
           <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -221,8 +222,14 @@
           {/if}
         </div>
 
-        <div class="overflow-y-hidden hover:overflow-y-auto px-2 bg-gray-50">
-          <TreeView items={tree} {handleClickFile} {current_file_path} />
+        <div
+          class={clsx([
+            "h-[calc(100vh-170px)] overflow-y-hidden hover:overflow-y-auto",
+            "bg-gray-50 rounded-lg",
+            "border border-gray-200 px-2 py-1",
+          ])}
+        >
+          <TreeView {root} items={tree} {handleClickFile} {current_file_path} />
         </div>
       </div>
     {/if}

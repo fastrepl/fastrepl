@@ -4,7 +4,7 @@ export interface TreeNode {
   children?: TreeNode[];
 }
 
-export const addRoot = (name, tree: TreeNode[]): TreeNode[] => {
+export const addRoot = (name: string, tree: TreeNode[]): TreeNode[] => {
   return [
     {
       name,
