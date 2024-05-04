@@ -21,6 +21,9 @@
   export let phx_submit = "submit";
   export let input_name = "text";
 
+  let selectedLineStart = null;
+  let selectedLineEnd = null;
+
   let scrollableElement: HTMLElement;
 
   $: tree = addRoot(root, buildTree(chunks.map((chunk) => chunk.file_path)));
@@ -28,6 +31,7 @@
   $: current_chunk = chunks.length > 0 ? chunks[0] : null;
 
   const handleClickFile = (path: string) => {
+    document.getSelection().empty();
     const next_chunk = chunks.find((chunk) => chunk.file_path === path);
 
     if (next_chunk) {
@@ -35,6 +39,41 @@
       current_chunk = next_chunk;
     }
   };
+
+  const handleSelection = (_: Event) => {
+    try {
+      const selection = document.getSelection();
+      const { startContainer, endContainer } = selection.getRangeAt(0);
+
+      const getLineNumber = (n: Node) => {
+        return Number.parseInt(
+          n.parentElement.parentElement.parentElement.previousElementSibling
+            ?.textContent ?? "0",
+        );
+      };
+
+      const startLine = getLineNumber(startContainer);
+      const endLine = getLineNumber(endContainer);
+
+      if (startLine) {
+        selectedLineStart = startLine;
+      }
+      if (endLine) {
+        selectedLineEnd = endLine;
+      }
+    } catch (_) {}
+  };
+
+  const handleMouseLeave = (e: Event) => {
+    document.removeEventListener("selectionchange", handleSelection);
+  };
+
+  const handleSelectionStart = (e: Event) => {
+    document.addEventListener("selectionchange", handleSelection);
+  };
+
+  $: if (selectedLineStart && selectedLineEnd) {
+  }
 </script>
 
 {#if chunks.length === 0}
@@ -58,9 +97,12 @@
     <span class="text-xs rounded-t-md bg-slate-200 p-0.5 w-full">
       {current_file_path}
     </span>
+    <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div
+      on:selectstart={handleSelectionStart}
+      on:mouseleave={handleMouseLeave}
       bind:this={scrollableElement}
-      class="text-sm h-[calc(100vh-300px)] rounded-b-md overflow-y-auto scrollbar-hide"
+      class="text-sm h-[calc(100vh-300px)] rounded-b-md overflow-y-auto scrollbar-hide selection:bg-blue-800"
     >
       <CodeSnippet chunk={current_chunk} />
     </div>
