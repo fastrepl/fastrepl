@@ -28,77 +28,79 @@ defmodule FastreplWeb.ThreadsDemoLive do
 
   def render(assigns) do
     ~H"""
-    <h2 class="text-lg font-semibold">
-      Fastrepl Demo
-    </h2>
-    <p class="mt-2">
-      This page is for anyone who wants to try out
-      <span class="font-semibold">
-        without logging in.
-      </span>
-    </p>
-    <p class="mt-2">
-      <span class="font-semibold">
-        There are two limitations:
-      </span>
-      <ul class="list-disc pl-6 mt-1">
-        <li>You can only use it for specific set of public repositories.</li>
-        <li>
-          Each thread has a unique url, and it's public while active. <br />
-          It will be terminated after you close the tab.
-        </li>
-      </ul>
-    </p>
+    <div class="mx-auto max-w-3xl">
+      <h2 class="text-lg font-semibold">
+        Fastrepl Demo
+      </h2>
+      <p class="mt-2">
+        This page is for anyone who wants to try out
+        <span class="font-semibold">
+          without logging in.
+        </span>
+      </p>
+      <p class="mt-2">
+        <span class="font-semibold">
+          There are two limitations:
+        </span>
+        <ul class="list-disc pl-6 mt-1">
+          <li>You can only use it for specific set of public repositories.</li>
+          <li>
+            Each thread has a unique url, and it's public while active. <br />
+            It will be terminated after you close the tab.
+          </li>
+        </ul>
+      </p>
 
-    <br />
-    <p class="mt-4 mb-10 underline text-lg">
-      ↓ Select a repo below to start a thread:
-    </p>
+      <br />
+      <p class="mt-4 mb-10 underline text-lg">
+        ↓ Select a repo below to start a thread:
+      </p>
 
-    <h2 class="text-lg font-semibold">
-      Github Repos
-    </h2>
-
-    <div class="mt-4 grid grid-cols-2 grid-rows-2 gap-4">
-      <%= for {name, description} <- @repos do %>
-        <.selectable_repo
-          full_name={name}
-          selected={name == @selected_repo}
-          description={description}
-        />
-      <% end %>
-    </div>
-
-    <%= if @selected_repo do %>
-      <h2 class="text-lg font-semibold mt-12">
-        Github Issues
+      <h2 class="text-lg font-semibold">
+        Github Repos
       </h2>
 
-      <%= if @async_result_issues.loading do %>
-        <div class="mt-4 grid grid-cols-3 gap-4">
-          <%= for _ <- 1..9 do %>
-            <.selectable_issue repo_full_name={@selected_repo} title="..." number={0} />
-          <% end %>
-        </div>
-      <% else %>
-        <div class="mt-4 grid grid-cols-3 gap-4">
-          <%= for issue <- @async_result_issues.result do %>
-            <.selectable_issue
-              repo_full_name={@selected_repo}
-              title={issue.title}
-              number={issue.number}
-              selected={issue.number == @selected_issue}
-            />
-          <% end %>
-        </div>
-      <% end %>
-    <% end %>
+      <div class="mt-4 grid grid-cols-2 grid-rows-2 gap-4">
+        <%= for {name, description} <- @repos do %>
+          <.selectable_repo
+            full_name={name}
+            selected={name == @selected_repo}
+            description={description}
+          />
+        <% end %>
+      </div>
 
-    <%= if @selected_repo && @selected_issue do %>
-      <.button phx-click="submit" class="w-full text-lg mt-8">
-        Start thread
-      </.button>
-    <% end %>
+      <%= if @selected_repo do %>
+        <h2 class="text-lg font-semibold mt-12">
+          Github Issues
+        </h2>
+
+        <%= if @async_result_issues.loading do %>
+          <div class="mt-4 grid grid-cols-3 gap-4">
+            <%= for _ <- 1..9 do %>
+              <.selectable_issue repo_full_name={@selected_repo} title="..." number={0} />
+            <% end %>
+          </div>
+        <% else %>
+          <div class="mt-4 grid grid-cols-3 gap-4">
+            <%= for issue <- @async_result_issues.result do %>
+              <.selectable_issue
+                repo_full_name={@selected_repo}
+                title={issue.title}
+                number={issue.number}
+                selected={issue.number == @selected_issue}
+              />
+            <% end %>
+          </div>
+        <% end %>
+      <% end %>
+
+      <%= if @selected_repo && @selected_issue do %>
+        <.button phx-click="submit" class="w-full text-lg mt-8">
+          Start thread
+        </.button>
+      <% end %>
+    </div>
     """
   end
 
