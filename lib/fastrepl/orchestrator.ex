@@ -28,6 +28,7 @@ defmodule Fastrepl.Orchestrator do
       |> Map.put(:thread_id, args.thread_id)
       |> Map.put(:repo, %Repository{full_name: args.repo_full_name})
       |> Map.put(:issue, %{title: "", number: args.issue_number})
+      |> Map.put(:view, %{})
 
     send(state.orchestrator_pid, :fetch_issue)
     send(state.orchestrator_pid, :clone_repo)
@@ -37,13 +38,18 @@ defmodule Fastrepl.Orchestrator do
 
   @impl true
   def handle_call(:state, _from, state) do
-    {:reply, %{repo: state.repo, issue: state.issue}, state}
+    {:reply, %{repo: state.repo, issue: state.issue, view: state.view}, state}
   end
 
   @impl true
   def handle_cast({:submit, instruction}, state) do
     send(self(), {:planning, %{query: instruction}})
     {:noreply, state}
+  end
+
+  @impl true
+  def handle_cast({:sync, map}, state) do
+    {:noreply, state |> Map.put(:view, Map.merge(state.view, map))}
   end
 
   @impl true

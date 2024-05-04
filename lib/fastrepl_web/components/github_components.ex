@@ -50,7 +50,7 @@ defmodule FastreplWeb.GithubComponents do
 
       <%= if assigns[:indexing_total] && assigns[:indexing_progress] do %>
         <%= if @indexing_total != @indexing_progress do %>
-          <div class="absolute bottom-0.5 w-full bg-gray-200 rounded-full h-1.5">
+          <div class="absolute bottom-0.5 w-[calc(100%-2rem)] bg-gray-200 rounded-full h-1.5">
             <div
               class="bg-blue-500 h-1.5 rounded-full"
               style={"width: #{round(@indexing_progress / @indexing_total * 100)}%"}

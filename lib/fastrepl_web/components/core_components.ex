@@ -19,6 +19,8 @@ defmodule FastreplWeb.CoreComponents do
   alias Phoenix.LiveView.JS
   import FastreplWeb.Gettext
 
+  import FastreplWeb.Utils, only: [clsx: 1]
+
   @doc """
   Renders a modal.
 
@@ -230,11 +232,14 @@ defmodule FastreplWeb.CoreComponents do
     ~H"""
     <button
       type={@type}
-      class={[
-        "phx-submit-loading:opacity-75 rounded-lg bg-zinc-900 hover:bg-zinc-700 py-2 px-3",
-        "text-sm font-semibold leading-6 text-white active:text-white/80",
-        @class
-      ]}
+      class={
+        clsx([
+          "phx-submit-loading:opacity-75 rounded-lg bg-zinc-900 hover:bg-zinc-700 py-2 px-3",
+          "text-sm font-semibold leading-6 text-white active:text-white/80",
+          @rest[:disabled] && "opacity-50",
+          @class
+        ])
+      }
       {@rest}
     >
       <%= render_slot(@inner_block) %>
