@@ -53,6 +53,8 @@ defmodule FastreplWeb.ThreadLive do
           </div>
         <% "Execution" -> %>
           <div>Execution</div>
+        <% nil -> %>
+          <div>...</div>
       <% end %>
     </div>
     """
@@ -65,7 +67,7 @@ defmodule FastreplWeb.ThreadLive do
 
     socket =
       socket
-      |> assign(:current_step, "Initialization")
+      |> assign(:current_step, nil)
       |> assign(:shared_tasks, [])
 
     if socket.assigns[:live_action] != :demo and socket.assigns[:current_user] == nil do
@@ -80,7 +82,11 @@ defmodule FastreplWeb.ThreadLive do
           state = GenServer.call(pid, :state)
           send(self(), {:sync, state})
 
-          {:ok, socket |> assign(thread_id: thread_id, orchestrator_pid: pid)}
+          socket =
+            socket
+            |> assign(thread_id: thread_id, orchestrator_pid: pid, current_step: "Initialization")
+
+          {:ok, socket}
 
         nil ->
           dest = if socket.assigns[:live_action] == :demo, do: "/demo", else: "/"
