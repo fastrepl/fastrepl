@@ -116,15 +116,15 @@ defmodule Fastrepl.Orchestrator do
       |> Enum.flat_map(&Chunker.chunk_file/1)
 
     Task.start(fn ->
-      sync_with_views(state.thread_id, %{indexing: {:start, length(chunks)}})
+      send(state.orchestrator_pid, {:indexing, {:start, length(chunks)}})
 
       Vectordb.ingest(
         vectordb_pid,
         chunks,
-        fn n -> sync_with_views(state.thread_id, %{indexing: {:progress, n}}) end
+        fn n -> send(state.orchestrator_pid, {:indexing, {:progress, n}}) end
       )
 
-      sync_with_views(state.thread_id, %{indexing: {:done, length(chunks)}})
+      send(state.orchestrator_pid, {:indexing, {:done, length(chunks)}})
     end)
 
     state =
@@ -221,6 +221,28 @@ defmodule Fastrepl.Orchestrator do
       end
     end)
 
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_info({:indexing, {type, value}}, state) do
+    state =
+      case type do
+        :start ->
+          state |> Map.put(:repo, %{state.repo | indexing_progress: 0, indexing_total: value})
+
+        :progress ->
+          state
+          |> Map.put(:repo, %{
+            state.repo
+            | indexing_progress: (state.repo.indexing_progress || 0) + value
+          })
+
+        :done ->
+          state |> Map.put(:repo, %{state.repo | indexing_progress: value})
+      end
+
+    sync_with_views(state.thread_id, %{repo: state.repo})
     {:noreply, state}
   end
 

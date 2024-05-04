@@ -23,8 +23,8 @@ defmodule FastreplWeb.ThreadLive do
               <.repo
                 full_name={@repo.full_name}
                 description={@repo.description}
-                indexing_total={assigns[:indexing_total]}
-                indexing_progress={assigns[:indexing_progress]}
+                indexing_total={@repo.indexing_total}
+                indexing_progress={@repo.indexing_progress}
               />
               <.issue repo_full_name={@repo.full_name} title={@issue.title} number={@issue.number} />
 
@@ -32,9 +32,7 @@ defmodule FastreplWeb.ThreadLive do
                 phx-click="move_step"
                 phx-value-name="Planning"
                 class="w-full text-lg mt-4"
-                disabled={
-                  !assigns[:indexing_total] || assigns[:indexing_total] != assigns[:indexing_progress]
-                }
+                disabled={!@repo.indexing_total || @repo.indexing_total != @repo.indexing_progress}
               >
                 Next
               </.button>
@@ -161,19 +159,6 @@ defmodule FastreplWeb.ThreadLive do
           :shared_tasks,
           List.update_at(socket.assigns.shared_tasks, index, &SharedTask.ok(&1, name))
         )
-    end
-  end
-
-  defp update_socket(socket, {:indexing, {type, value}}) do
-    case type do
-      :start ->
-        socket |> assign(:indexing_progress, 0) |> assign(:indexing_total, value)
-
-      :progress ->
-        socket |> assign(:indexing_progress, (socket.assigns[:indexing_progress] || 0) + value)
-
-      :done ->
-        socket |> assign(:indexing_progress, value)
     end
   end
 
