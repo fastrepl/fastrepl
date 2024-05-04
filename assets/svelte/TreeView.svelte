@@ -13,7 +13,7 @@
   {#each items as item, i (item.path)}
     <li
       class={clsx(
-        "max-w-[280px] truncate",
+        "w-[200px] truncate",
         !item.children?.length && "hover:bg-gray-200",
         item.path === current_file_path && "bg-gray-200 px-0.5 rounded-sm",
       )}
@@ -23,7 +23,7 @@
         <details open>
           <summary class="flex hover:underline p-0.5" tabindex="0">
             <slot {item} list={items} id={i}>
-              <span class="max-w-[280px] truncate">{item.name}</span>
+              <span class="max-w-[180px] truncate">{item.name}</span>
             </slot>
           </summary>
 
@@ -39,7 +39,7 @@
               >
                 <slot {item} list={items} id={i}>
                   <button
-                    class="max-w-[280px] truncate"
+                    class="max-w-[180px] truncate"
                     on:click={() => handleClickFile(item.path)}
                   >
                     {item.name}
@@ -52,7 +52,7 @@
       {:else}
         <slot {item} list={items} id={i}>
           <button
-            class="max-w-[280px] truncate"
+            class="max-w-[180px] truncate"
             on:click={() => handleClickFile(item.path)}
           >
             {item.name}
