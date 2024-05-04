@@ -28,13 +28,10 @@ defmodule FastreplWeb.ThreadsLive do
   def mount(_params, _session, socket) do
     threads =
       Registry.select(Application.fetch_env!(:fastrepl, :orchestrator_registry), [
-        {{:"$1", :"$2", :_}, [], [{{:"$1", :"$2"}}]}
+        {{:"$1", :"$2", %{type: :live}}, [], [{{:"$1", :"$2"}}]}
       ])
 
-    socket =
-      socket |> assign(:threads, threads)
-
-    {:ok, socket}
+    {:ok, socket |> assign(:threads, threads)}
   end
 
   def handle_event("kill", %{"id" => target}, socket) do

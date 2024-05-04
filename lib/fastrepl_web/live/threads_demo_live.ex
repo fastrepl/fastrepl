@@ -121,7 +121,8 @@ defmodule FastreplWeb.ThreadsDemoLive do
       Orchestrator.start(%{
         thread_id: thread_id,
         repo_full_name: socket.assigns.selected_repo,
-        issue_number: socket.assigns.selected_issue
+        issue_number: socket.assigns.selected_issue,
+        is_demo: true
       })
 
     {:noreply, socket |> redirect(to: "/demo/thread/#{thread_id}")}

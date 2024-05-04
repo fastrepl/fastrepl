@@ -15,7 +15,7 @@ defmodule Fastrepl.Orchestrator do
   alias Fastrepl.Tool.PathSearch
 
   def start(%{thread_id: thread_id, repo_full_name: _, issue_number: _} = args) do
-    GenServer.start(__MODULE__, args, name: via_registry(thread_id))
+    GenServer.start(__MODULE__, args, name: via_registry(thread_id, args[:is_demo]))
   end
 
   @impl true
@@ -270,8 +270,8 @@ defmodule Fastrepl.Orchestrator do
     :ok
   end
 
-  defp via_registry(id) do
-    {:via, Registry, {registry_module(), id}}
+  defp via_registry(id, is_demo) do
+    {:via, Registry, {registry_module(), id, %{type: if(is_demo, do: :demo, else: :live)}}}
   end
 
   defp registry_module() do
