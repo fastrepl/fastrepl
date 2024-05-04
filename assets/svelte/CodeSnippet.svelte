@@ -9,6 +9,17 @@
   };
 
   export let chunk: Chunk;
+  let code = "";
+
+  $: {
+    code = chunk.content;
+    const lines = code.split("\n");
+
+    if (lines.length < 99) {
+      code += "\n".repeat(99 - lines.length);
+    }
+  }
+
   $: highlightedLines = chunk.spans.flatMap(([from, to]) =>
     Array.from({ length: to - from + 1 }, (_, i) => from + i - 1),
   );
@@ -18,7 +29,7 @@
   {@html theme}
 </svelte:head>
 
-<HighlightAuto code={chunk.content} let:highlighted>
+<HighlightAuto {code} let:highlighted>
   <LineNumbers
     {highlighted}
     hideBorder
