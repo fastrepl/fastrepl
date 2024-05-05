@@ -131,6 +131,7 @@ defmodule FastreplWeb.ThreadLive do
       socket
       |> assign(:repo, repo)
       |> sync_with_orchestrator(:repo)
+      |> sync_with_views(:repo)
 
     {:noreply, socket}
   end
@@ -140,6 +141,7 @@ defmodule FastreplWeb.ThreadLive do
       socket
       |> assign(:repo, %{socket.assigns.repo | comments: comments})
       |> sync_with_orchestrator(:repo)
+      |> sync_with_views(:repo)
 
     {:noreply, socket}
   end
@@ -203,6 +205,16 @@ defmodule FastreplWeb.ThreadLive do
 
   defp sync_with_orchestrator(socket, key) when is_atom(key) do
     GenServer.cast(socket.assigns.orchestrator_pid, {:sync, %{key => socket.assigns[key]}})
+    socket
+  end
+
+  defp sync_with_views(socket, key) when is_atom(key) do
+    Phoenix.PubSub.broadcast(
+      Fastrepl.PubSub,
+      "thread:#{socket.assigns.thread_id}",
+      {:sync, %{key => socket.assigns[key]}}
+    )
+
     socket
   end
 end
