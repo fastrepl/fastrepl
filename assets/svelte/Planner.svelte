@@ -96,20 +96,19 @@
     contextMenuInstance.show();
   };
 
-  const handleSelection = (_: Event) => {
+  const handleMouseUp = (e: Event) => {
     try {
       const selection = document.getSelection();
-      const { startContainer, endContainer } = selection.getRangeAt(0);
 
       const getLineNumber = (n: Node) => {
         return Number.parseInt(
-          n.parentElement.parentElement.parentElement.previousElementSibling
-            ?.textContent ?? "0",
+          n.parentElement.closest("td").previousElementSibling?.textContent ??
+            "0",
         );
       };
 
-      const startLine = getLineNumber(startContainer);
-      const endLine = getLineNumber(endContainer);
+      const startLine = getLineNumber(selection.anchorNode);
+      const endLine = getLineNumber(selection.focusNode);
 
       if (startLine) {
         selectedLineStart = startLine;
@@ -118,14 +117,6 @@
         selectedLineEnd = endLine;
       }
     } catch (_) {}
-  };
-
-  const handleMouseLeave = (e: Event) => {
-    document.removeEventListener("selectionchange", handleSelection);
-  };
-
-  const handleSelectionStart = (e: Event) => {
-    document.addEventListener("selectionchange", handleSelection);
   };
 
   let items = [
@@ -158,8 +149,8 @@
     >
       {#each items as item, index}
         <div class="flex flex-col gap-1">
-          <div class="flex flex-row gap-2 items-center group">
-            <div>📁 {item.file}</div>
+          <div class="flex flex-row gap-2 items-center group text-md">
+            <div class="underline">{item.file}</div>
             <button
               class="hidden group-hover:block text-gray-400 hover:text-gray-700"
               on:click={() => handleRemoveFile(index)}
@@ -167,7 +158,7 @@
               (X)
             </button>
           </div>
-          <div class="pl-8 flex flex-col gap-0.5">
+          <div class="pl-4 flex flex-col gap-0.5 text-sm text-gray-700">
             {#each item.comments as comment}
               <div class="flex flex-row gap-2 items-center group">
                 <div>{comment}</div>
@@ -205,10 +196,13 @@
           <!-- svelte-ignore a11y-no-static-element-interactions -->
           <div
             bind:this={scrollableElement}
+            on:mouseup={handleMouseUp}
             on:contextmenu={handleContextMenu}
-            on:selectstart={handleSelectionStart}
-            on:mouseleave={handleMouseLeave}
-            class="text-sm rounded-b-md h-[calc(100vh-190px)] overflow-y-auto scrollbar-hide selection:bg-blue-800 max-w-[700px]"
+            class={clsx([
+              "max-w-[600px]",
+              "h-[calc(100vh-190px)] overflow-y-auto scrollbar-hide",
+              "text-sm rounded-b-md  selection:bg-blue-800",
+            ])}
           >
             <CodeSnippet chunk={current_chunk} />
           </div>
