@@ -107,15 +107,16 @@
         );
       };
 
-      const startLine = getLineNumber(selection.anchorNode);
-      const endLine = getLineNumber(selection.focusNode);
+      const [from, to] = [
+        getLineNumber(selection.anchorNode),
+        getLineNumber(selection.focusNode),
+      ];
+      if (!from || !to) {
+        return;
+      }
 
-      if (startLine) {
-        selectedLineStart = startLine;
-      }
-      if (endLine) {
-        selectedLineEnd = endLine;
-      }
+      selectedLineStart = from > to ? to : from;
+      selectedLineEnd = from > to ? from : to;
     } catch (_) {}
   };
 
