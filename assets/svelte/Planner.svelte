@@ -7,21 +7,10 @@
   import CodeSnippet from "$components/CodeSnippet.svelte";
   import Minimap from "$components/Minimap.svelte";
   import CodeActionList from "$components/CodeActionList.svelte";
+  import Comments from "$components/Comments.svelte";
 
+  import type { Chunk, Comment } from "$lib/types";
   import { addRoot, buildTree } from "$lib/utils/tree";
-
-  type Chunk = {
-    file_path: string;
-    content: string;
-    spans: number[][];
-  };
-
-  type Comment = {
-    file_path: string;
-    line_start: number;
-    line_end: number;
-    content: string;
-  };
 
   export let live: any;
   export let root = "repo";
@@ -68,14 +57,6 @@
       });
     }
   }
-  $: commentsMap = comments.reduce(
-    (acc, comment) => {
-      acc[comment.file_path] = acc[comment.file_path] || [];
-      acc[comment.file_path].push(comment);
-      return acc;
-    },
-    {} as Record<string, Comment[]>,
-  );
 
   const handleSubmitComment = (content: string) => {
     contextMenuInstance.hide();
@@ -191,53 +172,8 @@
 <div
   class="grid grid-cols-8 gap-2 h-[calc(100vh-140px)] border border-gray-200 rounded-xl p-4"
 >
-  <div class="col-span-3">
-    <div
-      class="flex flex-col h-[calc(100vh-170px)] bg-gray-50 rounded-lg gap-4 border border-gray-200 px-4 py-2 text-sm"
-    >
-      {#each Object.entries(commentsMap) as [file_path, comments]}
-        <div class="flex flex-col gap-1">
-          <div class="flex flex-row gap-2 items-center group text-md">
-            <div class="underline">{file_path}</div>
-            <button
-              class="hidden group-hover:block text-gray-400 hover:text-gray-700"
-            >
-              (X)
-            </button>
-          </div>
-          <div class="pl-4 flex flex-col gap-0.5 text-sm text-gray-700">
-            {#each comments as comment}
-              <div class="flex flex-row gap-2 items-center">
-                <button
-                  type="button"
-                  class="px-2 py-1 rounded-md bg-gray-100 hover:bg-gray-200 text-sm"
-                  on:click={() => handleClickComment(comment)}
-                >
-                  L{comment.line_start}-{comment.line_end}
-                </button>
-                <div>{comment.content}</div>
-                <button
-                  class="hidden hover:block text-gray-400 hover:text-gray-700"
-                >
-                  (X)
-                </button>
-              </div>
-            {/each}
-          </div>
-        </div>
-      {/each}
-
-      {#if comments.length !== 0}
-        <button
-          class={clsx([
-            "mt-auto  px-4 py-2 rounded-md",
-            "bg-gray-800 hover:bg-gray-700 text-white",
-          ])}
-        >
-          Execute plan
-        </button>
-      {/if}
-    </div>
+  <div class="col-span-3 h-[calc(100vh-170px)]">
+    <Comments items={comments} {handleClickComment} />
   </div>
 
   {#if chunks.length === 0}

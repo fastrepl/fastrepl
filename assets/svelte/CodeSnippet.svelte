@@ -2,11 +2,7 @@
   import { HighlightAuto, LineNumbers } from "svelte-highlight";
   import theme from "svelte-highlight/styles/github-dark";
 
-  type Chunk = {
-    file_path: string;
-    content: string;
-    spans: number[][];
-  };
+  import type { Chunk } from "$lib/types";
 
   export let chunk: Chunk;
   export let selections: number[][] | null = null;
