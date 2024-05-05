@@ -11,6 +11,7 @@ defmodule FastreplWeb.ThreadLive do
     <div class="flex flex-col gap-2 items-center">
       <div class="w-[600px]">
         <.horizontal_progress_bar
+          phx_click="move_step"
           current_step={@current_step}
           steps={["Initialization", "Planning", "Execution"]}
         />
@@ -30,7 +31,7 @@ defmodule FastreplWeb.ThreadLive do
 
               <.button
                 phx-click="move_step"
-                phx-value-name="Planning"
+                phx-value-step="Planning"
                 class="w-full text-lg mt-4"
                 disabled={!@repo.indexing_total || @repo.indexing_total != @repo.indexing_progress}
               >
@@ -97,10 +98,10 @@ defmodule FastreplWeb.ThreadLive do
     end
   end
 
-  def handle_event("move_step", %{"name" => name}, socket) do
+  def handle_event("move_step", %{"step" => step}, socket) do
     socket =
       socket
-      |> assign(:current_step, name)
+      |> assign(:current_step, step)
       |> sync_with_orchestrator(:current_step)
 
     {:noreply, socket}

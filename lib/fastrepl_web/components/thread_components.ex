@@ -87,13 +87,18 @@ defmodule FastreplWeb.ThreadComponents do
 
   attr :steps, :list, required: true
   attr :current_step, :string, required: true
+  attr :phx_click, :string, required: true
 
   def horizontal_progress_bar(assigns) do
     ~H"""
     <div class="relative after:absolute after:inset-x-0 after:top-1/2 after:block after:h-0.5 after:-translate-y-1/2 after:rounded-lg after:bg-gray-100">
       <ol class="relative z-10 flex justify-between text-sm font-medium text-gray-500">
         <%= for {step, index} <- Enum.with_index(@steps, 0) do %>
-          <li class="flex items-center gap-2 bg-white p-2 group">
+          <li
+            class="flex items-center gap-2 bg-white p-2 group"
+            phx-click={@phx_click}
+            phx-value-step={step}
+          >
             <%= if @current_step == step do %>
               <span class="size-6 rounded-full bg-blue-600 text-center text-[10px]/6 font-bold text-white">
                 <%= index + 1 %>

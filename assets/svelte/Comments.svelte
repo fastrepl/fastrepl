@@ -5,6 +5,7 @@
   export let items: Comment[] = [];
   export let handleClickComment: (comment: Comment) => void;
   export let handleUpdateComments: (comments: Comment[]) => void;
+  export let handleClickNext: () => void;
 
   $: map = items.reduce(
     (acc, comment) => {
@@ -68,6 +69,8 @@
 
   {#if items.length !== 0}
     <button
+      type="button"
+      on:click={handleClickNext}
       class={clsx([
         "mt-auto px-4 py-2 rounded-md",
         "bg-gray-800 hover:bg-gray-700 text-white",

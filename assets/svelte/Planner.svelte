@@ -144,6 +144,10 @@
     live.pushEvent("comment:replace", { comments });
   };
 
+  const handleClickNext = () => {
+    live.pushEvent("move_step", { step: "Execution" });
+  };
+
   onMount(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -188,7 +192,12 @@
   ])}
 >
   <div class="col-span-3 h-[calc(100vh-170px)]">
-    <Comments items={comments} {handleClickComment} {handleUpdateComments} />
+    <Comments
+      items={comments}
+      {handleClickComment}
+      {handleUpdateComments}
+      {handleClickNext}
+    />
   </div>
 
   {#if chunks.length === 0}
