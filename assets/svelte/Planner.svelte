@@ -132,12 +132,14 @@
         getLineNumber(selection.anchorNode),
         getLineNumber(selection.focusNode),
       ];
-      if (!from || !to) {
-        return;
-      }
 
-      selectedLineStart = from > to ? to : from;
-      selectedLineEnd = from > to ? from : to;
+      if (from && to) {
+        const [nextSelectedLineStart, nextSelectedLineEnd] =
+          from > to ? [to, from] : [from, to];
+
+        selectedLineStart = nextSelectedLineStart;
+        selectedLineEnd = nextSelectedLineEnd;
+      }
     } catch (_) {}
   };
 
@@ -227,10 +229,13 @@
           on:contextmenu={handleContextMenu}
           class={clsx([
             "h-[calc(100vh-190px)] overflow-y-auto scrollbar-hide",
-            "text-sm rounded-b-md  selection:bg-blue-800",
+            "text-sm rounded-b-md  selection:bg-[#fef16033]",
           ])}
         >
-          <CodeSnippet chunk={current_chunk} />
+          <CodeSnippet
+            chunk={current_chunk}
+            selection={[selectedLineStart, selectedLineEnd]}
+          />
         </div>
       </div>
 
