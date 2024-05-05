@@ -47,7 +47,8 @@ defmodule FastreplWeb.ThreadLive do
               props={
                 %{
                   root: @repo.full_name,
-                  chunks: if(assigns[:repo], do: @repo.chunks, else: [])
+                  chunks: if(assigns[:repo], do: @repo.chunks, else: []),
+                  comments: @comments
                 }
               }
             />
@@ -70,6 +71,7 @@ defmodule FastreplWeb.ThreadLive do
       socket
       |> assign(:current_step, nil)
       |> assign(:shared_tasks, [])
+      |> assign(:comments, [])
 
     if socket.assigns[:live_action] != :demo and socket.assigns[:current_user] == nil do
       {:ok, socket |> redirect(to: "/auth/github")}
@@ -102,11 +104,22 @@ defmodule FastreplWeb.ThreadLive do
   end
 
   def handle_event("comment", data, socket) do
-    %{"file_path" => file_path, "line_start" => line_start, "line_end" => line_end} = data
+    %{
+      "file_path" => file_path,
+      "line_start" => line_start,
+      "line_end" => line_end,
+      "content" => content
+    } = data
 
-    IO.inspect(file_path, label: "file_path")
-    IO.inspect(line_start, label: "line_start")
-    IO.inspect(line_end, label: "line_end")
+    socket =
+      socket
+      |> assign(
+        :comments,
+        [
+          %{file_path: file_path, line_start: line_start, line_end: line_end, content: content}
+          | socket.assigns.comments
+        ]
+      )
 
     {:noreply, socket}
   end

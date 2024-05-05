@@ -6,7 +6,7 @@
   import TreeView from "$components/TreeView.svelte";
   import CodeSnippet from "$components/CodeSnippet.svelte";
   import Minimap from "$components/Minimap.svelte";
-  import SelectableList from "$components/SelectableList.svelte";
+  import CodeActionList from "$components/CodeActionList.svelte";
 
   import { addRoot, buildTree } from "$lib/utils/tree";
 
@@ -16,9 +16,19 @@
     spans: number[][];
   };
 
+  type Comment = {
+    file_path: string;
+    line_start: number;
+    line_end: number;
+    content: string;
+  };
+
   export let live: any;
   export let root = "repo";
   export let chunks: Chunk[] = [];
+  export let comments: Comment[] = [];
+
+  let current_chunk = null;
 
   let selectedLineStart = null;
   let selectedLineEnd = null;
@@ -26,46 +36,58 @@
   let scrollableElement: HTMLElement;
   let contextMenuInstance: TippyInstance | null = null;
 
+  $: if (!current_chunk && chunks.length > 0) {
+    current_chunk = chunks[0];
+  }
+
   $: tree = addRoot(root, buildTree(chunks.map((chunk) => chunk.file_path)));
-  $: current_file_path = chunks.length > 0 ? chunks[0].file_path : null;
-  $: current_chunk = chunks.length > 0 ? chunks[0] : null;
   $: {
+    const createCodeActionList = (target: Element) => {
+      return new CodeActionList({
+        target,
+        props: { handleSubmit: handleSubmitComment },
+      });
+    };
+
     if (scrollableElement && !contextMenuInstance) {
       contextMenuInstance = tippy(scrollableElement, {
         placement: "auto",
         onCreate: (instance) => {
           const target = instance.popper.querySelector(".tippy-content");
-          new SelectableList({
-            target,
-            props: {
-              items: Object.keys(contextMenuCommands),
-              command: handleSelectCommand,
-            },
-          });
+          createCodeActionList(target);
+        },
+        onHidden: (instance) => {
+          const target = instance.popper.querySelector(".tippy-content");
+          target.firstChild.remove();
+          createCodeActionList(target);
         },
         trigger: "manual",
+        allowHTML: true,
         interactive: true,
         appendTo: () => document.body,
       });
     }
   }
+  $: commentsMap = comments.reduce(
+    (acc, comment) => {
+      acc[comment.file_path] = acc[comment.file_path] || [];
+      acc[comment.file_path].push(comment);
+      return acc;
+    },
+    {} as Record<string, Comment[]>,
+  );
 
-  const contextMenuCommands = {
-    Comment: () => {
+  const handleSubmitComment = (content: string) => {
+    contextMenuInstance.hide();
+
+    setTimeout(() => {
       live.pushEvent("comment", {
-        file_path: current_file_path,
+        file_path: current_chunk.file_path,
         line_start: selectedLineStart,
         line_end: selectedLineEnd,
+        content: content,
       });
-    },
-  };
-
-  const handleSelectCommand = ({ id }: any) => {
-    const command = contextMenuCommands[id];
-    if (command) {
-      command();
-    }
-    contextMenuInstance.hide();
+    }, 300);
   };
 
   const handleClickFile = (path: string) => {
@@ -73,7 +95,6 @@
     const next_chunk = chunks.find((chunk) => chunk.file_path === path);
 
     if (next_chunk) {
-      current_file_path = path;
       current_chunk = next_chunk;
     }
   };
@@ -120,29 +141,13 @@
     } catch (_) {}
   };
 
-  let items = [
-    {
-      file: "a/b/c.py",
-      comments: ["comment 1", "comment 2", "comment 3"],
-    },
-    {
-      file: "b/c/d.py",
-      comments: ["comment 4", "comment 5"],
-    },
-  ];
-
-  const handleRemoveFile = (index: number) => {
-    items.splice(index, 1);
-    items = items;
-  };
-  const handleRemoveComment = (index: number) => {
-    items[index].comments.splice(index, 1);
-    items = items;
-  };
-
   onMount(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.metaKey && e.key === "a") {
+      if (e.key === "Escape") {
+        contextMenuInstance.hide();
+      }
+
+      if (e.target["tagName"] !== "INPUT" && e.metaKey && e.key === "a") {
         e.preventDefault();
 
         document.getSelection().removeAllRanges();
@@ -174,24 +179,22 @@
     <div
       class="flex flex-col h-[calc(100vh-170px)] bg-gray-50 rounded-lg gap-4 border border-gray-200 px-4 py-2 text-sm"
     >
-      {#each items as item, index}
+      {#each Object.entries(commentsMap) as [file_path, comments]}
         <div class="flex flex-col gap-1">
           <div class="flex flex-row gap-2 items-center group text-md">
-            <div class="underline">{item.file}</div>
+            <div class="underline">{file_path}</div>
             <button
               class="hidden group-hover:block text-gray-400 hover:text-gray-700"
-              on:click={() => handleRemoveFile(index)}
             >
               (X)
             </button>
           </div>
           <div class="pl-4 flex flex-col gap-0.5 text-sm text-gray-700">
-            {#each item.comments as comment}
+            {#each comments as comment}
               <div class="flex flex-row gap-2 items-center group">
-                <div>{comment}</div>
+                <div>{comment.content}</div>
                 <button
                   class="hidden group-hover:block text-gray-400 hover:text-gray-700"
-                  on:click={() => handleRemoveComment(index)}
                 >
                   (X)
                 </button>
@@ -215,7 +218,7 @@
     <div class="col-span-4 relative">
       <div class="flex flex-col">
         <span class="text-xs rounded-t-md bg-slate-200 py-0.5 px-2">
-          {current_file_path}
+          {current_chunk.file_path}
         </span>
         <!-- svelte-ignore a11y-no-static-element-interactions -->
         <div
@@ -246,7 +249,12 @@
         "border border-gray-200 px-2 py-1",
       ])}
     >
-      <TreeView {root} items={tree} {handleClickFile} {current_file_path} />
+      <TreeView
+        {root}
+        items={tree}
+        {handleClickFile}
+        current_file_path={current_chunk.file_path}
+      />
     </div>
   {/if}
 </div>
