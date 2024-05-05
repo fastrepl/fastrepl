@@ -250,7 +250,14 @@ defmodule Fastrepl.Orchestrator do
   @impl true
   def handle_info({:chunks, chunks}, state) do
     chunks = Chunker.dedupe(state.repo.chunks ++ chunks)
-    repo = state.repo |> Map.put(:chunks, chunks)
+
+    repo =
+      state.repo
+      |> Map.put(:chunks, chunks)
+      |> Map.put(
+        :files,
+        Enum.map(chunks, fn chunk -> %{path: chunk.file_path, content: chunk.content} end)
+      )
 
     sync_with_views(state.thread_id, %{repo: repo})
     {:noreply, state |> Map.put(:repo, repo)}

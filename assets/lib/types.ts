@@ -5,8 +5,7 @@ export type Comment = {
   content: string;
 };
 
-export type Chunk = {
-  file_path: string;
+export type File = {
+  path: string;
   content: string;
-  spans: number[][];
 };

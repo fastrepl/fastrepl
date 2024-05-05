@@ -2,15 +2,13 @@
   import { HighlightAuto, LineNumbers } from "svelte-highlight";
   import theme from "svelte-highlight/styles/github-dark";
 
-  import type { Chunk } from "$lib/types";
-
-  export let chunk: Chunk;
-  export let selections: number[][] | null = null;
+  export let content: string;
+  export let selections: number[][] = [];
 
   let code = "";
 
   $: {
-    code = chunk.content;
+    code = content;
     const lines = code.split("\n");
 
     if (lines.length < 99) {
@@ -18,10 +16,7 @@
     }
   }
 
-  $: highlightedLines = [
-    ...chunk.spans,
-    ...(selections ? selections : []),
-  ].flatMap(([from, to]) =>
+  $: highlightedLines = selections.flatMap(([from, to]) =>
     Array.from({ length: to - from + 1 }, (_, i) => from + i - 1),
   );
 </script>

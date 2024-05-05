@@ -48,7 +48,7 @@ defmodule FastreplWeb.ThreadLive do
               props={
                 %{
                   root: @repo.full_name,
-                  chunks: if(assigns[:repo], do: @repo.chunks, else: []),
+                  files: if(assigns[:repo], do: @repo.files, else: []),
                   comments: if(assigns[:repo], do: @repo.comments, else: [])
                 }
               }

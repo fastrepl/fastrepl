@@ -1,6 +1,12 @@
 defmodule Fastrepl.Retrieval.Chunker.Chunk do
   defstruct file_path: "", content: "", spans: []
 
+  @type t :: %__MODULE__{
+          file_path: String.t(),
+          content: String.t(),
+          spans: [{pos_integer(), pos_integer()}]
+        }
+
   def from(root, path, lines \\ []) do
     content =
       case File.read(path) do

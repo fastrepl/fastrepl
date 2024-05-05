@@ -9,15 +9,16 @@
   import CodeActionList from "$components/CodeActionList.svelte";
   import Comments from "$components/Comments.svelte";
 
-  import type { Chunk, Comment } from "$lib/types";
+  import type { Comment, File } from "$lib/types";
   import { addRoot, buildTree } from "$lib/utils/tree";
 
   export let live: any;
   export let root = "repo";
-  export let chunks: Chunk[] = [];
+
+  export let files: File[] = [];
   export let comments: Comment[] = [];
 
-  let currentChunk = null;
+  let currentFile: File | null = null;
 
   let selectedLineStart = null;
   let selectedLineEnd = null;
@@ -25,11 +26,11 @@
   let scrollableElement: HTMLElement;
   let contextMenuInstance: TippyInstance | null = null;
 
-  $: if (!currentChunk && chunks.length > 0) {
-    currentChunk = chunks[0];
+  $: if (!currentFile && files.length > 0) {
+    currentFile = files[0];
   }
 
-  $: tree = addRoot(root, buildTree(chunks.map((chunk) => chunk.file_path)));
+  $: tree = addRoot(root, buildTree(files.map((f) => f.path)));
 
   $: {
     const createCodeActionList = (target: Element) => {
@@ -64,7 +65,7 @@
 
     setTimeout(() => {
       live.pushEvent("comment:add", {
-        file_path: currentChunk.file_path,
+        file_path: currentFile.path,
         line_start: selectedLineStart,
         line_end: selectedLineEnd,
         content: content,
@@ -77,10 +78,9 @@
     selectedLineStart = null;
     selectedLineEnd = null;
 
-    const nextChunk = chunks.find((chunk) => chunk.file_path === path);
-
-    if (nextChunk) {
-      currentChunk = nextChunk;
+    const nextFile = files.find((f) => f.path === path);
+    if (nextFile) {
+      currentFile = nextFile;
     }
   };
 
@@ -129,9 +129,7 @@
   };
 
   const handleClickComment = (comment: Comment) => {
-    currentChunk = chunks.find(
-      (chunk) => chunk.file_path === comment.file_path,
-    );
+    currentFile = files.find((f) => f.path === comment.file_path);
 
     const startLine =
       scrollableElement.getElementsByTagName("tr")[comment.line_start - 1];
@@ -200,7 +198,7 @@
     />
   </div>
 
-  {#if chunks.length === 0}
+  {#if files.length === 0}
     <div
       class={clsx([
         "col-span-5 h-[calc(100vh-170px)]",
@@ -208,15 +206,13 @@
         "bg-gray-50 border border-gray-200 rounded-xl",
       ])}
     >
-      <span class="text-sm text-gray-500 font-semibold">
-        No code snippets found.
-      </span>
+      <span class="text-sm text-gray-500 font-semibold"> No files found. </span>
     </div>
   {:else}
     <div class="col-span-4 relative">
       <div class="flex flex-col">
         <span class="text-xs rounded-t-md bg-slate-200 py-0.5 px-2">
-          {currentChunk.file_path}
+          {currentFile.path}
         </span>
         <!-- svelte-ignore a11y-no-static-element-interactions -->
         <div
@@ -229,13 +225,11 @@
           ])}
         >
           <CodeSnippet
-            chunk={currentChunk}
+            content={currentFile.content}
             selections={[
               [selectedLineStart, selectedLineEnd],
               ...comments
-                .filter(
-                  (comment) => comment.file_path === currentChunk.file_path,
-                )
+                .filter(({ file_path }) => file_path === currentFile.path)
                 .map((comment) => [comment.line_start, comment.line_end]),
             ]}
           />
@@ -262,7 +256,7 @@
         {root}
         items={tree}
         {handleClickFile}
-        currentFilePath={currentChunk.file_path}
+        currentFilePath={currentFile.path}
       />
     </div>
   {/if}
