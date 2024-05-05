@@ -48,7 +48,7 @@ defmodule FastreplWeb.ThreadLive do
                 %{
                   root: @repo.full_name,
                   chunks: if(assigns[:repo], do: @repo.chunks, else: []),
-                  comments: @comments
+                  comments: if(assigns[:repo], do: @repo.comments, else: [])
                 }
               }
             />
@@ -71,7 +71,6 @@ defmodule FastreplWeb.ThreadLive do
       socket
       |> assign(:current_step, nil)
       |> assign(:shared_tasks, [])
-      |> assign(:comments, [])
 
     if socket.assigns[:live_action] != :demo and socket.assigns[:current_user] == nil do
       {:ok, socket |> redirect(to: "/auth/github")}
@@ -87,7 +86,7 @@ defmodule FastreplWeb.ThreadLive do
 
           socket =
             socket
-            |> assign(thread_id: thread_id, orchestrator_pid: pid, current_step: "Initialization")
+            |> assign(thread_id: thread_id, orchestrator_pid: pid)
 
           {:ok, socket}
 
@@ -99,8 +98,12 @@ defmodule FastreplWeb.ThreadLive do
   end
 
   def handle_event("move_step", %{"name" => name}, socket) do
-    GenServer.cast(socket.assigns.orchestrator_pid, {:sync, %{current_step: name}})
-    {:noreply, socket |> assign(:current_step, name)}
+    socket =
+      socket
+      |> assign(:current_step, name)
+      |> sync_with_orchestrator(:current_step)
+
+    {:noreply, socket}
   end
 
   def handle_event("comment", data, socket) do
@@ -111,15 +114,23 @@ defmodule FastreplWeb.ThreadLive do
       "content" => content
     } = data
 
+    repo = %{
+      socket.assigns.repo
+      | comments: [
+          %{
+            file_path: file_path,
+            line_start: line_start,
+            line_end: line_end,
+            content: content
+          }
+          | socket.assigns.repo.comments
+        ]
+    }
+
     socket =
       socket
-      |> assign(
-        :comments,
-        [
-          %{file_path: file_path, line_start: line_start, line_end: line_end, content: content}
-          | socket.assigns.comments
-        ]
-      )
+      |> assign(:repo, repo)
+      |> sync_with_orchestrator(:repo)
 
     {:noreply, socket}
   end
@@ -148,11 +159,6 @@ defmodule FastreplWeb.ThreadLive do
   defp update_socket(socket, state) when is_map(state) do
     state
     |> Enum.reduce(socket, fn {k, v}, acc -> update_socket(acc, {k, v}) end)
-  end
-
-  defp update_socket(socket, {:view, state}) do
-    state
-    |> Enum.reduce(socket, fn {k, v}, acc -> assign(acc, k, v) end)
   end
 
   defp update_socket(socket, {:issue, issue}) do
@@ -184,5 +190,10 @@ defmodule FastreplWeb.ThreadLive do
 
   defp update_socket(socket, {k, v}) do
     socket |> assign(k, v)
+  end
+
+  defp sync_with_orchestrator(socket, key) when is_atom(key) do
+    GenServer.cast(socket.assigns.orchestrator_pid, {:sync, %{key => socket.assigns[key]}})
+    socket
   end
 end

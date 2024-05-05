@@ -92,6 +92,9 @@
 
   const handleClickFile = (path: string) => {
     document.getSelection().empty();
+    selectedLineStart = null;
+    selectedLineEnd = null;
+
     const next_chunk = chunks.find((chunk) => chunk.file_path === path);
 
     if (next_chunk) {
@@ -141,6 +144,17 @@
         selectedLineEnd = nextSelectedLineEnd;
       }
     } catch (_) {}
+  };
+
+  const handleClickComment = (comment: Comment) => {
+    current_chunk = chunks.find(
+      (chunk) => chunk.file_path === comment.file_path,
+    );
+
+    const startLine =
+      scrollableElement.getElementsByTagName("tr")[comment.line_start - 1];
+
+    startLine.scrollIntoView({ behavior: "smooth" });
   };
 
   onMount(() => {
@@ -193,10 +207,17 @@
           </div>
           <div class="pl-4 flex flex-col gap-0.5 text-sm text-gray-700">
             {#each comments as comment}
-              <div class="flex flex-row gap-2 items-center group">
+              <div class="flex flex-row gap-2 items-center">
+                <button
+                  type="button"
+                  class="px-2 py-1 rounded-md bg-gray-100 hover:bg-gray-200 text-sm"
+                  on:click={() => handleClickComment(comment)}
+                >
+                  L{comment.line_start}-{comment.line_end}
+                </button>
                 <div>{comment.content}</div>
                 <button
-                  class="hidden group-hover:block text-gray-400 hover:text-gray-700"
+                  class="hidden hover:block text-gray-400 hover:text-gray-700"
                 >
                   (X)
                 </button>
@@ -207,7 +228,12 @@
       {/each}
 
       {#if comments.length !== 0}
-        <button class="mt-auto bg-gray-800 text-white px-4 py-2 rounded-md">
+        <button
+          class={clsx([
+            "mt-auto  px-4 py-2 rounded-md",
+            "bg-gray-800 hover:bg-gray-700 text-white",
+          ])}
+        >
           Execute plan
         </button>
       {/if}
@@ -240,7 +266,14 @@
         >
           <CodeSnippet
             chunk={current_chunk}
-            selection={[selectedLineStart, selectedLineEnd]}
+            selections={[
+              [selectedLineStart, selectedLineEnd],
+              ...comments
+                .filter(
+                  (comment) => comment.file_path === current_chunk.file_path,
+                )
+                .map((comment) => [comment.line_start, comment.line_end]),
+            ]}
           />
         </div>
       </div>

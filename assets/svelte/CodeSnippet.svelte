@@ -9,7 +9,7 @@
   };
 
   export let chunk: Chunk;
-  export let selection: number[] | null = null;
+  export let selections: number[][] | null = null;
 
   let code = "";
 
@@ -24,7 +24,7 @@
 
   $: highlightedLines = [
     ...chunk.spans,
-    ...(selection ? [selection] : []),
+    ...(selections ? selections : []),
   ].flatMap(([from, to]) =>
     Array.from({ length: to - from + 1 }, (_, i) => from + i - 1),
   );

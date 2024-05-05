@@ -7,6 +7,7 @@ defmodule Fastrepl.Repository do
             root_path: "",
             paths: [],
             chunks: [],
+            comments: [],
             vectordb_pid: nil,
             indexing_progress: nil,
             indexing_total: nil
@@ -18,6 +19,7 @@ defmodule Fastrepl.Repository do
           paths: [String.t()],
           root_path: String.t(),
           chunks: [Chunk.t()],
+          comments: [any()],
           vectordb_pid: pid() | nil,
           indexing_progress: integer() | nil,
           indexing_total: integer() | nil
