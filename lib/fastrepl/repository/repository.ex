@@ -1,4 +1,5 @@
 defmodule Fastrepl.Repository do
+  alias Fastrepl.Repository
   alias Fastrepl.Retrieval.Chunker.Chunk
 
   defstruct full_name: "",
@@ -20,8 +21,8 @@ defmodule Fastrepl.Repository do
           paths: [String.t()],
           root_path: String.t(),
           chunks: [Chunk.t()],
-          files: [map()],
-          comments: [any()],
+          files: [Repository.File.t()],
+          comments: [Repository.Comment.t()],
           vectordb_pid: pid() | nil,
           indexing_progress: integer() | nil,
           indexing_total: integer() | nil

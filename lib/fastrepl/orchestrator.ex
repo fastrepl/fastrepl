@@ -254,10 +254,7 @@ defmodule Fastrepl.Orchestrator do
     repo =
       state.repo
       |> Map.put(:chunks, chunks)
-      |> Map.put(
-        :files,
-        Enum.map(chunks, fn chunk -> %{path: chunk.file_path, content: chunk.content} end)
-      )
+      |> Map.put(:files, Enum.map(chunks, &Repository.File.from/1))
 
     sync_with_views(state.thread_id, %{repo: repo})
     {:noreply, state |> Map.put(:repo, repo)}
