@@ -138,6 +138,32 @@
     items[index].comments.splice(index, 1);
     items = items;
   };
+
+  onMount(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.metaKey && e.key === "a") {
+        e.preventDefault();
+
+        document.getSelection().removeAllRanges();
+        const range = document.createRange();
+        range.selectNode(scrollableElement);
+        document.getSelection().addRange(range);
+
+        const trs = scrollableElement.querySelectorAll("tr");
+        selectedLineStart = Number.parseInt(
+          trs[0].firstElementChild.textContent,
+        );
+        selectedLineEnd = Number.parseInt(
+          trs[trs.length - 1].firstElementChild.textContent,
+        );
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  });
 </script>
 
 <div
