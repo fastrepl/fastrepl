@@ -202,7 +202,11 @@
 
   {#if chunks.length === 0}
     <div
-      class="col-span-5 bg-gray-100 flex items-center justify-center h-[calc(100vh-170px)]"
+      class={clsx([
+        "col-span-5 h-[calc(100vh-170px)]",
+        "flex items-center justify-center",
+        "bg-gray-50 border border-gray-200 rounded-xl",
+      ])}
     >
       <span class="text-sm text-gray-500 font-semibold">
         No code snippets found.
@@ -248,6 +252,7 @@
     <div
       class={clsx([
         "col-span-1",
+        "overflow-x-hidden hover:overflow-x-auto",
         "h-[calc(100vh-170px)] overflow-y-hidden hover:overflow-y-auto",
         "bg-gray-50 rounded-lg",
         "border border-gray-200 px-2 py-1",
