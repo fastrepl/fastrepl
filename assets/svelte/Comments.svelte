@@ -4,6 +4,7 @@
 
   export let items: Comment[] = [];
   export let handleClickComment: (comment: Comment) => void;
+  export let handleUpdateComments: (comments: Comment[]) => void;
 
   $: map = items.reduce(
     (acc, comment) => {
@@ -13,6 +14,15 @@
     },
     {} as Record<string, Comment[]>,
   );
+
+  const handleDeleteFile = (filePath: string) => {
+    handleUpdateComments(items.filter((item) => item.file_path !== filePath));
+  };
+
+  const handleDeleteComment = (index: number) => {
+    const newComments = items.filter((_, i) => i !== index);
+    handleUpdateComments(newComments);
+  };
 </script>
 
 <div
@@ -22,19 +32,20 @@
     "bg-gray-50 text-sm",
   ])}
 >
-  {#each Object.entries(map) as [file_path, comments]}
+  {#each Object.entries(map) as [filePath, comments]}
     <div class="flex flex-col gap-1">
-      <div class="flex flex-row gap-2 items-center group text-md">
-        <div class="underline">{file_path}</div>
+      <div class="flex flex-row gap-2 items-center text-md group">
+        <div class="underline">{filePath}</div>
         <button
+          on:click={() => handleDeleteFile(filePath)}
           class="hidden group-hover:block text-gray-400 hover:text-gray-700"
         >
           (X)
         </button>
       </div>
       <div class="pl-4 flex flex-col gap-0.5 text-sm text-gray-700">
-        {#each comments as comment}
-          <div class="flex flex-row gap-2 items-center">
+        {#each comments as comment, i}
+          <div class="flex flex-row gap-2 items-center group">
             <button
               type="button"
               class="px-2 py-1 rounded-md bg-gray-100 hover:bg-gray-200 text-sm"
@@ -44,7 +55,8 @@
             </button>
             <div>{comment.content}</div>
             <button
-              class="hidden hover:block text-gray-400 hover:text-gray-700"
+              on:click={() => handleDeleteComment(i)}
+              class="hidden group-hover:block text-gray-400 hover:text-gray-700"
             >
               (X)
             </button>

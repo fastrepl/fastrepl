@@ -106,7 +106,7 @@ defmodule FastreplWeb.ThreadLive do
     {:noreply, socket}
   end
 
-  def handle_event("comment", data, socket) do
+  def handle_event("comment:add", data, socket) do
     %{
       "file_path" => file_path,
       "line_start" => line_start,
@@ -130,6 +130,15 @@ defmodule FastreplWeb.ThreadLive do
     socket =
       socket
       |> assign(:repo, repo)
+      |> sync_with_orchestrator(:repo)
+
+    {:noreply, socket}
+  end
+
+  def handle_event("comment:replace", %{"comments" => comments}, socket) do
+    socket =
+      socket
+      |> assign(:repo, %{socket.assigns.repo | comments: comments})
       |> sync_with_orchestrator(:repo)
 
     {:noreply, socket}

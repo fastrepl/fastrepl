@@ -17,7 +17,7 @@
   export let chunks: Chunk[] = [];
   export let comments: Comment[] = [];
 
-  let current_chunk = null;
+  let currentChunk = null;
 
   let selectedLineStart = null;
   let selectedLineEnd = null;
@@ -25,11 +25,12 @@
   let scrollableElement: HTMLElement;
   let contextMenuInstance: TippyInstance | null = null;
 
-  $: if (!current_chunk && chunks.length > 0) {
-    current_chunk = chunks[0];
+  $: if (!currentChunk && chunks.length > 0) {
+    currentChunk = chunks[0];
   }
 
   $: tree = addRoot(root, buildTree(chunks.map((chunk) => chunk.file_path)));
+
   $: {
     const createCodeActionList = (target: Element) => {
       return new CodeActionList({
@@ -62,8 +63,8 @@
     contextMenuInstance.hide();
 
     setTimeout(() => {
-      live.pushEvent("comment", {
-        file_path: current_chunk.file_path,
+      live.pushEvent("comment:add", {
+        file_path: currentChunk.file_path,
         line_start: selectedLineStart,
         line_end: selectedLineEnd,
         content: content,
@@ -76,10 +77,10 @@
     selectedLineStart = null;
     selectedLineEnd = null;
 
-    const next_chunk = chunks.find((chunk) => chunk.file_path === path);
+    const nextChunk = chunks.find((chunk) => chunk.file_path === path);
 
-    if (next_chunk) {
-      current_chunk = next_chunk;
+    if (nextChunk) {
+      currentChunk = nextChunk;
     }
   };
 
@@ -101,7 +102,7 @@
     contextMenuInstance.show();
   };
 
-  const handleMouseUp = (e: Event) => {
+  const handleMouseUp = (_: Event) => {
     try {
       const selection = document.getSelection();
 
@@ -128,7 +129,7 @@
   };
 
   const handleClickComment = (comment: Comment) => {
-    current_chunk = chunks.find(
+    currentChunk = chunks.find(
       (chunk) => chunk.file_path === comment.file_path,
     );
 
@@ -138,13 +139,22 @@
     startLine.scrollIntoView({ behavior: "smooth" });
   };
 
+  const handleUpdateComments = (newComments: Comment[]) => {
+    comments = newComments;
+    live.pushEvent("comment:replace", { comments });
+  };
+
   onMount(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         contextMenuInstance.hide();
       }
 
-      if (e.target["tagName"] !== "INPUT" && e.metaKey && e.key === "a") {
+      if (e.target["tagName"] === "INPUT") {
+        return;
+      }
+
+      if (e.metaKey && e.key === "a") {
         e.preventDefault();
 
         document.getSelection().removeAllRanges();
@@ -153,6 +163,7 @@
         document.getSelection().addRange(range);
 
         const trs = scrollableElement.querySelectorAll("tr");
+
         selectedLineStart = Number.parseInt(
           trs[0].firstElementChild.textContent,
         );
@@ -170,10 +181,14 @@
 </script>
 
 <div
-  class="grid grid-cols-8 gap-2 h-[calc(100vh-140px)] border border-gray-200 rounded-xl p-4"
+  class={clsx([
+    "grid grid-cols-8 gap-2",
+    "h-[calc(100vh-140px)]",
+    "border border-gray-200 rounded-xl p-4",
+  ])}
 >
   <div class="col-span-3 h-[calc(100vh-170px)]">
-    <Comments items={comments} {handleClickComment} />
+    <Comments items={comments} {handleClickComment} {handleUpdateComments} />
   </div>
 
   {#if chunks.length === 0}
@@ -188,7 +203,7 @@
     <div class="col-span-4 relative">
       <div class="flex flex-col">
         <span class="text-xs rounded-t-md bg-slate-200 py-0.5 px-2">
-          {current_chunk.file_path}
+          {currentChunk.file_path}
         </span>
         <!-- svelte-ignore a11y-no-static-element-interactions -->
         <div
@@ -201,12 +216,12 @@
           ])}
         >
           <CodeSnippet
-            chunk={current_chunk}
+            chunk={currentChunk}
             selections={[
               [selectedLineStart, selectedLineEnd],
               ...comments
                 .filter(
-                  (comment) => comment.file_path === current_chunk.file_path,
+                  (comment) => comment.file_path === currentChunk.file_path,
                 )
                 .map((comment) => [comment.line_start, comment.line_end]),
             ]}
@@ -233,7 +248,7 @@
         {root}
         items={tree}
         {handleClickFile}
-        current_file_path={current_chunk.file_path}
+        currentFilePath={currentChunk.file_path}
       />
     </div>
   {/if}

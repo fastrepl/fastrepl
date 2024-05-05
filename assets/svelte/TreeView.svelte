@@ -6,7 +6,7 @@
 
   export let root: string;
   export let items: TreeNode[] = [];
-  export let current_file_path: string;
+  export let currentFilePath: string;
   export let handleClickFile: (path: string) => void;
 </script>
 
@@ -15,7 +15,7 @@
     <li
       class={clsx(
         !item.children?.length && "hover:bg-gray-200",
-        item.path === current_file_path && "bg-gray-200 px-0.5 rounded-sm",
+        item.path === currentFilePath && "bg-gray-200 px-0.5 rounded-sm",
       )}
       transition:slide={{ duration: 600 }}
     >
@@ -37,7 +37,7 @@
             <div class="pl-2">
               <svelte:self
                 items={item.children}
-                {current_file_path}
+                {currentFilePath}
                 {handleClickFile}
                 let:item
                 let:list={items}
