@@ -141,9 +141,9 @@
 </script>
 
 <div
-  class="flex flex-row h-[calc(100vh-140px)] border border-gray-200 rounded-xl p-4"
+  class="grid grid-cols-8 gap-2 h-[calc(100vh-140px)] border border-gray-200 rounded-xl p-4"
 >
-  <div class="basis-2/5">
+  <div class="col-span-3">
     <div
       class="flex flex-col h-[calc(100vh-170px)] bg-gray-50 rounded-lg gap-4 border border-gray-200 px-4 py-2 text-sm"
     >
@@ -176,54 +176,50 @@
     </div>
   </div>
 
-  <div class="h-full w-0.5 bg-gray-100 mx-2"></div>
-
-  <div class="basis-3/5">
-    {#if chunks.length === 0}
-      <div
-        class="bg-gray-100 flex items-center justify-center h-[calc(100vh-170px)]"
-      >
-        <span class="text-sm text-gray-500 font-semibold">
-          No code snippets found.
+  {#if chunks.length === 0}
+    <div
+      class="col-span-5 bg-gray-100 flex items-center justify-center h-[calc(100vh-170px)]"
+    >
+      <span class="text-sm text-gray-500 font-semibold">
+        No code snippets found.
+      </span>
+    </div>
+  {:else}
+    <div class="col-span-4 relative">
+      <div class="flex flex-col">
+        <span class="text-xs rounded-t-md bg-slate-200 py-0.5 px-2">
+          {current_file_path}
         </span>
-      </div>
-    {:else}
-      <div class="flex flex-row gap-2">
-        <div class="flex flex-col relative">
-          <span class="text-xs rounded-t-md bg-slate-200 py-0.5 px-2">
-            {current_file_path}
-          </span>
-          <!-- svelte-ignore a11y-no-static-element-interactions -->
-          <div
-            bind:this={scrollableElement}
-            on:mouseup={handleMouseUp}
-            on:contextmenu={handleContextMenu}
-            class={clsx([
-              "max-w-[600px]",
-              "h-[calc(100vh-190px)] overflow-y-auto scrollbar-hide",
-              "text-sm rounded-b-md  selection:bg-blue-800",
-            ])}
-          >
-            <CodeSnippet chunk={current_chunk} />
-          </div>
-
-          {#if scrollableElement}
-            <div class="absolute right-0 top-7">
-              <Minimap root={scrollableElement} />
-            </div>
-          {/if}
-        </div>
-
+        <!-- svelte-ignore a11y-no-static-element-interactions -->
         <div
+          bind:this={scrollableElement}
+          on:mouseup={handleMouseUp}
+          on:contextmenu={handleContextMenu}
           class={clsx([
-            "h-[calc(100vh-170px)] overflow-y-hidden hover:overflow-y-auto",
-            "bg-gray-50 rounded-lg",
-            "border border-gray-200 px-2 py-1",
+            "h-[calc(100vh-190px)] overflow-y-auto scrollbar-hide",
+            "text-sm rounded-b-md  selection:bg-blue-800",
           ])}
         >
-          <TreeView {root} items={tree} {handleClickFile} {current_file_path} />
+          <CodeSnippet chunk={current_chunk} />
         </div>
       </div>
-    {/if}
-  </div>
+
+      {#if scrollableElement}
+        <div class="absolute right-0 top-7">
+          <Minimap root={scrollableElement} />
+        </div>
+      {/if}
+    </div>
+
+    <div
+      class={clsx([
+        "col-span-1",
+        "h-[calc(100vh-170px)] overflow-y-hidden hover:overflow-y-auto",
+        "bg-gray-50 rounded-lg",
+        "border border-gray-200 px-2 py-1",
+      ])}
+    >
+      <TreeView {root} items={tree} {handleClickFile} {current_file_path} />
+    </div>
+  {/if}
 </div>

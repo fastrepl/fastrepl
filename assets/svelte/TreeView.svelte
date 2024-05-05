@@ -14,7 +14,6 @@
   {#each items as item, i (item.path)}
     <li
       class={clsx(
-        "w-[140px] truncate",
         !item.children?.length && "hover:bg-gray-200",
         item.path === current_file_path && "bg-gray-200 px-0.5 rounded-sm",
       )}
@@ -30,7 +29,7 @@
             ])}
           >
             <slot {item} list={items} id={i}>
-              <span class="max-w-[130px] truncate">{item.name}</span>
+              <span>{item.name}</span>
             </slot>
           </summary>
 
@@ -45,10 +44,7 @@
                 let:id={i}
               >
                 <slot {item} list={items} id={i}>
-                  <button
-                    class="max-w-[130px] truncate"
-                    on:click={() => handleClickFile(item.path)}
-                  >
+                  <button on:click={() => handleClickFile(item.path)}>
                     {item.name}
                   </button>
                 </slot>
@@ -58,10 +54,7 @@
         </details>
       {:else}
         <slot {item} list={items} id={i}>
-          <button
-            class="max-w-[130px] truncate"
-            on:click={() => handleClickFile(item.path)}
-          >
+          <button on:click={() => handleClickFile(item.path)}>
             {item.name}
           </button>
         </slot>
