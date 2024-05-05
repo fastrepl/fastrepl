@@ -114,22 +114,16 @@ defmodule FastreplWeb.ThreadLive do
       "content" => content
     } = data
 
-    repo = %{
-      socket.assigns.repo
-      | comments: [
-          %{
-            file_path: file_path,
-            line_start: line_start,
-            line_end: line_end,
-            content: content
-          }
-          | socket.assigns.repo.comments
-        ]
-    }
+    new_comments =
+      [
+        %{file_path: file_path, line_start: line_start, line_end: line_end, content: content}
+        | socket.assigns.repo.comments
+      ]
+      |> Enum.reverse()
 
     socket =
       socket
-      |> assign(:repo, repo)
+      |> assign(:repo, %{socket.assigns.repo | comments: new_comments})
       |> sync_with_orchestrator(:repo)
       |> sync_with_views(:repo)
 
