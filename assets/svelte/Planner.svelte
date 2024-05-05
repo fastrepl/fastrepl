@@ -205,6 +205,12 @@
           </div>
         </div>
       {/each}
+
+      {#if comments.length !== 0}
+        <button class="mt-auto bg-gray-800 text-white px-4 py-2 rounded-md">
+          Execute plan
+        </button>
+      {/if}
     </div>
   </div>
 
