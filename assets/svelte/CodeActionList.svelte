@@ -33,13 +33,21 @@
 </script>
 
 <div
-  class="bg-gray-100 rounded-lg shadow-[0_0_0_1px_rgba(0,0,0,0.05),0px_10px_20px_rgba(0,0,0,0.1)] text-opacity-80 text-black text-sm overflow-hidden p-1 relative"
+  class={clsx([
+    "border border-gray-300 rounded-lg",
+    "text-opacity-80 text-black text-sm",
+    "bg-gray-100 overflow-hidden relative p-0.5",
+  ])}
 >
   {#if currentIndex === null}
     {#each items as item, index}
       <button
-        class={"border border-transparent rounded-md block m-0 py-1 px-2 text-left w-full"}
         on:click={() => handleChangeIndex(index)}
+        class={clsx([
+          "border border-transparent py-1 px-2 m-0",
+          "rounded-md block text-left w-full",
+          "bg-gray-100 hover:bg-gray-200",
+        ])}
       >
         {item}
       </button>
@@ -66,8 +74,10 @@
           "w-12 h-8 rounded-lg",
           "bg-gray-200 hover:bg-gray-300",
           "text-gray-400 hover:text-gray-500 text-md",
-        ])}>+</button
+        ])}
       >
+        +
+      </button>
     </div>
   {/if}
 </div>

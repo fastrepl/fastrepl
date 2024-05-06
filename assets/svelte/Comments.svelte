@@ -62,7 +62,7 @@
       <div
         in:fly={{ duration: 300, x: 30 }}
         out:fly={{ duration: 300, x: -30 }}
-        class="pl-4 flex flex-col gap-0.5 text-sm text-gray-700"
+        class="pl-4 mt-1 flex flex-col gap-2 text-sm text-gray-700"
       >
         {#each comments as comment (`${comment.file_path}-${comment.line_start}`)}
           <div
@@ -72,7 +72,11 @@
           >
             <button
               type="button"
-              class="px-2 py-1 rounded-md bg-gray-100 hover:bg-gray-200 text-sm"
+              class={clsx([
+                "px-1 py-0.5 rounded-md",
+                "bg-gray-200 hover:bg-yellow-100",
+                "text-sm",
+              ])}
               on:click={() => handleClickComment(comment)}
             >
               L{comment.line_start}-{comment.line_end}
