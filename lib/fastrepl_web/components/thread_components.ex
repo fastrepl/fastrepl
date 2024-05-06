@@ -100,11 +100,11 @@ defmodule FastreplWeb.ThreadComponents do
             phx-value-step={step}
           >
             <%= if @current_step == step do %>
-              <span class="size-6 rounded-full bg-blue-600 text-center text-[10px]/6 font-bold text-white">
+              <span class="size-6 rounded-full bg-gray-600 text-center text-[10px]/6 font-bold text-white">
                 <%= index + 1 %>
               </span>
             <% else %>
-              <span class="size-6 rounded-full bg-gray-100 group-hover:bg-blue-600 group-hover:text-white text-center text-[10px]/6 font-bold">
+              <span class="size-6 rounded-full bg-gray-100 group-hover:bg-gray-600 group-hover:text-white text-center text-[10px]/6 font-bold">
                 <%= index + 1 %>
               </span>
             <% end %>

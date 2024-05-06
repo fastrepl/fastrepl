@@ -10,6 +10,7 @@ defmodule Fastrepl.Repository do
             chunks: [],
             files: [],
             comments: [],
+            diffs: [],
             vectordb_pid: nil,
             indexing_progress: nil,
             indexing_total: nil
@@ -23,6 +24,7 @@ defmodule Fastrepl.Repository do
           chunks: [Chunk.t()],
           files: [Repository.File.t()],
           comments: [Repository.Comment.t()],
+          diffs: [any()],
           vectordb_pid: pid() | nil,
           indexing_progress: integer() | nil,
           indexing_total: integer() | nil

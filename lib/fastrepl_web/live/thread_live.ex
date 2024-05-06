@@ -55,7 +55,18 @@ defmodule FastreplWeb.ThreadLive do
             />
           </div>
         <% "Execution" -> %>
-          <div>Execution</div>
+          <div class="mt-8">
+            <%= if assigns[:repo] && @repo.diffs do %>
+              <div><%= @repo.diffs |> Enum.count() %> diffs created</div>
+            <% else %>
+              <div>No diffs created</div>
+            <% end %>
+
+            <div class="flex flex-row gap-4 mt-4">
+              <.button>Create PR</.button>
+              <.button>Fetch Diffs</.button>
+            </div>
+          </div>
         <% nil -> %>
           <div>...</div>
       <% end %>
