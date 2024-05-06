@@ -10,6 +10,7 @@
   import CodeActionList from "$components/CodeActionList.svelte";
   import Comments from "$components/Comments.svelte";
   import ChatEditor from "$components/ChatEditor.svelte";
+  import ChatMessage from "$components/ChatMessage.svelte";
 
   import type { Comment, File } from "$lib/types";
   import { addRoot, buildTree } from "$lib/utils/tree";
@@ -229,7 +230,7 @@
       </Tabs.List>
       <Tabs.Content
         value={TABS[0]}
-        class="bg-gray-50 border-b border-gray-200 rounded-b-lg px-4 py-2 h-full"
+        class="bg-gray-50 border-b border-gray-200 rounded-b-lg p-4 h-full"
       >
         <Comments
           items={comments}
@@ -242,9 +243,13 @@
         value={TABS[1]}
         class={clsx([
           "bg-gray-50 h-full relative",
-          "border-b border-gray-200 rounded-b-lg px-4 py-2",
+          "border-b border-gray-200 rounded-b-lg p-4",
         ])}
       >
+        <ChatMessage name="AI" time={new Date().toLocaleTimeString()}>
+          I am here to help with the planning!
+        </ChatMessage>
+
         <div class={clsx(["w-full px-6", "absolute bottom-2 left-0"])}>
           <ChatEditor
             handleSubmit={handleSubmitChat}
