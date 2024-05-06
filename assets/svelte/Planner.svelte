@@ -212,7 +212,10 @@
           Chat
         </Tabs.Trigger>
       </Tabs.List>
-      <Tabs.Content value="Comments" class="h-full">
+      <Tabs.Content
+        value="Comments"
+        class="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 h-full"
+      >
         <Comments
           items={comments}
           {handleClickComment}
@@ -220,7 +223,10 @@
           {handleClickNext}
         />
       </Tabs.Content>
-      <Tabs.Content value="Chat" class="h-full">
+      <Tabs.Content
+        value="Chat"
+        class="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 h-full"
+      >
         <div>Chat Goes Here</div>
       </Tabs.Content>
     </Tabs.Root>

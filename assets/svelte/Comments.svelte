@@ -1,5 +1,7 @@
 <script lang="ts">
   import { clsx } from "clsx";
+  import { fly } from "svelte/transition";
+
   import type { Comment } from "$lib/types";
 
   export let items: Comment[] = [];
@@ -26,16 +28,14 @@
   };
 </script>
 
-<div
-  class={clsx([
-    "flex flex-col gap-4 h-full",
-    "border border-gray-200 rounded-lg px-4 py-2",
-    "bg-gray-50 text-sm",
-  ])}
->
+<div class="flex flex-col gap-4 h-full text-sm">
   {#each Object.entries(map) as [filePath, comments]}
     <div class="flex flex-col gap-1">
-      <div class="flex flex-row gap-2 items-center text-md group">
+      <div
+        in:fly={{ duration: 300, x: 30 }}
+        out:fly={{ duration: 300, x: -30 }}
+        class="flex flex-row gap-2 items-center text-md group"
+      >
         <div class="underline">{filePath}</div>
         <button
           on:click={() => handleDeleteFile(filePath)}
@@ -44,9 +44,17 @@
           (X)
         </button>
       </div>
-      <div class="pl-4 flex flex-col gap-0.5 text-sm text-gray-700">
-        {#each comments as comment, i}
-          <div class="flex flex-row gap-2 items-center group">
+      <div
+        in:fly={{ duration: 300, x: 30 }}
+        out:fly={{ duration: 300, x: -30 }}
+        class="pl-4 flex flex-col gap-0.5 text-sm text-gray-700"
+      >
+        {#each comments as comment, i (`${comment.file_path}-${comment.line_start}`)}
+          <div
+            in:fly={{ duration: 300, x: 30 }}
+            out:fly={{ duration: 300, x: -30 }}
+            class="flex flex-row gap-2 items-center group"
+          >
             <button
               type="button"
               class="px-2 py-1 rounded-md bg-gray-100 hover:bg-gray-200 text-sm"
@@ -70,6 +78,8 @@
   {#if items.length !== 0}
     <button
       type="button"
+      in:fly={{ duration: 300, x: 30 }}
+      out:fly={{ duration: 300, x: -30 }}
       on:click={handleClickNext}
       class={clsx([
         "mt-auto px-4 py-2 rounded-md",
