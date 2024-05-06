@@ -43,7 +43,7 @@
     const createCodeActionList = (target: Element) => {
       return new CodeActionList({
         target,
-        props: { handleSubmit: handleSubmitComment },
+        props: { handleSubmitComment, handleSubmitReference },
       });
     };
 
@@ -69,7 +69,7 @@
 
   const handleSubmitComment = (content: string) => {
     contextMenuInstance.hide();
-    currentTab = "Comments";
+    currentTab = TABS[0];
 
     setTimeout(() => {
       live.pushEvent("comment:add", {
@@ -79,6 +79,12 @@
         content: content,
       });
     }, 300);
+  };
+
+  const handleSubmitReference = () => {
+    contextMenuInstance.hide();
+    currentTab = TABS[1];
+    console.log(currentFile.path, selectedLineStart, selectedLineEnd);
   };
 
   const handleClickFile = (path: string) => {
