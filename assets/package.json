@@ -21,6 +21,7 @@
     "@tiptap/pm": "^2.3.0",
     "@tiptap/starter-kit": "^2.3.0",
     "@tiptap/suggestion": "^2.3.0",
+    "bits-ui": "^0.21.7",
     "clsx": "^2.1.1",
     "fuse.js": "^7.0.0",
     "live_svelte": "file:../deps/live_svelte",

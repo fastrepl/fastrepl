@@ -2,6 +2,7 @@
   import { clsx } from "clsx";
   import { onMount } from "svelte";
   import tippy, { type Instance as TippyInstance } from "tippy.js";
+  import { Tabs } from "bits-ui";
 
   import TreeView from "$components/TreeView.svelte";
   import CodeSnippet from "$components/CodeSnippet.svelte";
@@ -189,13 +190,40 @@
     "border border-gray-200 rounded-xl p-4",
   ])}
 >
-  <div class="col-span-3 h-[calc(100vh-170px)]">
-    <Comments
-      items={comments}
-      {handleClickComment}
-      {handleUpdateComments}
-      {handleClickNext}
-    />
+  <div class="col-span-3 h-[calc(100vh-200px)]">
+    <Tabs.Root value="Comments" class="h-full">
+      <Tabs.List
+        class={clsx([
+          "border border-gray-300 rounded-md",
+          "flex flex-row gap-0.5",
+          "text-xs w-fit mb-2",
+        ])}
+      >
+        <Tabs.Trigger
+          value="Comments"
+          class="data-[state=active]:bg-gray-200 px-1 py-0.5"
+        >
+          Comments
+        </Tabs.Trigger>
+        <Tabs.Trigger
+          value="Chat"
+          class="data-[state=active]:bg-gray-200 px-1 py-0.5"
+        >
+          Chat
+        </Tabs.Trigger>
+      </Tabs.List>
+      <Tabs.Content value="Comments" class="h-full">
+        <Comments
+          items={comments}
+          {handleClickComment}
+          {handleUpdateComments}
+          {handleClickNext}
+        />
+      </Tabs.Content>
+      <Tabs.Content value="Chat" class="h-full">
+        <div>Chat Goes Here</div>
+      </Tabs.Content>
+    </Tabs.Root>
   </div>
 
   {#if files.length === 0}
