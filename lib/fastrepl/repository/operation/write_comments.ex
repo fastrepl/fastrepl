@@ -1,4 +1,4 @@
-defmodule Fastrepl.Repository.Operation.WriteComment do
+defmodule Fastrepl.Repository.Operation.WriteComments do
   alias Fastrepl.Repository
 
   alias LangChain.Chains.LLMChain

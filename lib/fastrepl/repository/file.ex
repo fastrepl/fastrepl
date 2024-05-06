@@ -1,4 +1,5 @@
 defmodule Fastrepl.Repository.File do
+  @derive Jason.Encoder
   defstruct path: "", content: ""
 
   alias Fastrepl.Retrieval.Chunker.Chunk
