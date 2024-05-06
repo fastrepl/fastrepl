@@ -9,6 +9,7 @@
   import Minimap from "$components/Minimap.svelte";
   import CodeActionList from "$components/CodeActionList.svelte";
   import Comments from "$components/Comments.svelte";
+  import ChatEditor from "$components/ChatEditor.svelte";
 
   import type { Comment, File } from "$lib/types";
   import { addRoot, buildTree } from "$lib/utils/tree";
@@ -147,13 +148,17 @@
     live.pushEvent("move_step", { step: "Execution" });
   };
 
+  const handleSubmitChat = (value: string) => {
+    console.log(value);
+  };
+
   onMount(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         contextMenuInstance.hide();
       }
 
-      if (e.target["tagName"] === "INPUT") {
+      if (e.target["contentEditable"] || e.target["tagName"] === "INPUT") {
         return;
       }
 
@@ -191,7 +196,7 @@
   ])}
 >
   <div
-    class="col-span-3 h-[calc(100vh-200px)] border border-gray-200 rounded-lg"
+    class="col-span-3 h-[calc(100vh-190px)] border border-gray-200 rounded-lg"
   >
     <Tabs.Root value="Comments" class="h-full">
       <Tabs.List
@@ -227,9 +232,17 @@
       </Tabs.Content>
       <Tabs.Content
         value="Chat"
-        class="bg-gray-50 border-b border-gray-200 rounded-b-lg px-4 py-2 h-full"
+        class={clsx([
+          "bg-gray-50 h-full relative",
+          "border-b border-gray-200 rounded-b-lg px-4 py-2",
+        ])}
       >
-        <div>Chat Goes Here</div>
+        <div class={clsx(["w-full px-6", "absolute bottom-2 left-0"])}>
+          <ChatEditor
+            handleSubmit={handleSubmitChat}
+            placeholder="Type something..."
+          />
+        </div>
       </Tabs.Content>
     </Tabs.Root>
   </div>

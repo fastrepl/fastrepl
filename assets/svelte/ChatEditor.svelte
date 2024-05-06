@@ -9,34 +9,25 @@
 
   import { turndownService } from "$lib/turndown";
 
-  export let live: any;
-  export let input_name: string;
-  export let phx_submit = "submit";
   export let placeholder = "Type something...";
+  export let handleSubmit: (value: string) => void;
 
   let editor: Readable<Editor>;
-  let mdContent = "";
 
-  const FORM_ID = "chat-editor-form";
-
-  const keydownListener = (e: KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      const form = document.getElementById(FORM_ID);
-      form.dispatchEvent(
-        new Event("submit", { bubbles: true, cancelable: true }),
-      );
-      handleSubmit();
-    }
-  };
-
-  const handleSubmit = () => {
+  const handleSubmitWrapper = () => {
+    const html = $editor.getHTML();
+    const md = turndownService.turndown(html);
+    handleSubmit(md);
     $editor.commands.clearContent();
   };
 
-  onMount(() => {
-    const form = document.getElementById(FORM_ID);
-    form.setAttribute("phx-submit", phx_submit);
+  const keydownListener = (e: KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      handleSubmitWrapper();
+    }
+  };
 
+  onMount(() => {
     editor = createEditor({
       extensions: [
         ...Shared,
@@ -47,10 +38,6 @@
         }),
       ],
       content: "",
-      onUpdate: (e) => {
-        const html = e.editor.getHTML();
-        mdContent = turndownService.turndown(html);
-      },
       editorProps: {
         attributes: {
           class:
@@ -58,16 +45,8 @@
         },
       },
     });
-    $editor.commands.focus();
 
-    live.handleEvent("tiptap:submit", () => {
-      $editor.commands.clearContent();
-      $editor.commands.focus();
-    });
-    live.handleEvent("tiptap:append", ({ content }) => {
-      const { size } = $editor.view.state.doc.content;
-      $editor.commands.insertContentAt(size, content);
-    });
+    $editor.commands.focus();
   });
 
   window.addEventListener("keydown", keydownListener);
@@ -76,14 +55,13 @@
   });
 </script>
 
-<form id={FORM_ID} class="w-[750px]">
-  <input type="hidden" name={input_name} value={mdContent} />
+<div class="w-full relative">
   <EditorContent editor={$editor} />
   <button
     type="submit"
-    on:click={handleSubmit}
-    class="w-7 h-7 rounded-xl bg-blue-500 hover:bg-blue-600 bottom-[72px] right-2.5 absolute ml-2 text-white text-md"
+    on:click={handleSubmitWrapper}
+    class="w-7 h-7 rounded-xl bg-blue-600 hover:bg-blue-500 absolute top-2 right-2 ml-2 text-white text-md"
   >
     ↑
   </button>
-</form>
+</div>
