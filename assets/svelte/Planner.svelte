@@ -187,34 +187,36 @@
   class={clsx([
     "grid grid-cols-8 gap-2",
     "h-[calc(100vh-140px)]",
-    "border border-gray-200 rounded-xl p-4",
+    "border border-gray-200 rounded-lg p-4",
   ])}
 >
-  <div class="col-span-3 h-[calc(100vh-200px)]">
+  <div
+    class="col-span-3 h-[calc(100vh-200px)] border border-gray-200 rounded-lg"
+  >
     <Tabs.Root value="Comments" class="h-full">
       <Tabs.List
         class={clsx([
-          "border border-gray-300 rounded-md",
+          "border-t border-x border-gray-200 px-1 rounded-t-lg",
           "flex flex-row gap-0.5",
-          "text-xs w-fit mb-2",
+          "text-xs bg-gray-200",
         ])}
       >
         <Tabs.Trigger
           value="Comments"
-          class="data-[state=active]:bg-gray-200 px-1 py-0.5"
+          class="data-[state=active]:font-semibold data-[state=inactive]:opacity-40 px-1 py-0.5"
         >
           Comments
         </Tabs.Trigger>
         <Tabs.Trigger
           value="Chat"
-          class="data-[state=active]:bg-gray-200 px-1 py-0.5"
+          class="data-[state=active]:font-semibold data-[state=inactive]:opacity-40 px-1 py-0.5"
         >
           Chat
         </Tabs.Trigger>
       </Tabs.List>
       <Tabs.Content
         value="Comments"
-        class="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 h-full"
+        class="bg-gray-50 border-b border-gray-200 rounded-b-lg px-4 py-2 h-full"
       >
         <Comments
           items={comments}
@@ -225,7 +227,7 @@
       </Tabs.Content>
       <Tabs.Content
         value="Chat"
-        class="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 h-full"
+        class="bg-gray-50 border-b border-gray-200 rounded-b-lg px-4 py-2 h-full"
       >
         <div>Chat Goes Here</div>
       </Tabs.Content>
@@ -237,7 +239,7 @@
       class={clsx([
         "col-span-5 h-[calc(100vh-170px)]",
         "flex items-center justify-center",
-        "bg-gray-50 border border-gray-200 rounded-xl",
+        "bg-gray-50 border border-gray-200 rounded-lg",
       ])}
     >
       <span class="text-sm text-gray-500 font-semibold"> No files found. </span>
@@ -245,7 +247,7 @@
   {:else}
     <div class="col-span-4 relative">
       <div class="flex flex-col">
-        <span class="text-xs rounded-t-md bg-slate-200 py-0.5 px-2">
+        <span class="text-xs rounded-t-lg bg-gray-200 py-0.5 px-2">
           {currentFile.path}
         </span>
         <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -255,7 +257,7 @@
           on:contextmenu={handleContextMenu}
           class={clsx([
             "h-[calc(100vh-190px)] overflow-y-auto scrollbar-hide",
-            "text-sm rounded-b-md  selection:bg-[#fef16033]",
+            "text-sm rounded-b-lg  selection:bg-[#fef16033]",
           ])}
         >
           <CodeSnippet
