@@ -1,5 +1,6 @@
 <script lang="ts">
   import { clsx } from "clsx";
+  import { nanoid } from "nanoid";
   import { fly } from "svelte/transition";
 
   import type { Comment } from "$lib/types";
@@ -9,27 +10,41 @@
   export let handleUpdateComments: (comments: Comment[]) => void;
   export let handleClickNext: () => void;
 
-  $: map = items.reduce(
-    (acc, comment) => {
-      acc[comment.file_path] = acc[comment.file_path] || [];
-      acc[comment.file_path].push(comment);
-      return acc;
-    },
-    {} as Record<string, Comment[]>,
-  );
+  $: map = items
+    .sort((a, b) => {
+      if (a.file_path < b.file_path) return -1;
+      if (a.file_path > b.file_path) return 1;
+      if (a.line_start < b.line_start) return -1;
+      if (a.line_start > b.line_start) return 1;
+      return 0;
+    })
+    .reduce(
+      (acc, comment) => {
+        acc[comment.file_path] = acc[comment.file_path] || [];
+        acc[comment.file_path].push({ id: nanoid(), ...comment });
+        return acc;
+      },
+      {} as Record<string, (Comment & { id: string })[]>,
+    );
 
   const handleDeleteFile = (filePath: string) => {
-    handleUpdateComments(items.filter((item) => item.file_path !== filePath));
+    const newComments = items.filter((item) => item.file_path !== filePath);
+    handleUpdateComments(newComments);
   };
 
-  const handleDeleteComment = (index: number) => {
-    const newComments = items.filter((_, i) => i !== index);
+  const handleDeleteComment = (commentId: string) => {
+    const newComments = Object.entries(map)
+      .map(([_, comments]) =>
+        comments.filter((comment) => comment.id !== commentId),
+      )
+      .flat();
+
     handleUpdateComments(newComments);
   };
 </script>
 
 <div class="flex flex-col gap-4 h-full text-sm">
-  {#each Object.entries(map) as [filePath, comments]}
+  {#each Object.entries(map) as [filePath, comments] (filePath)}
     <div class="flex flex-col gap-1">
       <div
         in:fly={{ duration: 300, x: 30 }}
@@ -49,7 +64,7 @@
         out:fly={{ duration: 300, x: -30 }}
         class="pl-4 flex flex-col gap-0.5 text-sm text-gray-700"
       >
-        {#each comments as comment, i (`${comment.file_path}-${comment.line_start}`)}
+        {#each comments as comment (`${comment.file_path}-${comment.line_start}`)}
           <div
             in:fly={{ duration: 300, x: 30 }}
             out:fly={{ duration: 300, x: -30 }}
@@ -64,7 +79,7 @@
             </button>
             <div>{comment.content}</div>
             <button
-              on:click={() => handleDeleteComment(i)}
+              on:click={() => handleDeleteComment(comment.id)}
               class="hidden group-hover:block text-gray-400 hover:text-gray-700"
             >
               (X)
