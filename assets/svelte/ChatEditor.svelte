@@ -10,6 +10,7 @@
   import { Placeholder } from "@tiptap/extension-placeholder";
 
   import { turndownService } from "$lib/turndown";
+  import { tippy } from "$lib/actions";
 
   export let placeholder = "Type something...";
   export let paths: string[] = [];
@@ -66,6 +67,9 @@
   <EditorContent editor={$editor} />
   <button
     type="submit"
+    use:tippy={{
+      content: `<div class="text-xs text-gray-500">Submit</div>`,
+    }}
     on:click={handleSubmitWrapper}
     class={clsx([
       "absolute top-2 right-2",
