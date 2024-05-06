@@ -19,6 +19,7 @@
   export let root = "repo";
 
   export let files: File[] = [];
+  export let paths: string[] = [];
   export let comments: Comment[] = [];
 
   const TABS = ["Comments", "Chat"];
@@ -252,6 +253,7 @@
 
         <div class={clsx(["w-full px-6", "absolute bottom-2 left-0"])}>
           <ChatEditor
+            {paths}
             handleSubmit={handleSubmitChat}
             placeholder="Type something..."
           />

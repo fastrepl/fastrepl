@@ -6,11 +6,13 @@
   import { createEditor, Editor, EditorContent } from "svelte-tiptap";
 
   import { Shared } from "$lib/extensions/shared";
+  import { ReferenceFile } from "$lib/extensions/referenceFile";
   import { Placeholder } from "@tiptap/extension-placeholder";
 
   import { turndownService } from "$lib/turndown";
 
   export let placeholder = "Type something...";
+  export let paths: string[] = [];
   export let handleSubmit: (value: string) => void;
 
   let editor: Readable<Editor>;
@@ -32,6 +34,10 @@
     editor = createEditor({
       extensions: [
         ...Shared,
+        ReferenceFile({
+          trigger: "/",
+          names: paths,
+        }),
         Placeholder.configure({
           placeholder,
           emptyEditorClass:

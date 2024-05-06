@@ -49,6 +49,7 @@ defmodule FastreplWeb.ThreadLive do
                 %{
                   root: @repo.full_name,
                   files: if(assigns[:repo], do: @repo.files, else: []),
+                  paths: if(assigns[:repo], do: @repo.paths, else: []),
                   comments: if(assigns[:repo], do: @repo.comments, else: [])
                 }
               }
