@@ -39,7 +39,6 @@
     canvas.height = 240;
 
     canvasContext.setTransform(1, 0, 0, 1, 0, 0);
-    canvasContext.globalAlpha = 0.8;
 
     const canvasBounds = canvas.getBoundingClientRect();
     canvasContext.scale(
@@ -54,7 +53,8 @@
     for (const element of root.getElementsByClassName("line-background")) {
       const elementRect = element.getBoundingClientRect();
 
-      canvasContext.fillStyle = "yellow";
+      canvasContext.fillStyle = "rgb(253 224 71)";
+      canvasContext.globalAlpha = 0.8;
       canvasContext.fillRect(
         0,
         elementRect.y - rootRect.y + root.scrollTop,
@@ -64,6 +64,7 @@
     }
 
     canvasContext.fillStyle = "gray";
+    canvasContext.globalAlpha = 0.2;
     canvasContext.fillRect(
       0,
       root.scrollTop,
@@ -76,5 +77,5 @@
 <canvas
   bind:this={canvas}
   style="visibility: hidden;"
-  class="px-0.5 border border-gray-700 rounded-md"
+  class="px-0.5 border border-gray-200 rounded-md"
 />

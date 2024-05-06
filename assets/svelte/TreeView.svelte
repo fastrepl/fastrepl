@@ -24,8 +24,9 @@
           <summary
             tabindex="0"
             class={clsx([
-              "flex hover:underline p-0.5",
+              "flex p-0.5",
               item.name === root && "font-semibold",
+              item.name !== root && "hover:underline",
             ])}
           >
             <slot {item} list={items} id={i}>

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { clsx } from "clsx";
   import { onDestroy, onMount } from "svelte";
   import type { Readable } from "svelte/store";
 
@@ -60,7 +61,12 @@
   <button
     type="submit"
     on:click={handleSubmitWrapper}
-    class="w-7 h-7 rounded-xl bg-blue-600 hover:bg-blue-500 absolute top-2 right-2 ml-2 text-white text-md"
+    class={clsx([
+      "absolute top-2 right-2",
+      "w-7 h-7 rounded-xl ml-2",
+      "bg-gray-200 hover:bg-gray-300",
+      "text-gray-400 hover:text-gray-500 text-md",
+    ])}
   >
     ↑
   </button>

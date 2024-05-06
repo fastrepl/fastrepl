@@ -1,6 +1,6 @@
 <script lang="ts">
   import { HighlightAuto, LineNumbers } from "svelte-highlight";
-  import theme from "svelte-highlight/styles/github-dark";
+  import theme from "svelte-highlight/styles/one-light";
 
   export let content: string;
   export let selections: number[][] = [];

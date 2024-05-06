@@ -271,6 +271,7 @@
           class={clsx([
             "h-[calc(100vh-190px)] overflow-y-auto scrollbar-hide",
             "text-sm rounded-b-lg  selection:bg-[#fef16033]",
+            "border-b border-x border-gray-200 rounded-b-lg",
           ])}
         >
           <CodeSnippet
