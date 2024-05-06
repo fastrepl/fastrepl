@@ -23,6 +23,29 @@ defmodule Fastrepl.Repository.File do
       content: File.read!(path)
     }
   end
+
+  @spec find_line(t(), String.t()) :: pos_integer() | nil
+  def find_line(file, pattern) do
+    file_lines = String.split(file.content, "\n")
+    pattern_lines = String.split(pattern, "\n")
+    pattern_lines_count = length(pattern_lines)
+
+    file_lines
+    |> Enum.with_index(1)
+    |> Enum.map(fn {_, index} ->
+      if index + pattern_lines_count - 1 <= length(file_lines) do
+        from_file = Enum.slice(file_lines, index - 1, pattern_lines_count) |> Enum.join("\n")
+        {index, String.jaro_distance(from_file, pattern)}
+      else
+        {index, -1}
+      end
+    end)
+    |> Enum.max_by(fn {_, similarity} -> similarity end)
+    |> case do
+      {index, score} when score > 0.8 -> index
+      _ -> nil
+    end
+  end
 end
 
 defmodule Fastrepl.Repository.Comment do

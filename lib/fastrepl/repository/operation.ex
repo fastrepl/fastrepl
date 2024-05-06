@@ -8,7 +8,7 @@ defmodule Fastrepl.Repository.Operation.WriteComment do
 
   @model_id "gpt-4-turbo-2024-04-09"
 
-  @spec run(String.t(), Repository.File.t()) :: Repository.Comment.t()
+  @spec run(String.t(), Repository.File.t()) :: {:ok, [Repository.Comment.t()]} | {:error, any()}
   def run(goal, file) do
     {:ok, _, %Message{} = message} =
       LLMChain.new!(%{llm: ChatModel.new!(%{model: @model_id, stream: false, temperature: 0})})
@@ -17,14 +17,40 @@ defmodule Fastrepl.Repository.Operation.WriteComment do
       |> LLMChain.run()
 
     if length(message.tool_calls) > 0 do
-      tool_call = message |> get_in([Access.key!(:tool_calls), Access.at(0)])
-      {:ok, {tool_call.name, tool_call.arguments}}
+      comments =
+        message.tool_calls
+        |> Enum.map(&tool_call_to_comment(&1, file))
+        |> Enum.filter(fn comment -> comment != nil end)
+
+      {:ok, comments}
     else
-      message
+      {:error, message}
     end
   end
 
-  @spec messages(String.t(), File.t()) :: Message.t()
+  defp tool_call_to_comment(tool_call, file) do
+    case tool_call.name do
+      "write_instruction" ->
+        %Repository.Comment{
+          file_path: file.path,
+          line_start: Repository.File.find_line(file.path, tool_call.arguments["block_start"]),
+          line_end: Repository.File.find_line(file.path, tool_call.arguments["block_end"]),
+          content: tool_call.arguments["instruction"]
+        }
+
+      "mark_as_readonly" ->
+        %Repository.Comment{
+          file_path: file.path,
+          line_start: Repository.File.find_line(file.path, tool_call.arguments["block_start"]),
+          line_end: Repository.File.find_line(file.path, tool_call.arguments["block_end"]),
+          content: tool_call.arguments["comment"]
+        }
+
+      _ ->
+        nil
+    end
+  end
+
   defp messages(goal, file) do
     [
       Message.new_system!("""
@@ -49,7 +75,6 @@ defmodule Fastrepl.Repository.Operation.WriteComment do
     ]
   end
 
-  @spec tools() :: [Function.t()]
   defp tools() do
     [
       Function.new!(%{
