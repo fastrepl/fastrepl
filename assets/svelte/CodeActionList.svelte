@@ -6,9 +6,17 @@
   let currentIndex = null;
   let value = "";
 
+  const handleSubmitWrapper = () => {
+    if (!value) {
+      return;
+    }
+
+    handleSubmit(value);
+  };
+
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === "Enter") {
-      handleSubmit(value);
+      handleSubmitWrapper();
     }
   };
 </script>
@@ -38,7 +46,7 @@
       />
       <button
         type="button"
-        on:click={() => handleSubmit(value)}
+        on:click={handleSubmitWrapper}
         class="w-12 h-8 bg-gray-800 text-gray-200 rounded-lg">Add</button
       >
     </div>
