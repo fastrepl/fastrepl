@@ -20,6 +20,9 @@
   export let files: File[] = [];
   export let comments: Comment[] = [];
 
+  const TABS = ["Comments", "Chat"];
+  let currentTab: (typeof TABS)[number] = TABS[0];
+
   let currentFile: File | null = null;
 
   let selectedLineStart = null;
@@ -64,6 +67,7 @@
 
   const handleSubmitComment = (content: string) => {
     contextMenuInstance.hide();
+    currentTab = "Comments";
 
     setTimeout(() => {
       live.pushEvent("comment:add", {
@@ -198,7 +202,11 @@
   <div
     class="col-span-3 h-[calc(100vh-190px)] border border-gray-200 rounded-lg"
   >
-    <Tabs.Root value="Comments" class="h-full">
+    <Tabs.Root
+      value={currentTab}
+      onValueChange={(value) => (currentTab = value)}
+      class="h-full"
+    >
       <Tabs.List
         class={clsx([
           "border-t border-x border-gray-200 px-1 rounded-t-lg",
@@ -207,20 +215,20 @@
         ])}
       >
         <Tabs.Trigger
-          value="Comments"
+          value={TABS[0]}
           class="data-[state=active]:font-semibold data-[state=inactive]:opacity-40 px-1 py-0.5"
         >
-          Comments
+          {TABS[0]}
         </Tabs.Trigger>
         <Tabs.Trigger
-          value="Chat"
+          value={TABS[1]}
           class="data-[state=active]:font-semibold data-[state=inactive]:opacity-40 px-1 py-0.5"
         >
-          Chat
+          {TABS[1]}
         </Tabs.Trigger>
       </Tabs.List>
       <Tabs.Content
-        value="Comments"
+        value={TABS[0]}
         class="bg-gray-50 border-b border-gray-200 rounded-b-lg px-4 py-2 h-full"
       >
         <Comments
@@ -231,7 +239,7 @@
         />
       </Tabs.Content>
       <Tabs.Content
-        value="Chat"
+        value={TABS[1]}
         class={clsx([
           "bg-gray-50 h-full relative",
           "border-b border-gray-200 rounded-b-lg px-4 py-2",
