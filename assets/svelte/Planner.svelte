@@ -203,12 +203,11 @@
 <div
   class={clsx([
     "grid grid-cols-8 gap-2",
-    "h-[calc(100vh-140px)]",
-    "border border-gray-200 rounded-lg p-4",
+    "border border-gray-200 rounded-lg p-2",
   ])}
 >
   <div
-    class="col-span-3 h-[calc(100vh-190px)] border border-gray-200 rounded-lg"
+    class="col-span-3 h-[calc(100vh-170px)] border border-gray-200 rounded-lg"
   >
     <Tabs.Root
       value={currentTab}
@@ -290,7 +289,7 @@
           on:mouseup={handleMouseUp}
           on:contextmenu={handleContextMenu}
           class={clsx([
-            "h-[calc(100vh-190px)] overflow-y-auto scrollbar-hide",
+            "h-[calc(100vh-170px)] overflow-y-auto scrollbar-hide",
             "text-sm rounded-b-lg  selection:bg-[#fef16033]",
             "border-b border-x border-gray-200 rounded-b-lg",
           ])}
@@ -318,7 +317,7 @@
       class={clsx([
         "col-span-1",
         "overflow-x-hidden hover:overflow-x-auto",
-        "h-[calc(100vh-170px)] overflow-y-hidden hover:overflow-y-auto",
+        "h-[calc(100vh-150px)] overflow-y-hidden hover:overflow-y-auto",
         "bg-gray-50 rounded-lg",
         "border border-gray-200 px-2 py-1",
       ])}

@@ -68,20 +68,22 @@
           <div
             in:fly={{ duration: 300, x: 30 }}
             out:fly={{ duration: 300, x: -30 }}
-            class="flex flex-row gap-2 items-center group"
+            class="flex flex-row gap-3 items-center group"
           >
             <button
               type="button"
               class={clsx([
                 "px-1 py-0.5 rounded-md",
                 "bg-gray-200 hover:bg-yellow-100",
-                "text-sm",
+                "text-sm w-fit text-nowrap",
               ])}
               on:click={() => handleClickComment(comment)}
             >
               L{comment.line_start}-{comment.line_end}
             </button>
-            <div>{comment.content}</div>
+            <div class="truncate">
+              {comment.content}
+            </div>
             <button
               on:click={() => handleDeleteComment(comment.id)}
               class="hidden group-hover:block text-gray-400 hover:text-gray-700"

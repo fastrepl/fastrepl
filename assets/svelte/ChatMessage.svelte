@@ -3,7 +3,7 @@
   export let time: string;
 </script>
 
-<div class="flex px-4 py-3 relative">
+<div class="flex p-2 relative">
   <div class="h-10 w-10 rounded flex-shrink-0 bg-[#f0e9e9]">
     <img
       alt={name}
