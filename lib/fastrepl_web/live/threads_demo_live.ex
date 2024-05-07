@@ -46,7 +46,7 @@ defmodule FastreplWeb.ThreadsDemoLive do
           <li>You can only use it for specific set of public repositories.</li>
           <li>
             Each thread has a unique url, and it's public while active. <br />
-            It will be terminated after you close the tab.
+            It will be terminated after you close the tab or refresh the page.
           </li>
         </ul>
       </p>

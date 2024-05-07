@@ -207,7 +207,7 @@
   ])}
 >
   <div
-    class="col-span-3 h-[calc(100vh-170px)] border border-gray-200 rounded-lg"
+    class="col-span-3 h-[calc(100vh-190px)] border border-gray-200 rounded-lg"
   >
     <Tabs.Root
       value={currentTab}
@@ -256,7 +256,7 @@
           I am here to help with the planning!
         </ChatMessage>
 
-        <div class={clsx(["w-full px-6", "absolute bottom-2 left-0"])}>
+        <div class={clsx(["w-full px-3", "absolute bottom-1 left-0"])}>
           <ChatEditor
             {paths}
             handleSubmit={handleSubmitChat}
