@@ -1,77 +1,32 @@
 defmodule FastreplWeb.ThreadLive do
   use FastreplWeb, :live_view
 
-  import FastreplWeb.ThreadComponents, only: [horizontal_progress_bar: 1]
-  import FastreplWeb.GithubComponents, only: [repo: 1, issue: 1]
-
   alias FastreplWeb.Utils.SharedTask
 
   def render(assigns) do
     ~H"""
-    <div class="flex flex-col gap-2 items-center">
-      <div class="w-[600px]">
-        <.horizontal_progress_bar
-          phx_click="move_step"
-          current_step={@current_step}
-          steps={["Initialization", "Planning", "Execution"]}
-        />
-      </div>
-
-      <%= case @current_step do %>
-        <% "Initialization" -> %>
-          <%= if assigns[:repo] && assigns[:issue] do %>
-            <div class="flex flex-col gap-4 mt-10">
-              <.repo
-                full_name={@repo.full_name}
-                description={@repo.description}
-                indexing_total={@repo.indexing_total}
-                indexing_progress={@repo.indexing_progress}
-              />
-              <.issue repo_full_name={@repo.full_name} title={@issue.title} number={@issue.number} />
-
-              <.button
-                phx-click="move_step"
-                phx-value-step="Planning"
-                class="w-full text-lg mt-4"
-                disabled={!@repo.indexing_total || @repo.indexing_total != @repo.indexing_progress}
-              >
-                Next
-              </.button>
-            </div>
-          <% end %>
-        <% "Planning" -> %>
-          <div class="w-full">
-            <.svelte
-              name="Planner"
-              socket={@socket}
-              ssr={false}
-              props={
-                %{
-                  root: @repo.full_name,
-                  files: if(assigns[:repo], do: @repo.files, else: []),
-                  paths: if(assigns[:repo], do: @repo.paths, else: []),
-                  comments: if(assigns[:repo], do: @repo.comments, else: [])
-                }
-              }
-            />
-          </div>
-        <% "Execution" -> %>
-          <div class="w-full">
-            <.svelte
-              name="Execution"
-              socket={@socket}
-              ssr={false}
-              props={
-                %{
-                  diffs: if(assigns[:repo], do: @repo.diffs, else: [])
-                }
-              }
-            />
-          </div>
-        <% nil -> %>
-          <div>...</div>
-      <% end %>
-    </div>
+    <.svelte
+      name="Thread"
+      socket={@socket}
+      ssr={false}
+      props={
+        %{
+          repoRootPath: assigns |> get_in([Access.key(:repo), Access.key(:root_path)]),
+          repoFullName: assigns |> get_in([Access.key(:repo), Access.key(:full_name)]),
+          repoDescription: assigns |> get_in([Access.key(:repo), Access.key(:description)]),
+          issueTitle: assigns |> get_in([Access.key(:issue), Access.key(:title)]),
+          issueNumber: assigns |> get_in([Access.key(:issue), Access.key(:number)]),
+          indexingTotal: assigns |> get_in([Access.key(:repo), Access.key(:indexing_total)]),
+          indexingProgress: assigns |> get_in([Access.key(:repo), Access.key(:indexing_progress)]),
+          files: assigns |> get_in([Access.key(:repo), Access.key(:files)]),
+          paths: assigns |> get_in([Access.key(:repo), Access.key(:paths)]),
+          comments: assigns |> get_in([Access.key(:repo), Access.key(:comments)]),
+          diffs: assigns |> get_in([Access.key(:repo), Access.key(:diffs)]),
+          steps: @steps,
+          currentStep: @current_step
+        }
+      }
+    />
     """
   end
 
@@ -82,6 +37,7 @@ defmodule FastreplWeb.ThreadLive do
 
     socket =
       socket
+      |> assign(:steps, ["Initialization", "Planning", "Execution"])
       |> assign(:current_step, nil)
       |> assign(:shared_tasks, [])
 
@@ -110,7 +66,9 @@ defmodule FastreplWeb.ThreadLive do
     end
   end
 
-  def handle_event("move_step", %{"step" => step}, socket) do
+  def handle_event("step:set", %{"step" => step}, socket) do
+    IO.inspect(step)
+
     socket =
       socket
       |> assign(:current_step, step)
@@ -119,31 +77,7 @@ defmodule FastreplWeb.ThreadLive do
     {:noreply, socket}
   end
 
-  def handle_event("comment:add", data, socket) do
-    %{
-      "file_path" => file_path,
-      "line_start" => line_start,
-      "line_end" => line_end,
-      "content" => content
-    } = data
-
-    new_comments =
-      [
-        %{file_path: file_path, line_start: line_start, line_end: line_end, content: content}
-        | socket.assigns.repo.comments
-      ]
-      |> Enum.reverse()
-
-    socket =
-      socket
-      |> assign(:repo, %{socket.assigns.repo | comments: new_comments})
-      |> sync_with_orchestrator(:repo)
-      |> sync_with_views(:repo)
-
-    {:noreply, socket}
-  end
-
-  def handle_event("comment:replace", %{"comments" => comments}, socket) do
+  def handle_event("comment:set", %{"comments" => comments}, socket) do
     socket =
       socket
       |> assign(:repo, %{socket.assigns.repo | comments: comments})

@@ -70,7 +70,7 @@
 
 <div
   class={clsx([
-    "grid grid-cols-5 gap-2",
+    "w-full grid grid-cols-5 gap-2",
     "border border-gray-200 rounded-lg p-2",
   ])}
 >
@@ -78,7 +78,7 @@
     class={clsx([
       "col-span-1 h-[calc(100vh-170px)]",
       "border border-gray-200 rounded-lg py-1 px-2",
-      "text-sm",
+      "text-sm bg-gray-50 ",
     ])}
   >
     <DropdownMenu.Root>
@@ -148,7 +148,7 @@
     </ol>
   </div>
 
-  <div class="col-span-4 border border-gray-200 rounded-lg">
+  <div class="col-span-4 border border-gray-200 rounded-lg bg-gray-50">
     {#if currentFilePath}
       {@const diff = diffs.find((diff) => diff.file_path === currentFilePath)}
       <div class="flex flex-col">

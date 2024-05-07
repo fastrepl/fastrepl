@@ -1,0 +1,19 @@
+<script lang="ts">
+  export let repoFullName: string;
+  export let issueTitle: string;
+  export let issueNumber: number;
+</script>
+
+<div
+  class="flex flex-col gap-1 p-2 border border-black rounded-xl bg-gray-100 text-sm"
+>
+  <a
+    href="https://github.com/{repoFullName}/issues/{issueNumber}"
+    class="text-sm font-semibold hover:underline w-fit px-1"
+  >
+    #{issueNumber}
+  </a>
+  <span class="text-sm truncate max-w-72">
+    {issueTitle}
+  </span>
+</div>

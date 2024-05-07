@@ -8,7 +8,7 @@
   export let items: Comment[] = [];
   export let handleClickComment: (comment: Comment) => void;
   export let handleUpdateComments: (comments: Comment[]) => void;
-  export let handleClickNext: () => void;
+  export let handleClickExecute: () => void;
 
   $: map = items
     .sort((a, b) => {
@@ -101,7 +101,7 @@
       type="button"
       in:fly={{ duration: 300, x: 30 }}
       out:fly={{ duration: 300, x: -30 }}
-      on:click={handleClickNext}
+      on:click={handleClickExecute}
       class={clsx([
         "mt-auto px-4 py-2 rounded-md",
         "bg-gray-800 hover:bg-gray-700 text-white",

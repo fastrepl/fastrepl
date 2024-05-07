@@ -16,12 +16,13 @@
   import { tippy as tippyAction } from "$lib/actions";
   import { buildTree } from "$lib/utils/tree";
 
-  export let live: any;
-  export let root = "repo";
-
+  export let repoFullName: string;
   export let files: File[] = [];
   export let paths: string[] = [];
   export let comments: Comment[] = [];
+
+  export let handleSetComments: (comments: Comment[]) => void;
+  export let handleClickExecute: () => void;
 
   const TABS = ["Comments", "Chat"];
   let currentTab: (typeof TABS)[number] = TABS[0];
@@ -72,13 +73,15 @@
     contextMenuInstance.hide();
     currentTab = TABS[0];
 
+    const newComment: Comment = {
+      file_path: currentFile.path,
+      line_start: selectedLineStart,
+      line_end: selectedLineEnd,
+      content: content,
+    };
     setTimeout(() => {
-      live.pushEvent("comment:add", {
-        file_path: currentFile.path,
-        line_start: selectedLineStart,
-        line_end: selectedLineEnd,
-        content: content,
-      });
+      comments = [...comments, newComment];
+      handleSetComments(comments);
     }, 300);
   };
 
@@ -157,11 +160,7 @@
 
   const handleUpdateComments = (newComments: Comment[]) => {
     comments = newComments;
-    live.pushEvent("comment:replace", { comments });
-  };
-
-  const handleClickNext = () => {
-    live.pushEvent("move_step", { step: "Execution" });
+    handleSetComments(comments);
   };
 
   const handleSubmitChat = (value: string) => {
@@ -246,7 +245,7 @@
           items={comments}
           {handleClickComment}
           {handleUpdateComments}
-          {handleClickNext}
+          {handleClickExecute}
         />
       </Tabs.Content>
       <Tabs.Content
@@ -332,7 +331,7 @@
   >
     <div class="flex flex-row justify-between items-center">
       <span class="text-xs font-semibold truncate">
-        {root}
+        {repoFullName}
       </span>
       <button
         type="button"
