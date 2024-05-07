@@ -95,6 +95,9 @@
     const nextFile = files.find((f) => f.path === path);
     if (nextFile) {
       currentFile = nextFile;
+
+      const startLine = scrollableElement.getElementsByTagName("tr")[1];
+      startLine.scrollIntoView({ behavior: "smooth" });
     }
   };
 

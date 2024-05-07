@@ -56,17 +56,17 @@ defmodule FastreplWeb.ThreadLive do
             />
           </div>
         <% "Execution" -> %>
-          <div class="mt-8">
-            <%= if assigns[:repo] && @repo.diffs do %>
-              <div><%= @repo.diffs |> Enum.count() %> diffs created</div>
-            <% else %>
-              <div>No diffs created</div>
-            <% end %>
-
-            <div class="flex flex-row gap-4 mt-4">
-              <.button>Create PR</.button>
-              <.button>Fetch Diffs</.button>
-            </div>
+          <div class="w-full">
+            <.svelte
+              name="Execution"
+              socket={@socket}
+              ssr={false}
+              props={
+                %{
+                  diffs: if(assigns[:repo], do: @repo.diffs, else: [])
+                }
+              }
+            />
           </div>
         <% nil -> %>
           <div>...</div>
