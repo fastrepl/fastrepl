@@ -1,6 +1,7 @@
 defmodule FastreplWeb.ThreadLive do
   use FastreplWeb, :live_view
 
+  alias Fastrepl.Repository
   alias FastreplWeb.Utils.SharedTask
 
   def render(assigns) do
@@ -11,7 +12,6 @@ defmodule FastreplWeb.ThreadLive do
       ssr={false}
       props={
         %{
-          repoRootPath: assigns |> get_in([Access.key(:repo), Access.key(:root_path)]),
           repoFullName: assigns |> get_in([Access.key(:repo), Access.key(:full_name)]),
           repoDescription: assigns |> get_in([Access.key(:repo), Access.key(:description)]),
           issueTitle: assigns |> get_in([Access.key(:issue), Access.key(:title)]),
@@ -81,6 +81,19 @@ defmodule FastreplWeb.ThreadLive do
     socket =
       socket
       |> assign(:repo, %{socket.assigns.repo | comments: comments})
+      |> sync_with_orchestrator(:repo)
+      |> sync_with_views(:repo)
+
+    {:noreply, socket}
+  end
+
+  def handle_event("file:add", %{"path" => path}, socket) do
+    file = Repository.File.from!(socket.assigns.repo.root_path, path)
+    files = [file | socket.assigns.repo.files]
+
+    socket =
+      socket
+      |> assign(:repo, %{socket.assigns.repo | files: files})
       |> sync_with_orchestrator(:repo)
       |> sync_with_views(:repo)
 

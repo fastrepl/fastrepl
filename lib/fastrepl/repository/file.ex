@@ -17,11 +17,11 @@ defmodule Fastrepl.Repository.File do
     }
   end
 
-  @spec from!(Path.t()) :: t()
-  def from!(path) do
+  @spec from!(Path.t(), Path.t()) :: t()
+  def from!(root_path, file_path) do
     %__MODULE__{
-      path: path,
-      content: File.read!(path)
+      path: file_path,
+      content: File.read!(Path.join(root_path, file_path))
     }
   end
 

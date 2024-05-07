@@ -1,8 +1,9 @@
 <script lang="ts">
   import { clsx } from "clsx";
   import { onMount } from "svelte";
+  import { fade } from "svelte/transition";
   import tippy, { type Instance as TippyInstance } from "tippy.js";
-  import { Tabs } from "bits-ui";
+  import { Tabs, Dialog } from "bits-ui";
 
   import TreeView from "$components/TreeView.svelte";
   import CodeSnippet from "$components/CodeSnippet.svelte";
@@ -11,9 +12,9 @@
   import Comments from "$components/Comments.svelte";
   import ChatEditor from "$components/ChatEditor.svelte";
   import ChatMessage from "$components/ChatMessage.svelte";
+  import SearchFile from "$components/SearchFile.svelte";
 
   import type { Comment, File } from "$lib/types";
-  import { tippy as tippyAction } from "$lib/actions";
   import { buildTree } from "$lib/utils/tree";
 
   export let repoFullName: string;
@@ -23,6 +24,7 @@
 
   export let handleSetComments: (comments: Comment[]) => void;
   export let handleClickExecute: () => void;
+  export let handleAddFile: (path: string) => void;
 
   const TABS = ["Comments", "Chat"];
   let currentTab: (typeof TABS)[number] = TABS[0];
@@ -68,6 +70,23 @@
       });
     }
   }
+
+  let openFileSearch = false;
+  const handleOpenFileSearch = () => {
+    openFileSearch = true;
+  };
+
+  const handleSelectFile = (path: string) => {
+    openFileSearch = false;
+    handleAddFile(path);
+
+    setTimeout(() => {
+      const file = files.find((f) => f.path === path);
+      if (file) {
+        currentFile = file;
+      }
+    }, 500);
+  };
 
   const handleSubmitComment = (content: string) => {
     contextMenuInstance.hide();
@@ -203,9 +222,22 @@
   });
 </script>
 
+<Dialog.Root bind:open={openFileSearch}>
+  <Dialog.Portal>
+    <Dialog.Overlay
+      transition={fade}
+      transitionConfig={{ duration: 150 }}
+      class="fixed inset-0 z-50 bg-black/60"
+    />
+    <Dialog.Content class="fixed left-[50%] top-[10px] z-50 translate-x-[-50%]">
+      <SearchFile paths={paths.filter((p) => !files.find((f) => f.path === p))} {handleSelectFile} />
+    </Dialog.Content>
+  </Dialog.Portal>
+</Dialog.Root>
+
 <div
   class={clsx([
-    "grid grid-cols-6 gap-2",
+    "grid grid-cols-6 gap-2 w-full",
     "border border-gray-200 rounded-lg p-2",
   ])}
 >
@@ -336,9 +368,7 @@
       <button
         type="button"
         class="text-lg text-gray-400 hover:text-gray-800 pl-2"
-        use:tippyAction={{
-          content: `<div class="text-xs text-gray-700">Open file</div>`,
-        }}
+        on:click={() => handleOpenFileSearch()}
       >
         +
       </button>

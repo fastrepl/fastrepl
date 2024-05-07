@@ -46,6 +46,10 @@
   const handleSetComments = (comments: Comment[]) => {
     live.pushEvent("comment:set", { comments });
   };
+
+  const handleAddFile = (path: string) => {
+    live.pushEvent("file:add", { path });
+  };
 </script>
 
 <div class="flex flex-col gap-2 items-center">
@@ -72,6 +76,7 @@
       {comments}
       {handleSetComments}
       {handleClickExecute}
+      {handleAddFile}
     />
   {:else if currentStep === steps[2]}
     <Execution {diffs} />
