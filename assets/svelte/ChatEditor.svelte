@@ -68,7 +68,7 @@
   <button
     type="submit"
     use:tippy={{
-      content: `<div class="text-xs text-gray-500">Submit</div>`,
+      content: `<div class="text-xs text-gray-700">Submit</div>`,
     }}
     on:click={handleSubmitWrapper}
     class={clsx([

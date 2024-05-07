@@ -13,7 +13,8 @@
   import ChatMessage from "$components/ChatMessage.svelte";
 
   import type { Comment, File } from "$lib/types";
-  import { addRoot, buildTree } from "$lib/utils/tree";
+  import { tippy as tippyAction } from "$lib/actions";
+  import { buildTree } from "$lib/utils/tree";
 
   export let live: any;
   export let root = "repo";
@@ -37,7 +38,7 @@
     currentFile = files[0];
   }
 
-  $: tree = addRoot(root, buildTree(files.map((f) => f.path)));
+  $: tree = buildTree(files.map((f) => f.path));
 
   $: {
     const createCodeActionList = (target: Element) => {
@@ -205,12 +206,12 @@
 
 <div
   class={clsx([
-    "grid grid-cols-8 gap-2",
+    "grid grid-cols-6 gap-2",
     "border border-gray-200 rounded-lg p-2",
   ])}
 >
   <div
-    class="col-span-3 h-[calc(100vh-190px)] border border-gray-200 rounded-lg"
+    class="col-span-2 h-[calc(100vh-170px)] border border-gray-200 rounded-lg"
   >
     <Tabs.Root
       value={currentTab}
@@ -273,15 +274,17 @@
   {#if files.length === 0}
     <div
       class={clsx([
-        "col-span-5 h-[calc(100vh-170px)]",
+        "col-span-3 h-[calc(100vh-150px)]",
         "flex items-center justify-center",
         "bg-gray-50 border border-gray-200 rounded-lg",
       ])}
     >
-      <span class="text-sm text-gray-500 font-semibold"> No files found. </span>
+      <span class="text-sm text-gray-500 font-semibold">
+        No file selected.
+      </span>
     </div>
   {:else}
-    <div class="col-span-4 relative">
+    <div class="col-span-3 relative">
       <div class="flex flex-col">
         <span class="text-xs rounded-t-lg bg-gray-200 py-0.5 px-2">
           {currentFile.path}
@@ -315,22 +318,38 @@
         </div>
       {/if}
     </div>
+  {/if}
 
-    <div
-      class={clsx([
-        "col-span-1",
-        "overflow-x-hidden hover:overflow-x-auto",
-        "h-[calc(100vh-150px)] overflow-y-hidden hover:overflow-y-auto",
-        "bg-gray-50 rounded-lg",
-        "border border-gray-200 px-2 py-1",
-      ])}
-    >
-      <TreeView
+  <div
+    class={clsx([
+      "col-span-1",
+      "flex flex-col",
+      "overflow-x-hidden hover:overflow-x-auto",
+      "h-[calc(100vh-150px)] overflow-y-hidden hover:overflow-y-auto",
+      "bg-gray-50 rounded-lg",
+      "border border-gray-200 px-2 py-1",
+    ])}
+  >
+    <div class="flex flex-row justify-between items-center">
+      <span class="text-xs font-semibold truncate">
         {root}
+      </span>
+      <button
+        type="button"
+        class="text-lg text-gray-400 hover:text-gray-800 pl-2"
+        use:tippyAction={{
+          content: `<div class="text-xs text-gray-700">Open file</div>`,
+        }}
+      >
+        +
+      </button>
+    </div>
+    <div class="pl-2">
+      <TreeView
         items={tree}
         {handleClickFile}
-        currentFilePath={currentFile.path}
+        currentFilePath={currentFile?.path}
       />
     </div>
-  {/if}
+  </div>
 </div>

@@ -4,9 +4,8 @@
 
   import { type TreeNode } from "$lib/utils/tree";
 
-  export let root: string;
   export let items: TreeNode[] = [];
-  export let currentFilePath: string;
+  export let currentFilePath: string | null = null;
   export let handleClickFile: (path: string) => void;
 </script>
 
@@ -21,14 +20,7 @@
     >
       {#if item.children}
         <details open>
-          <summary
-            tabindex="0"
-            class={clsx([
-              "flex p-0.5",
-              item.name === root && "font-semibold",
-              item.name !== root && "hover:underline",
-            ])}
-          >
+          <summary tabindex="0" class="flex p-0.5">
             <slot {item} list={items} id={i}>
               <span>{item.name}</span>
             </slot>
