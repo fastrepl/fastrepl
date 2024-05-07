@@ -119,7 +119,7 @@
     if (nextFile) {
       currentFile = nextFile;
 
-      const startLine = scrollableElement.getElementsByTagName("tr")[1];
+      const startLine = scrollableElement.getElementsByTagName("tr")[0];
       startLine.scrollIntoView({ behavior: "smooth" });
     }
   };
@@ -192,7 +192,11 @@
         contextMenuInstance.hide();
       }
 
-      if (e.target["contentEditable"] || e.target["tagName"] === "INPUT") {
+      if (e.target["contentEditable"] && e.target["tagName"] === "DIV") {
+        return;
+      }
+
+      if (e.target["tagName"] === "INPUT") {
         return;
       }
 
@@ -230,7 +234,10 @@
       class="fixed inset-0 z-50 bg-black/60"
     />
     <Dialog.Content class="fixed left-[50%] top-[10px] z-50 translate-x-[-50%]">
-      <SearchFile paths={paths.filter((p) => !files.find((f) => f.path === p))} {handleSelectFile} />
+      <SearchFile
+        paths={paths.filter((p) => !files.find((f) => f.path === p))}
+        {handleSelectFile}
+      />
     </Dialog.Content>
   </Dialog.Portal>
 </Dialog.Root>
