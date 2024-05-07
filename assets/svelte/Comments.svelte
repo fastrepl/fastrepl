@@ -43,7 +43,17 @@
   };
 </script>
 
-<div class="flex flex-col gap-4 h-full text-sm">
+<div class="flex flex-col gap-4 h-full text-sm relative">
+  {#if items.length === 0}
+    <span
+      in:fly={{ duration: 300, x: 30 }}
+      out:fly={{ duration: 300, x: -30 }}
+      class="text-sm text-gray-500 font-semibold absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2"
+    >
+      No comments yet.
+    </span>
+  {/if}
+
   {#each Object.entries(map) as [filePath, comments] (filePath)}
     <div class="flex flex-col gap-1">
       <div
