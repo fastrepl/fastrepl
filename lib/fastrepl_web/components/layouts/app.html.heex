@@ -11,9 +11,9 @@
       </a>
 
       <%= if @current_user do %>
-        <FastreplWeb.AuthComponents.github text="Sign out" href="/auth/github/out" />
+        <FastreplWeb.AuthComponents.github mode={:sign_out} href="/auth/github/out" />
       <% else %>
-        <FastreplWeb.AuthComponents.github text="Sign in" href="/auth/github" />
+        <FastreplWeb.AuthComponents.github mode={:sign_in} href="/auth/github" />
       <% end %>
     </div>
   </div>

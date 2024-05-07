@@ -1,13 +1,34 @@
 defmodule FastreplWeb.AuthComponents do
   use Phoenix.Component
 
-  attr :text, :string
+  import FastreplWeb.Utils, only: [clsx: 1]
+
+  attr :mode, :atom
   attr :href, :string
 
   def github(assigns) do
     ~H"""
-    <a href={@href} class="flex flex-row items-center bg-[#24292e] rounded-xl px-3 py-2 gap-3 w-fit">
-      <svg viewBox="0 0 16 16" class="fill-white w-4 h-4">
+    <a
+      href={@href}
+      class={
+        clsx([
+          "flex flex-row items-center rounded-xl px-3 py-2 gap-3",
+          "border border-gray-200",
+          @mode == :sign_in && "bg-[#24292e]",
+          @mode == :sign_out && "bg-white"
+        ])
+      }
+    >
+      <svg
+        viewBox="0 0 16 16"
+        class={
+          clsx([
+            "w-4 h-4",
+            @mode == :sign_in && "fill-white",
+            @mode == :sign_out && "fill-[#24292e]"
+          ])
+        }
+      >
         <path
           fill-rule="evenodd"
           d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
@@ -19,8 +40,18 @@ defmodule FastreplWeb.AuthComponents do
           .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"
         />
       </svg>
-      <div class="text-white text-xs font-semibold">
-        <%= @text %>
+      <div class={
+        clsx([
+          "text-xs font-semibold w-[58px]",
+          @mode == :sign_in && "text-white",
+          @mode == :sign_out && "text-[#24292e]"
+        ])
+      }>
+        <%= if @mode == :sign_in do %>
+          Sign in
+        <% else %>
+          Sign out
+        <% end %>
       </div>
     </a>
     """
