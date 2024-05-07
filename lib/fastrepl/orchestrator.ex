@@ -54,6 +54,13 @@ defmodule Fastrepl.Orchestrator do
   end
 
   @impl true
+  def handle_cast({:chat, %{messages: messages}}, state) do
+    next_messages = messages |> List.replace_at(-1, %{role: "assistant", content: "TEST"})
+    sync_with_views(state.thread_id, %{messages: next_messages})
+    {:noreply, state}
+  end
+
+  @impl true
   def handle_info(:fetch_issue, state) do
     issue = Github.get_issue!(state.repo.full_name, state.issue.number)
     comments = Github.list_issue_comments!(state.repo.full_name, state.issue.number)
@@ -285,5 +292,14 @@ defmodule Fastrepl.Orchestrator do
 
   defp sync_with_views(thread_id, state) when is_map(state) do
     Phoenix.PubSub.broadcast(Fastrepl.PubSub, "thread:#{thread_id}", {:sync, state})
+  end
+
+  defp should_broadcast?(state, action) do
+    if state[:last_broadcasted_at] == nil do
+      true
+    else
+      diff = DateTime.utc_now() |> DateTime.diff(state.last_broadcasted_at, :millisecond)
+      diff > 180 or action == :response_complete
+    end
   end
 end

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Comment, File, Diff } from "$lib/types";
+  import type { Comment, File, Diff, Message } from "$lib/types";
   import Stepper from "$components/Stepper.svelte";
   import Initialization from "$components/Initialization.svelte";
   import Planning from "$components/Planning.svelte";
@@ -20,6 +20,7 @@
   export let files: File[] = [];
   export let paths: string[] = [];
   export let comments: Comment[];
+  export let messages: Message[] = [];
   export let diffs: Diff[] = [];
 
   const handleChangeStep = (step: string) => {
@@ -50,6 +51,10 @@
   const handleAddFile = (path: string) => {
     live.pushEvent("file:add", { path });
   };
+
+  const handleSubmitChat = (message: Message) => {
+    live.pushEvent("chat:submit", { message });
+  };
 </script>
 
 <div class="flex flex-col gap-2 items-center">
@@ -74,9 +79,11 @@
       {files}
       {paths}
       {comments}
+      {messages}
       {handleSetComments}
       {handleClickExecute}
       {handleAddFile}
+      {handleSubmitChat}
     />
   {:else if currentStep === steps[2]}
     <Execution {diffs} />

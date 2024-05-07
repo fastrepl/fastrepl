@@ -14,3 +14,8 @@ export interface Diff {
   file_path: string;
   content: string;
 }
+
+export interface Message {
+  role: "assistant" | "user";
+  content: string;
+}

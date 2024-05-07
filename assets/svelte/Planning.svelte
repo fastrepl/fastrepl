@@ -11,20 +11,22 @@
   import CodeActionList from "$components/CodeActionList.svelte";
   import Comments from "$components/Comments.svelte";
   import ChatEditor from "$components/ChatEditor.svelte";
-  import ChatMessage from "$components/ChatMessage.svelte";
   import SearchFile from "$components/SearchFile.svelte";
+  import Messages from "$components/Messages.svelte";
 
-  import type { Comment, File } from "$lib/types";
+  import type { Comment, File, Message } from "$lib/types";
   import { buildTree } from "$lib/utils/tree";
 
   export let repoFullName: string;
   export let files: File[] = [];
   export let paths: string[] = [];
   export let comments: Comment[] = [];
+  export let messages: Message[] = [];
 
   export let handleSetComments: (comments: Comment[]) => void;
   export let handleClickExecute: () => void;
   export let handleAddFile: (path: string) => void;
+  export let handleSubmitChat: (message: Message) => void;
 
   const TABS = ["Comments", "Chat"];
   let currentTab: (typeof TABS)[number] = TABS[0];
@@ -182,10 +184,6 @@
     handleSetComments(comments);
   };
 
-  const handleSubmitChat = (value: string) => {
-    console.log(value);
-  };
-
   onMount(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -294,10 +292,7 @@
           "border-b border-gray-200 rounded-b-lg p-4",
         ])}
       >
-        <ChatMessage name="AI" time={new Date().toLocaleTimeString()}>
-          I am here to help with the planning!
-        </ChatMessage>
-
+        <Messages {messages} />
         <div class={clsx(["w-full px-3", "absolute bottom-1 left-0"])}>
           <ChatEditor
             {paths}

@@ -21,6 +21,7 @@ defmodule FastreplWeb.ThreadLive do
           files: assigns |> get_in([Access.key(:repo), Access.key(:files)]),
           paths: assigns |> get_in([Access.key(:repo), Access.key(:paths)]),
           comments: assigns |> get_in([Access.key(:repo), Access.key(:comments)]),
+          messages: @messages,
           diffs: assigns |> get_in([Access.key(:repo), Access.key(:diffs)]),
           steps: @steps,
           currentStep: @current_step
@@ -40,6 +41,7 @@ defmodule FastreplWeb.ThreadLive do
       |> assign(:steps, ["Initialization", "Planning", "Execution"])
       |> assign(:current_step, nil)
       |> assign(:shared_tasks, [])
+      |> assign(:messages, [])
 
     if socket.assigns[:live_action] != :demo and socket.assigns[:current_user] == nil do
       {:ok, socket |> redirect(to: "/auth/github")}
@@ -67,8 +69,6 @@ defmodule FastreplWeb.ThreadLive do
   end
 
   def handle_event("step:set", %{"step" => step}, socket) do
-    IO.inspect(step)
-
     socket =
       socket
       |> assign(:current_step, step)
@@ -100,6 +100,13 @@ defmodule FastreplWeb.ThreadLive do
     {:noreply, socket}
   end
 
+  def handle_event("chat:submit", %{"message" => message}, socket) do
+    messages = socket.assigns.messages ++ [message, %{role: "assistant", content: ""}]
+    GenServer.cast(socket.assigns.orchestrator_pid, {:chat, %{messages: messages}})
+
+    {:noreply, socket |> assign(:messages, messages)}
+  end
+
   def handle_info({:sync, state}, socket) do
     {:noreply, socket |> update_socket(state)}
   end
@@ -124,14 +131,6 @@ defmodule FastreplWeb.ThreadLive do
   defp update_socket(socket, state) when is_map(state) do
     state
     |> Enum.reduce(socket, fn {k, v}, acc -> update_socket(acc, {k, v}) end)
-  end
-
-  defp update_socket(socket, {:issue, issue}) do
-    socket |> assign(:issue, issue)
-  end
-
-  defp update_socket(socket, {:repo, repo}) do
-    socket |> assign(:repo, repo)
   end
 
   defp update_socket(socket, {:task, {id, name}}) do

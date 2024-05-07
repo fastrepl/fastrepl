@@ -9,19 +9,21 @@
   import { ReferenceFile } from "$lib/extensions/referenceFile";
   import { Placeholder } from "@tiptap/extension-placeholder";
 
+  import type { Message } from "$lib/types";
   import { turndownService } from "$lib/turndown";
   import { tippy } from "$lib/actions";
 
   export let placeholder = "Type something...";
   export let paths: string[] = [];
-  export let handleSubmit: (value: string) => void;
+  export let handleSubmit: (message: Message) => void;
 
   let editor: Readable<Editor>;
 
   const handleSubmitWrapper = () => {
     const html = $editor.getHTML();
     const md = turndownService.turndown(html);
-    handleSubmit(md);
+    handleSubmit({ role: "user", content: md });
+
     $editor.commands.clearContent();
   };
 

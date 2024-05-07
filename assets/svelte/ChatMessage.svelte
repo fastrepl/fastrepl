@@ -3,16 +3,16 @@
   export let time: string;
 </script>
 
-<div class="flex p-2 relative">
-  <div class="h-10 w-10 rounded flex-shrink-0 bg-[#f0e9e9]">
+<div class="flex p-2">
+  <div class="h-10 w-10 rounded flex-shrink-0 bg-[#e5e7eb]">
     <img
       alt={name}
-      src={`//ui-avatars.com/api/?name=${name}&background=f0e9e9&font-size=0.35`}
+      src={`//ui-avatars.com/api/?name=${name}&background=e5e7eb&font-size=0.35`}
       class="h-10 w-10 rounded flex-shrink-0"
     />
   </div>
 
-  <div class="ml-2">
+  <div class="ml-2 flex flex-col justify-between pb-1">
     <div class="-mt-1">
       <span class="text-sm font-semibold">
         {name}
