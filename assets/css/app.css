@@ -11,6 +11,12 @@
   user-select: none;
 }
 
+.hljs::selection,
+.hljs ::selection {
+  background-color: #fef16033 !important;
+  color: #181818 !important;
+}
+
 details > summary {
   list-style: none;
 }
