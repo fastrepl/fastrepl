@@ -10,3 +10,10 @@
   -ms-user-select: none;
   user-select: none;
 }
+
+details > summary {
+  list-style: none;
+}
+details > summary::-webkit-details-marker {
+  display: none;
+}
