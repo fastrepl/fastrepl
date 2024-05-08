@@ -36,7 +36,8 @@
   let selectedLineStart = null;
   let selectedLineEnd = null;
 
-  let scrollableElement: HTMLElement;
+  let codeSnippetContainer: HTMLElement;
+
   let contextMenuInstance: TippyInstance | null = null;
 
   $: if (!currentFile && files.length > 0) {
@@ -53,8 +54,8 @@
       });
     };
 
-    if (scrollableElement && !contextMenuInstance) {
-      contextMenuInstance = tippy(scrollableElement, {
+    if (codeSnippetContainer && !contextMenuInstance) {
+      contextMenuInstance = tippy(codeSnippetContainer, {
         placement: "auto",
         onCreate: (instance) => {
           const target = instance.popper.querySelector(".tippy-content");
@@ -121,7 +122,7 @@
     if (nextFile) {
       currentFile = nextFile;
 
-      const startLine = scrollableElement.getElementsByTagName("tr")[0];
+      const startLine = codeSnippetContainer.getElementsByTagName("tr")[0];
       startLine.scrollIntoView({ behavior: "smooth" });
     }
   };
@@ -174,7 +175,7 @@
     currentFile = files.find((f) => f.path === comment.file_path);
 
     const startLine =
-      scrollableElement.getElementsByTagName("tr")[comment.line_start - 1];
+      codeSnippetContainer.getElementsByTagName("tr")[comment.line_start - 1];
 
     startLine.scrollIntoView({ behavior: "smooth" });
   };
@@ -203,10 +204,10 @@
 
         document.getSelection().removeAllRanges();
         const range = document.createRange();
-        range.selectNode(scrollableElement);
+        range.selectNode(codeSnippetContainer);
         document.getSelection().addRange(range);
 
-        const trs = scrollableElement.querySelectorAll("tr");
+        const trs = codeSnippetContainer.querySelectorAll("tr");
 
         selectedLineStart = Number.parseInt(
           trs[0].firstElementChild.textContent,
@@ -324,7 +325,7 @@
         </span>
         <!-- svelte-ignore a11y-no-static-element-interactions -->
         <div
-          bind:this={scrollableElement}
+          bind:this={codeSnippetContainer}
           on:mouseup={handleMouseUp}
           on:contextmenu={handleContextMenu}
           class={clsx([
@@ -345,9 +346,9 @@
         </div>
       </div>
 
-      {#if scrollableElement}
+      {#if codeSnippetContainer}
         <div class="absolute right-0 top-7">
-          <Minimap root={scrollableElement} />
+          <Minimap root={codeSnippetContainer} />
         </div>
       {/if}
     </div>

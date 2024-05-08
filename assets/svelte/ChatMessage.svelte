@@ -12,12 +12,12 @@
     />
   </div>
 
-  <div class="ml-2 flex flex-col justify-between pb-1">
+  <div class="ml-2 flex flex-col justify-between pb-1 text-xs">
     <div class="-mt-1">
-      <span class="text-sm font-semibold">
+      <span class="font-semibold">
         {name}
       </span>
-      <span class="ml-1 text-xs text-gray-500">
+      <span class="ml-0.5 text-gray-500">
         {time}
       </span>
     </div>

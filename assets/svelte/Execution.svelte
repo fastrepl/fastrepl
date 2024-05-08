@@ -24,12 +24,12 @@
     openPatchDialog = true;
   };
 
-  let scrollableElement: HTMLElement;
+  let codeDiffContainer: HTMLElement;
 
   const handleClickFile = (path: string) => {
     currentFilePath = path;
 
-    const startLine = scrollableElement.getElementsByTagName("tr")[0];
+    const startLine = codeDiffContainer.getElementsByTagName("tr")[0];
     startLine.scrollIntoView({ behavior: "smooth" });
   };
 </script>
@@ -156,7 +156,7 @@
           {diff.file_path}
         </span>
         <div
-          bind:this={scrollableElement}
+          bind:this={codeDiffContainer}
           class={clsx([
             "h-[calc(100vh-190px)] overflow-y-auto scrollbar-hide",
             "text-sm rounded-b-lg  selection:bg-[#fef16033]",
