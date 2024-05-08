@@ -3,7 +3,7 @@ source: src/tests/naive.rs
 expression: result
 ---
 [
-    ```test.md#L1-L50
+    ```test.md#L1-L137
     # 🦜️🔗 LangChain
     
     ⚡ Build context-aware reasoning applications ⚡
@@ -54,20 +54,6 @@ expression: result
       - Some integrations have been further split into **partner packages** that only rely on **`langchain-core`**. Examples include **`langchain_openai`** and **`langchain_anthropic`**.
     - **`langchain`**: Chains, agents, and retrieval strategies that make up an application's cognitive architecture.
     - **[LangGraph](https://python.langchain.com/docs/langgraph)**: A library for building robust and stateful multi-actor applications with LLMs by modeling steps as edges and nodes in a graph.
-    ```
-    ---
-    ,
-    ```test.md#L41-L90
-    - **Open-source libraries**: Build your applications using LangChain's [modular building blocks](https://python.langchain.com/docs/expression_language/) and [components](https://python.langchain.com/docs/modules/). Integrate with hundreds of [third-party providers](https://python.langchain.com/docs/integrations/platforms/).
-    - **Productionization**: Inspect, monitor, and evaluate your apps with [LangSmith](https://python.langchain.com/docs/langsmith/) so that you can constantly optimize and deploy with confidence.
-    - **Deployment**: Turn any chain into a REST API with [LangServe](https://python.langchain.com/docs/langserve).
-    
-    ### Open-source libraries
-    - **`langchain-core`**: Base abstractions and LangChain Expression Language.
-    - **`langchain-community`**: Third party integrations.
-      - Some integrations have been further split into **partner packages** that only rely on **`langchain-core`**. Examples include **`langchain_openai`** and **`langchain_anthropic`**.
-    - **`langchain`**: Chains, agents, and retrieval strategies that make up an application's cognitive architecture.
-    - **[LangGraph](https://python.langchain.com/docs/langgraph)**: A library for building robust and stateful multi-actor applications with LLMs by modeling steps as edges and nodes in a graph.
     
     ### Productionization:
     - **[LangSmith](https://python.langchain.com/docs/langsmith)**: A developer platform that lets you debug, test, evaluate, and monitor chains built on any LLM framework and seamlessly integrates with LangChain.
@@ -108,20 +94,6 @@ expression: result
     LCEL is the foundation of many of LangChain's components, and is a declarative way to compose chains. LCEL was designed from day 1 to support putting prototypes in production, with no code changes, from the simplest “prompt + LLM” chain to the most complex chains.
     
     - **[Overview](https://python.langchain.com/docs/expression_language/)**: LCEL and its benefits
-    ```
-    ---
-    ,
-    ```test.md#L81-L130
-    1. **Components**: composable building blocks, tools and integrations for working with language models. Components are modular and easy-to-use, whether you are using the rest of the LangChain framework or not
-    2. **Off-the-shelf chains**: built-in assemblages of components for accomplishing higher-level tasks
-    
-    Off-the-shelf chains make it easy to get started. Components make it easy to customize existing chains and build new ones. 
-    
-    ## LangChain Expression Language (LCEL)
-    
-    LCEL is the foundation of many of LangChain's components, and is a declarative way to compose chains. LCEL was designed from day 1 to support putting prototypes in production, with no code changes, from the simplest “prompt + LLM” chain to the most complex chains.
-    
-    - **[Overview](https://python.langchain.com/docs/expression_language/)**: LCEL and its benefits
     - **[Interface](https://python.langchain.com/docs/expression_language/interface)**: The standard interface for LCEL objects
     - **[Primitives](https://python.langchain.com/docs/expression_language/primitives)**: More on the primitives LCEL includes
     
@@ -152,20 +124,6 @@ expression: result
     You can also check out the full [API Reference docs](https://api.python.langchain.com).
     
     ## 🌐 Ecosystem
-    
-    - [🦜🛠️ LangSmith](https://python.langchain.com/docs/langsmith/): Tracing and evaluating your language model applications and intelligent agents to help you move from prototype to production.
-    - [🦜🕸️ LangGraph](https://python.langchain.com/docs/langgraph): Creating stateful, multi-actor applications with LLMs, built on top of (and intended to be used with) LangChain primitives.
-    - [🦜🏓 LangServe](https://python.langchain.com/docs/langserve): Deploying LangChain runnables and chains as REST APIs.
-      - [LangChain Templates](https://python.langchain.com/docs/templates/): Example applications hosted with LangServe.
-    
-    
-    ## 💁 Contributing
-    
-    As an open-source project in a rapidly developing field, we are extremely open to contributions, whether it be in the form of a new feature, improved infrastructure, or better documentation.
-    ```
-    ---
-    ,
-    ```test.md#L121-L137
     
     - [🦜🛠️ LangSmith](https://python.langchain.com/docs/langsmith/): Tracing and evaluating your language model applications and intelligent agents to help you move from prototype to production.
     - [🦜🕸️ LangGraph](https://python.langchain.com/docs/langgraph): Creating stateful, multi-actor applications with LLMs, built on top of (and intended to be used with) LangChain primitives.

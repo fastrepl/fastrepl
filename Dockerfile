@@ -18,14 +18,9 @@ ARG DEBIAN_VERSION=bullseye-20240130-slim
 ARG BUILDER_IMAGE="hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-debian-${DEBIAN_VERSION}"
 ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
 
-FROM rust:1.76.0-bullseye as code_utils_builder
+FROM rust:1.76.0-bullseye as rust_builder
 WORKDIR /app
 COPY native/code_utils ./
-RUN cargo rustc --release
-
-FROM rust:1.76.0-bullseye as git_utils_builder
-WORKDIR /app
-COPY native/git_utils ./
 RUN cargo rustc --release
 
 FROM ${BUILDER_IMAGE} as app_builder
@@ -69,8 +64,7 @@ WORKDIR /app
 # compile assets
 RUN mix assets.deploy
 
-COPY --from=code_utils_builder /app/target/release/libcode_utils.so priv/native/libcode_utils.so
-COPY --from=git_utils_builder /app/target/release/libgit_utils.so priv/native/libgit_utils.so
+COPY --from=rust_builder /app/target/release/libcode_utils.so priv/native/libcode_utils.so
 
 # Compile the release
 RUN mix compile
