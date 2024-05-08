@@ -1,6 +1,8 @@
 defmodule Fastrepl.FS do
   require Logger
 
+  alias Fastrepl.Native.CodeUtils
+
   def git_clone(clone_url, path) do
     File.rm_rf(path)
 
@@ -12,6 +14,37 @@ defmodule Fastrepl.FS do
         Logger.error("Failed to clone repo. code: #{code}")
         File.rm_rf(path)
         :error
+    end
+  end
+
+  def new_repo(repos_root, repo_url, repo_full_name, repo_sha) do
+    repo_id = String.replace(repo_full_name, "/", "-")
+    base_dir = Path.join(repos_root, "#{repo_id}-#{repo_sha}")
+    working_dir = Path.join(repos_root, "#{repo_id}-#{repo_sha}-#{Nanoid.generate()}")
+
+    if File.exists?(base_dir) do
+      copy_repo(base_dir, working_dir)
+    else
+      clone_and_copy_repo(repo_url, base_dir, working_dir)
+    end
+  end
+
+  defp copy_repo(from, to) do
+    case File.cp_r(from, to) do
+      {:ok, _} ->
+        {:ok, to}
+
+      {:error, _} ->
+        File.rm_rf(to)
+        {:error, "failed to copy from base dir"}
+    end
+  end
+
+  defp clone_and_copy_repo(repo_url, base_dir, working_dir) do
+    if CodeUtils.clone(repo_url, base_dir, 1) do
+      copy_repo(base_dir, working_dir)
+    else
+      {:error, "failed to clone repo"}
     end
   end
 

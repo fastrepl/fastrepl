@@ -131,31 +131,23 @@ defmodule Fastrepl.Orchestrator do
   @impl true
   def handle_info(:clone_repo, state) do
     repo = state.repo.full_name |> Github.get_repo!()
-    sha = repo |> Github.get_latest_commit!()
+    repo_sha = repo |> Github.get_latest_commit!()
 
-    root_path =
-      Application.fetch_env!(:fastrepl, :clone_dir)
-      |> Path.join("#{state.repo.full_name}-#{sha}")
+    Task.start(fn ->
+      repo_url = Github.URL.clone_without_token(state.repo.full_name)
 
-    if not File.exists?(root_path) do
-      Task.start(fn ->
-        url = Github.URL.clone_without_token(state.repo.full_name)
-        :ok = FS.git_clone(url, root_path)
-        send(state.orchestrator_pid, {:post_clone_repo, root_path})
-      end)
-    else
+      {:ok, root_path} =
+        FS.new_repo(
+          Application.fetch_env!(:fastrepl, :clone_dir),
+          repo_url,
+          state.repo.full_name,
+          repo_sha
+        )
+
       send(state.orchestrator_pid, {:post_clone_repo, root_path})
-    end
+    end)
 
-    state =
-      state
-      |> Map.put(:repo, %{
-        state.repo
-        | root_path: root_path,
-          sha: sha,
-          description: repo.description
-      })
-
+    state = state |> Map.put(:repo, %{state.repo | sha: repo_sha, description: repo.description})
     sync_with_views(state.thread_id, %{repo: state.repo})
     {:noreply, state}
   end
