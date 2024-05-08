@@ -111,6 +111,7 @@
       line_start: selectedLineStart,
       line_end: selectedLineEnd,
       content: content,
+      read_only: false,
     };
     setTimeout(() => {
       comments = [...comments, newComment];

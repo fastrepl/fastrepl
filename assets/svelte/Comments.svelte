@@ -1,7 +1,9 @@
 <script lang="ts">
+  import { fly } from "svelte/transition";
+
   import { clsx } from "clsx";
   import { nanoid } from "nanoid";
-  import { fly } from "svelte/transition";
+  import { Toggle } from "bits-ui";
 
   import type { Comment } from "$lib/interfaces";
 
@@ -41,6 +43,18 @@
 
     handleUpdateComments(newComments);
   };
+
+  const handlePressedChange = (index: number) => {
+    const newComments = items.map((comment, i) => {
+      if (i === index) {
+        return { ...comment, read_only: !comment.read_only };
+      }
+
+      return comment;
+    });
+
+    handleUpdateComments(newComments);
+  };
 </script>
 
 <div class="flex flex-col gap-4 h-full text-sm relative">
@@ -74,12 +88,25 @@
         out:fly={{ duration: 300, x: -30 }}
         class="pl-4 mt-1 flex flex-col gap-2 text-sm text-gray-700"
       >
-        {#each comments as comment (`${comment.file_path}-${comment.line_start}`)}
+        {#each comments as comment, index (`${comment.file_path}-${comment.line_start}`)}
           <div
             in:fly={{ duration: 300, x: 30 }}
             out:fly={{ duration: 300, x: -30 }}
-            class="flex flex-row gap-3 items-center group"
+            class="flex flex-row gap-2 items-center group"
           >
+            <Toggle.Root
+              onPressedChange={(_pressed) => handlePressedChange(index)}
+            >
+              <div
+                class="w-[24px] border border-gray-100 rounded-md p-1 text-xs text-gray-400 hover:text-gray-600"
+              >
+                {#if comment.read_only}
+                  <span> R </span>
+                {:else}
+                  <span> RW </span>
+                {/if}
+              </div>
+            </Toggle.Root>
             <button
               type="button"
               class={clsx([
