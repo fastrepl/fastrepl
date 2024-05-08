@@ -60,5 +60,5 @@ fn commits() {
     git::clone(repo_url, &dest_path, 5).unwrap();
 
     let result = git::commits(&dest_path).unwrap();
-    assert_eq!(result.len(), 5 - 1);
+    assert_eq!(result.len(), 5);
 }
