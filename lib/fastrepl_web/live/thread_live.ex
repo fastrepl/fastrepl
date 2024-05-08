@@ -24,7 +24,8 @@ defmodule FastreplWeb.ThreadLive do
           messages: @messages,
           diffs: assigns |> get_in([Access.key(:repo), Access.key(:diffs)]),
           steps: @steps,
-          currentStep: @current_step
+          currentStep: @current_step,
+          threadId: @thread_id
         }
       }
     />

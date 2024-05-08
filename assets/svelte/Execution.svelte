@@ -6,6 +6,7 @@
   import CodeDiff from "$components/CodeDiff.svelte";
   import type { Diff } from "$lib/interfaces";
 
+  export let threadId: string;
   export let diffs: Diff[] = [];
 
   let currentFilePath = null;
@@ -44,8 +45,11 @@
     <Dialog.Content
       class="fixed left-[50%] top-[50%] z-50 translate-x-[-50%] translate-y-[-50%]"
     >
-      <div class="text-black w-[400px] h-[300px] bg-gray-100 rounded-md">
-        Create PR
+      <div
+        class="w-[400px] h-[300px] bg-gray-100 text-black rounded-md flex flex-col items-center justify-center"
+      >
+        <span>Create PR</span>
+        <span>(Not implemented yet)</span>
       </div>
     </Dialog.Content>
   </Dialog.Portal>
@@ -61,8 +65,12 @@
     <Dialog.Content
       class="fixed left-[50%] top-[50%] z-50 translate-x-[-50%] translate-y-[-50%]"
     >
-      <div class="text-black w-[400px] h-[300px] bg-gray-100 rounded-md">
-        Download Patch
+      <div
+        class="w-[400px] h-[300px] bg-gray-100 text-black rounded-md flex flex-col items-center justify-center"
+      >
+        <a href="/api/patch/{threadId}" class="text-blue-500 underline">
+          Download Git Patch
+        </a>
       </div>
     </Dialog.Content>
   </Dialog.Portal>

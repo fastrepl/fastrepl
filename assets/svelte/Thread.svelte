@@ -7,6 +7,7 @@
 
   export let live: any;
 
+  export let threadId: string;
   export let steps: string[] = [];
   export let currentStep: (typeof steps)[number];
 
@@ -86,6 +87,6 @@
       {handleSubmitChat}
     />
   {:else if currentStep === steps[2]}
-    <Execution {diffs} />
+    <Execution {threadId} {diffs} />
   {/if}
 </div>
