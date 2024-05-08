@@ -14,6 +14,8 @@ defmodule Fastrepl.Orchestrator do
   alias Fastrepl.Tool.SemanticSearch
   alias Fastrepl.Tool.PathSearch
 
+  alias Fastrepl.Chain.PlanningChat
+
   def start(%{thread_id: thread_id, repo_full_name: _, issue_number: _} = args) do
     GenServer.start(__MODULE__, args, name: via_registry(thread_id, args[:is_demo]))
   end
@@ -29,6 +31,7 @@ defmodule Fastrepl.Orchestrator do
       |> Map.put(:repo, %Repository{full_name: args.repo_full_name})
       |> Map.put(:issue, %{title: "", number: args.issue_number})
       |> Map.put(:current_step, "Initialization")
+      |> Map.put(:messages, [])
 
     send(state.orchestrator_pid, :fetch_issue)
     send(state.orchestrator_pid, :clone_repo)
@@ -38,7 +41,13 @@ defmodule Fastrepl.Orchestrator do
 
   @impl true
   def handle_call(:state, _from, state) do
-    {:reply, %{repo: state.repo, issue: state.issue, current_step: state.current_step}, state}
+    {:reply,
+     %{
+       repo: state.repo,
+       issue: state.issue,
+       current_step: state.current_step,
+       messages: state.messages
+     }, state}
   end
 
   @impl true
@@ -55,9 +64,49 @@ defmodule Fastrepl.Orchestrator do
 
   @impl true
   def handle_cast({:chat, %{messages: messages}}, state) do
-    next_messages = messages |> List.replace_at(-1, %{role: "assistant", content: "TEST"})
-    sync_with_views(state.thread_id, %{messages: next_messages})
-    {:noreply, state}
+    callback = fn
+      {:update, content} ->
+        send(
+          state.orchestrator_pid,
+          {:response_update, %{content: content}}
+        )
+
+      {:complete, content} ->
+        send(
+          state.orchestrator_pid,
+          {:response_complete, %{content: content}}
+        )
+    end
+
+    PlanningChat.run(messages |> get_in([Access.at(-2), Access.key!("content")]), callback)
+    {:noreply, state |> Map.put(:messages, messages)}
+  end
+
+  @impl true
+  def handle_info({action, %{content: content}}, state)
+      when action in [:response_update, :response_complete] do
+    messages =
+      case action do
+        :response_update ->
+          state.messages
+          |> List.update_at(
+            -1,
+            fn message -> %{message | content: message.content <> content} end
+          )
+
+        :response_complete ->
+          state.messages
+          |> List.replace_at(
+            -1,
+            %{role: "assistant", content: content}
+          )
+      end
+
+    if should_broadcast?(state, action) do
+      sync_with_views(state.thread_id, %{messages: messages})
+    end
+
+    {:noreply, state |> Map.put(:messages, messages)}
   end
 
   @impl true
