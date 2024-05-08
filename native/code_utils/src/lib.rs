@@ -21,7 +21,7 @@ rustler::init!(
     ]
 );
 
-#[rustler::nif]
+#[rustler::nif(schedule = "DirtyIo")]
 fn clone<'a>(repo_url: &'a str, dest_path: &'a str, depth: i32) -> bool {
     match git::clone(repo_url, dest_path, depth) {
         Ok(_) => true,
@@ -76,7 +76,7 @@ fn _chunk_code<'a>(path: &'a str, code: &'a str) -> Vec<ds::Chunk<'a>> {
     }
 }
 
-#[rustler::nif(schedule = "DirtyCpu")]
+#[rustler::nif]
 fn grep_file(path: &str, pattern: &str) -> Vec<usize> {
     let reader = std::fs::File::open(path);
 
