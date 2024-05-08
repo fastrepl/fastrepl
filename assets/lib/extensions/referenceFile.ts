@@ -22,10 +22,10 @@ export const ReferenceFile = ({
     renderHTML(props) {
       const { node } = props;
       return [
-        "a",
+        "span",
         {
           class: "py-1 px-2 text-sm border border-gray-300 rounded-md",
-          // href: `https://github.com/${props.node.attrs.id}`,
+          "data-file-path": node.attrs.id,
         },
         node.attrs.id,
       ];
