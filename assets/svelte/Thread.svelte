@@ -42,6 +42,7 @@
   const handleDoneInitialization = () => {};
 
   const handleClickExecute = () => {
+    live.pushEvent("execute", {});
     handleNextStep();
   };
 
