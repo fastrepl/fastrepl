@@ -89,6 +89,16 @@ defmodule Fastrepl.Orchestrator do
   end
 
   @impl true
+  def handle_cast(:execute, state) do
+    Task.start(fn ->
+      :timer.sleep(1000)
+      send(state.orchestrator_pid, {:diff, %{file_path: "test.md", content: "+ Hello\n- World"}})
+    end)
+
+    {:noreply, state}
+  end
+
+  @impl true
   def handle_info({action, %{content: content}}, state)
       when action in [:response_update, :response_complete] do
     messages =
@@ -312,6 +322,13 @@ defmodule Fastrepl.Orchestrator do
 
     sync_with_views(state.thread_id, %{repo: repo})
     {:noreply, state |> Map.put(:repo, repo)}
+  end
+
+  @impl true
+  def handle_info({:diff, diff}, state) do
+    state = state |> Map.put(:repo, %{state.repo | diffs: [diff | state.repo.diffs]})
+    sync_with_views(state.thread_id, %{repo: state.repo})
+    {:noreply, state}
   end
 
   @impl true
