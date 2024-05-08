@@ -4,7 +4,7 @@
   import { fade } from "svelte/transition";
 
   import CodeDiff from "$components/CodeDiff.svelte";
-  import type { Diff } from "$lib/types";
+  import type { Diff } from "$lib/interfaces";
 
   export let diffs: Diff[] = [];
 

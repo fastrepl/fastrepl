@@ -1,6 +1,6 @@
 <script lang="ts">
   import { afterUpdate } from "svelte";
-  import type { Message } from "$lib/types";
+  import type { Message } from "$lib/interfaces";
 
   import ChatMessage from "$components/ChatMessage.svelte";
   import Typing from "$components/Typing.svelte";

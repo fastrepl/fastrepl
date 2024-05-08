@@ -9,7 +9,7 @@
   import { ReferenceFile } from "$lib/extensions/referenceFile";
   import { Placeholder } from "@tiptap/extension-placeholder";
 
-  import type { Message } from "$lib/types";
+  import type { Message } from "$lib/interfaces";
   import { turndownService } from "$lib/turndown";
   import { tippy } from "$lib/actions";
 

@@ -3,7 +3,7 @@
   import { nanoid } from "nanoid";
   import { fly } from "svelte/transition";
 
-  import type { Comment } from "$lib/types";
+  import type { Comment } from "$lib/interfaces";
 
   export let items: Comment[] = [];
   export let handleClickComment: (comment: Comment) => void;

@@ -13,8 +13,10 @@
   import ChatEditor from "$components/ChatEditor.svelte";
   import SearchFile from "$components/SearchFile.svelte";
   import Messages from "$components/Messages.svelte";
+  import References from "./References.svelte";
 
-  import type { Comment, File, Message } from "$lib/types";
+  import type { Comment, File, Message } from "$lib/interfaces";
+  import type { Reference } from "$lib/types";
   import { buildTree } from "$lib/utils/tree";
 
   export let repoFullName: string;
@@ -27,6 +29,14 @@
   export let handleClickExecute: () => void;
   export let handleAddFile: (path: string) => void;
   export let handleSubmitChat: (message: Message) => void;
+
+  let references: Reference[] = [];
+  const handleDeleteReference = (index: number) => {
+    references = [
+      ...references.slice(0, index),
+      ...references.slice(index + 1),
+    ];
+  };
 
   const TABS = ["Comments", "Chat"];
   let currentTab: (typeof TABS)[number] = TABS[0];
@@ -111,7 +121,30 @@
   const handleSubmitReference = () => {
     contextMenuInstance.hide();
     currentTab = TABS[1];
-    console.log(currentFile.path, selectedLineStart, selectedLineEnd);
+
+    references = [
+      ...references,
+      {
+        filePath: currentFile.path,
+        lineStart: selectedLineStart,
+        lineEnd: selectedLineEnd,
+        handleClick: (ref: Reference) => {
+          currentFile = files.find((f) => f.path === ref.filePath);
+
+          setTimeout(() => {
+            const startLine =
+              codeSnippetContainer.getElementsByTagName("tr")[
+                ref.lineStart - 1
+              ];
+            startLine.scrollIntoView({ behavior: "smooth" });
+
+            removeSelection();
+            selectedLineStart = ref.lineStart;
+            selectedLineEnd = ref.lineEnd;
+          }, 300);
+        },
+      },
+    ];
   };
 
   const handleClickFile = (path: string) => {
@@ -299,7 +332,14 @@
         ])}
       >
         <Messages {messages} />
-        <div class={clsx(["w-full px-3", "absolute bottom-1 left-0"])}>
+        <div
+          class={clsx([
+            "w-full px-3",
+            "absolute bottom-1 left-0",
+            "flex flex-col gap-2",
+          ])}
+        >
+          <References {references} handleDelete={handleDeleteReference} />
           <ChatEditor
             {paths}
             handleSubmit={handleSubmitChat}

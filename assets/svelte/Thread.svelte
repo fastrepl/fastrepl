@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Comment, File, Diff, Message } from "$lib/types";
+  import type { Comment, File, Diff, Message } from "$lib/interfaces";
   import Stepper from "$components/Stepper.svelte";
   import Initialization from "$components/Initialization.svelte";
   import Planning from "$components/Planning.svelte";
