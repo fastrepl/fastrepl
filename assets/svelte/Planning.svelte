@@ -81,6 +81,7 @@
 
   const handleSelectFile = (path: string) => {
     openFileSearch = false;
+    removeSelection();
     handleAddFile(path);
 
     setTimeout(() => {
@@ -114,9 +115,7 @@
   };
 
   const handleClickFile = (path: string) => {
-    document.getSelection().empty();
-    selectedLineStart = null;
-    selectedLineEnd = null;
+    removeSelection();
 
     const nextFile = files.find((f) => f.path === path);
     if (nextFile) {
@@ -223,6 +222,12 @@
       document.removeEventListener("keydown", handleKeyDown);
     };
   });
+
+  const removeSelection = () => {
+    document.getSelection().removeAllRanges();
+    selectedLineEnd = null;
+    selectedLineStart = null;
+  };
 </script>
 
 <Dialog.Root bind:open={openFileSearch}>
