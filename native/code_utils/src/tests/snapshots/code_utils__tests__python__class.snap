@@ -3,7 +3,7 @@ source: src/tests/python.rs
 expression: result
 ---
 [
-    ```router.py#L1-L50
+    ```router.py#L1-L200
     # +-----------------------------------------------+
     # |                                               |
     # |           Give Feedback / Get Help            |
@@ -54,20 +54,6 @@ expression: result
     
     class Router:
         model_names: List = []
-    ```
-    ---
-    ,
-    ```router.py#L41-L90
-        LiteLLM_Params,
-        RouterErrors,
-        updateDeployment,
-        updateLiteLLMParams,
-    )
-    from litellm.integrations.custom_logger import CustomLogger
-    
-    
-    class Router:
-        model_names: List = []
         cache_responses: Optional[bool] = False
         default_cache_time_seconds: int = 1 * 60 * 60  # 1 hour
         tenacity = None
@@ -98,20 +84,6 @@ expression: result
             set_verbose: bool = False,
             debug_level: Literal["DEBUG", "INFO"] = "INFO",
             fallbacks: List = [],
-            context_window_fallbacks: List = [],
-            model_group_alias: Optional[dict] = {},
-            enable_pre_call_checks: bool = False,
-            retry_after: int = 0,  # min time to wait before retrying a failed request
-            allowed_fails: Optional[
-                int
-            ] = None,  # Number of times a deployment can failbefore being added to cooldown
-            cooldown_time: float = 1,  # (seconds) time to cooldown a deployment after failure
-            routing_strategy: Literal[
-                "simple-shuffle",
-    ```
-    ---
-    ,
-    ```router.py#L81-L130
             context_window_fallbacks: List = [],
             model_group_alias: Optional[dict] = {},
             enable_pre_call_checks: bool = False,
@@ -162,20 +134,6 @@ expression: result
     
             Example Usage:
             ```python
-    ```
-    ---
-    ,
-    ```router.py#L121-L170
-                allowed_fails (Optional[int]): Number of allowed fails before adding to cooldown. Defaults to None.
-                cooldown_time (float): Time to cooldown a deployment after failure in seconds. Defaults to 1.
-                routing_strategy (Literal["simple-shuffle", "least-busy", "usage-based-routing", "latency-based-routing"]): Routing strategy. Defaults to "simple-shuffle".
-                routing_strategy_args (dict): Additional args for latency-based routing. Defaults to {}.
-    
-            Returns:
-                Router: An instance of the litellm.Router class.
-    
-            Example Usage:
-            ```python
             from litellm import Router
             model_list = [
             {
@@ -216,20 +174,6 @@ expression: result
             if self.set_verbose == True:
                 if debug_level == "INFO":
                     verbose_router_logger.setLevel(logging.INFO)
-    ```
-    ---
-    ,
-    ```router.py#L161-L210
-            """
-    
-            if semaphore:
-                self.semaphore = semaphore
-            self.set_verbose = set_verbose
-            self.debug_level = debug_level
-            self.enable_pre_call_checks = enable_pre_call_checks
-            if self.set_verbose == True:
-                if debug_level == "INFO":
-                    verbose_router_logger.setLevel(logging.INFO)
                 elif debug_level == "DEBUG":
                     verbose_router_logger.setLevel(logging.DEBUG)
     
@@ -260,20 +204,20 @@ expression: result
     
                 if redis_password is not None:
                     cache_config["password"] = redis_password
-    
-                # Add additional key-value pairs from cache_kwargs
-                cache_config.update(cache_kwargs)
-                redis_cache = RedisCache(**cache_config)
-    
-            if cache_responses:
-                if litellm.cache is None:
-                    # the cache can be initialized on the proxy server. We should not overwrite it
-                    litellm.cache = litellm.Cache(type=cache_type, **cache_config)  # type: ignore
-                self.cache_responses = cache_responses
     ```
     ---
     ,
-    ```router.py#L201-L250
+    ```router.py#L191-L390
+                    cache_config["url"] = redis_url
+    
+                if redis_host is not None:
+                    cache_config["host"] = redis_host
+    
+                if redis_port is not None:
+                    cache_config["port"] = str(redis_port)  # type: ignore
+    
+                if redis_password is not None:
+                    cache_config["password"] = redis_password
     
                 # Add additional key-value pairs from cache_kwargs
                 cache_config.update(cache_kwargs)
@@ -324,20 +268,6 @@ expression: result
                 context_window_fallbacks or litellm.context_window_fallbacks
             )
             self.total_calls: defaultdict = defaultdict(
-    ```
-    ---
-    ,
-    ```router.py#L241-L290
-    
-            self.timeout = timeout or litellm.request_timeout
-    
-            self.retry_after = retry_after
-            self.routing_strategy = routing_strategy
-            self.fallbacks = fallbacks or litellm.fallbacks
-            self.context_window_fallbacks = (
-                context_window_fallbacks or litellm.context_window_fallbacks
-            )
-            self.total_calls: defaultdict = defaultdict(
                 int
             )  # dict to store total calls made to each model
             self.fail_calls: defaultdict = defaultdict(
@@ -368,20 +298,6 @@ expression: result
             self.deployment_stats: dict = {}  # used for debugging load balancing
             """
             deployment_stats = {
-                "122999-2828282-277:
-                {
-                    "model": "gpt-3",
-                    "api_base": "http://localhost:4000",
-                    "num_requests": 20,
-                    "avg_latency": 0.001,
-                    "num_failures": 0,
-                    "num_successes": 20
-                }
-            }
-    ```
-    ---
-    ,
-    ```router.py#L281-L330
                 "122999-2828282-277:
                 {
                     "model": "gpt-3",
@@ -432,20 +348,6 @@ expression: result
                 litellm.failure_callback = [self.deployment_callback_on_failure]
             print(  # noqa
                 f"Intialized router with Routing strategy: {self.routing_strategy}\n\nRouting fallbacks: {self.fallbacks}\n\nRouting context window fallbacks: {self.context_window_fallbacks}\n\nRouter Redis Caching={self.cache.redis_cache}"
-    ```
-    ---
-    ,
-    ```router.py#L321-L370
-                )
-                if isinstance(litellm.callbacks, list):
-                    litellm.callbacks.append(self.lowestlatency_logger)  # type: ignore
-            ## COOLDOWNS ##
-            if isinstance(litellm.failure_callback, list):
-                litellm.failure_callback.append(self.deployment_callback_on_failure)
-            else:
-                litellm.failure_callback = [self.deployment_callback_on_failure]
-            print(  # noqa
-                f"Intialized router with Routing strategy: {self.routing_strategy}\n\nRouting fallbacks: {self.fallbacks}\n\nRouting context window fallbacks: {self.context_window_fallbacks}\n\nRouter Redis Caching={self.cache.redis_cache}"
             )  # noqa
             self.routing_strategy_args = routing_strategy_args
     
@@ -486,20 +388,6 @@ expression: result
                 return response
             except Exception as e:
                 raise e
-    ```
-    ---
-    ,
-    ```router.py#L361-L410
-                kwargs["model"] = model
-                kwargs["messages"] = messages
-                kwargs["original_function"] = self._completion
-                timeout = kwargs.get("request_timeout", self.timeout)
-                kwargs["num_retries"] = kwargs.get("num_retries", self.num_retries)
-                kwargs.setdefault("metadata", {}).update({"model_group": model})
-                response = self.function_with_fallbacks(**kwargs)
-                return response
-            except Exception as e:
-                raise e
     
         def _completion(self, model: str, messages: List[Dict[str, str]], **kwargs):
             model_name = None
@@ -520,6 +408,20 @@ expression: result
                 data = deployment["litellm_params"].copy()
                 kwargs["model_info"] = deployment.get("model_info", {})
                 model_name = data["model"]
+    ```
+    ---
+    ,
+    ```router.py#L381-L580
+                kwargs.setdefault("metadata", {}).update(
+                    {
+                        "deployment": deployment["litellm_params"]["model"],
+                        "api_base": deployment.get("litellm_params", {}).get("api_base"),
+                        "model_info": deployment.get("model_info", {}),
+                    }
+                )
+                data = deployment["litellm_params"].copy()
+                kwargs["model_info"] = deployment.get("model_info", {})
+                model_name = data["model"]
                 for k, v in self.default_litellm_params.items():
                     if (
                         k not in kwargs
@@ -530,20 +432,6 @@ expression: result
                 potential_model_client = self._get_client(
                     deployment=deployment, kwargs=kwargs
                 )
-                # check if provided keys == client keys #
-                dynamic_api_key = kwargs.get("api_key", None)
-                if (
-                    dynamic_api_key is not None
-                    and potential_model_client is not None
-                    and dynamic_api_key != potential_model_client.api_key
-                ):
-                    model_client = None
-                else:
-                    model_client = potential_model_client
-    ```
-    ---
-    ,
-    ```router.py#L401-L450
                 # check if provided keys == client keys #
                 dynamic_api_key = kwargs.get("api_key", None)
                 if (
@@ -594,20 +482,6 @@ expression: result
             except Exception as e:
                 raise e
     
-    ```
-    ---
-    ,
-    ```router.py#L441-L490
-    
-                timeout = kwargs.get("request_timeout", self.timeout)
-                kwargs.setdefault("metadata", {}).update({"model_group": model})
-    
-                response = await self.async_function_with_fallbacks(**kwargs)
-    
-                return response
-            except Exception as e:
-                raise e
-    
         async def _acompletion(self, model: str, messages: List[Dict[str, str]], **kwargs):
             """
             - Get an available deployment
@@ -638,20 +512,6 @@ expression: result
                         "api_base": deployment.get("litellm_params", {}).get("api_base"),
                     }
                 )
-                kwargs["model_info"] = deployment.get("model_info", {})
-                data = deployment["litellm_params"].copy()
-    
-                model_name = data["model"]
-                for k, v in self.default_litellm_params.items():
-                    if (
-                        k not in kwargs and v is not None
-                    ):  # prioritize model-specific params > default router params
-                        kwargs[k] = v
-                    elif k == "metadata":
-    ```
-    ---
-    ,
-    ```router.py#L481-L530
                 kwargs["model_info"] = deployment.get("model_info", {})
                 data = deployment["litellm_params"].copy()
     
@@ -702,20 +562,6 @@ expression: result
                 )
     
                 rpm_semaphore = self._get_client(
-    ```
-    ---
-    ,
-    ```router.py#L521-L570
-                        **data,
-                        "messages": messages,
-                        "caching": self.cache_responses,
-                        "client": model_client,
-                        "timeout": timeout,
-                        **kwargs,
-                    }
-                )
-    
-                rpm_semaphore = self._get_client(
                     deployment=deployment,
                     kwargs=kwargs,
                     client_type="max_parallel_requests",
@@ -756,20 +602,20 @@ expression: result
         def image_generation(self, prompt: str, model: str, **kwargs):
             try:
                 kwargs["model"] = model
+                kwargs["prompt"] = prompt
+                kwargs["original_function"] = self._image_generation
+                kwargs["num_retries"] = kwargs.get("num_retries", self.num_retries)
+                timeout = kwargs.get("request_timeout", self.timeout)
+                kwargs.setdefault("metadata", {}).update({"model_group": model})
+                response = self.function_with_fallbacks(**kwargs)
+    
+                return response
+            except Exception as e:
+                raise e
     ```
     ---
     ,
-    ```router.py#L561-L610
-                verbose_router_logger.info(
-                    f"litellm.acompletion(model={model_name})\033[31m Exception {str(e)}\033[0m"
-                )
-                if model_name is not None:
-                    self.fail_calls[model_name] += 1
-                raise e
-    
-        def image_generation(self, prompt: str, model: str, **kwargs):
-            try:
-                kwargs["model"] = model
+    ```router.py#L571-L770
                 kwargs["prompt"] = prompt
                 kwargs["original_function"] = self._image_generation
                 kwargs["num_retries"] = kwargs.get("num_retries", self.num_retries)
@@ -800,20 +646,6 @@ expression: result
                 kwargs["model_info"] = deployment.get("model_info", {})
                 data = deployment["litellm_params"].copy()
                 model_name = data["model"]
-                for k, v in self.default_litellm_params.items():
-                    if (
-                        k not in kwargs
-                    ):  # prioritize model-specific params > default router params
-                        kwargs[k] = v
-                    elif k == "metadata":
-                        kwargs[k].update(v)
-    
-                potential_model_client = self._get_client(
-                    deployment=deployment, kwargs=kwargs, client_type="async"
-    ```
-    ---
-    ,
-    ```router.py#L601-L650
                 for k, v in self.default_litellm_params.items():
                     if (
                         k not in kwargs
@@ -864,20 +696,6 @@ expression: result
                 raise e
     
         async def aimage_generation(self, prompt: str, model: str, **kwargs):
-    ```
-    ---
-    ,
-    ```router.py#L641-L690
-                return response
-            except Exception as e:
-                verbose_router_logger.info(
-                    f"litellm.image_generation(model={model_name})\033[31m Exception {str(e)}\033[0m"
-                )
-                if model_name is not None:
-                    self.fail_calls[model_name] += 1
-                raise e
-    
-        async def aimage_generation(self, prompt: str, model: str, **kwargs):
             try:
                 kwargs["model"] = model
                 kwargs["prompt"] = prompt
@@ -918,20 +736,6 @@ expression: result
                     elif k == "metadata":
                         kwargs[k].update(v)
     
-    ```
-    ---
-    ,
-    ```router.py#L681-L730
-                data = deployment["litellm_params"].copy()
-                model_name = data["model"]
-                for k, v in self.default_litellm_params.items():
-                    if (
-                        k not in kwargs
-                    ):  # prioritize model-specific params > default router params
-                        kwargs[k] = v
-                    elif k == "metadata":
-                        kwargs[k].update(v)
-    
                 potential_model_client = self._get_client(
                     deployment=deployment, kwargs=kwargs, client_type="async"
                 )
@@ -962,20 +766,6 @@ expression: result
                     deployment=deployment,
                     kwargs=kwargs,
                     client_type="max_parallel_requests",
-                )
-    
-                if rpm_semaphore is not None and isinstance(
-                    rpm_semaphore, asyncio.Semaphore
-                ):
-                    async with rpm_semaphore:
-                        """
-                        - Check rpm limits before making the call
-                        - If allowed, increment the rpm limit (allows global value to be updated, concurrency-safe)
-                        """
-    ```
-    ---
-    ,
-    ```router.py#L721-L770
                 )
     
                 if rpm_semaphore is not None and isinstance(
@@ -1029,7 +819,7 @@ expression: result
     ```
     ---
     ,
-    ```router.py#L761-L810
+    ```router.py#L761-L960
                     "litellm_params": {
                         "model": "whisper-1",
                     },
@@ -1080,20 +870,6 @@ expression: result
                     if (
                         k not in kwargs
                     ):  # prioritize model-specific params > default router params
-    ```
-    ---
-    ,
-    ```router.py#L801-L850
-                        "model_info": deployment.get("model_info", {}),
-                    }
-                )
-                kwargs["model_info"] = deployment.get("model_info", {})
-                data = deployment["litellm_params"].copy()
-                model_name = data["model"]
-                for k, v in self.default_litellm_params.items():
-                    if (
-                        k not in kwargs
-                    ):  # prioritize model-specific params > default router params
                         kwargs[k] = v
                     elif k == "metadata":
                         kwargs[k].update(v)
@@ -1124,20 +900,6 @@ expression: result
                 )
     
                 ### CONCURRENCY-SAFE RPM CHECKS ###
-                rpm_semaphore = self._get_client(
-                    deployment=deployment,
-                    kwargs=kwargs,
-                    client_type="max_parallel_requests",
-                )
-    
-                if rpm_semaphore is not None and isinstance(
-                    rpm_semaphore, asyncio.Semaphore
-                ):
-                    async with rpm_semaphore:
-    ```
-    ---
-    ,
-    ```router.py#L841-L890
                 rpm_semaphore = self._get_client(
                     deployment=deployment,
                     kwargs=kwargs,
@@ -1188,20 +950,6 @@ expression: result
             except Exception as e:
                 raise e
     
-    ```
-    ---
-    ,
-    ```router.py#L881-L930
-                kwargs["num_retries"] = kwargs.get("num_retries", self.num_retries)
-                timeout = kwargs.get("request_timeout", self.timeout)
-                kwargs.setdefault("metadata", {}).update({"model_group": model})
-    
-                response = await self.async_function_with_fallbacks(**kwargs)
-    
-                return response
-            except Exception as e:
-                raise e
-    
         async def _amoderation(self, model: str, input: str, **kwargs):
             model_name = None
             try:
@@ -1242,20 +990,6 @@ expression: result
                 ):
                     model_client = None
                 else:
-    ```
-    ---
-    ,
-    ```router.py#L921-L970
-                )
-                # check if provided keys == client keys #
-                dynamic_api_key = kwargs.get("api_key", None)
-                if (
-                    dynamic_api_key is not None
-                    and potential_model_client is not None
-                    and dynamic_api_key != potential_model_client.api_key
-                ):
-                    model_client = None
-                else:
                     model_client = potential_model_client
                 self.total_calls[model_name] += 1
     
@@ -1286,20 +1020,20 @@ expression: result
                 )
                 return response
             except Exception as e:
-                verbose_router_logger.info(
-                    f"litellm.amoderation(model={model_name})\033[31m Exception {str(e)}\033[0m"
-                )
-                if model_name is not None:
-                    self.fail_calls[model_name] += 1
-                raise e
-    
-        def text_completion(
-            self,
-            model: str,
     ```
     ---
     ,
-    ```router.py#L961-L1010
+    ```router.py#L951-L1150
+                        **kwargs,
+                    }
+                )
+    
+                self.success_calls[model_name] += 1
+                verbose_router_logger.info(
+                    f"litellm.amoderation(model={model_name})\033[32m 200 OK\033[0m"
+                )
+                return response
+            except Exception as e:
                 verbose_router_logger.info(
                     f"litellm.amoderation(model={model_name})\033[31m Exception {str(e)}\033[0m"
                 )
@@ -1350,20 +1084,6 @@ expression: result
                     kwargs["original_function"] = self.completion
                     return self.function_with_retries(**kwargs)
                 else:
-    ```
-    ---
-    ,
-    ```router.py#L1001-L1050
-    
-                # call via litellm.completion()
-                return litellm.text_completion(**{**data, "prompt": prompt, "caching": self.cache_responses, **kwargs})  # type: ignore
-            except Exception as e:
-                if self.num_retries > 0:
-                    kwargs["model"] = model
-                    kwargs["messages"] = messages
-                    kwargs["original_function"] = self.completion
-                    return self.function_with_retries(**kwargs)
-                else:
                     raise e
     
         async def atext_completion(
@@ -1394,20 +1114,6 @@ expression: result
                     f"Inside _atext_completion()- model: {model}; kwargs: {kwargs}"
                 )
                 deployment = await self.async_get_available_deployment(
-                    model=model,
-                    messages=[{"role": "user", "content": prompt}],
-                    specific_deployment=kwargs.pop("specific_deployment", None),
-                )
-                kwargs.setdefault("metadata", {}).update(
-                    {
-                        "deployment": deployment["litellm_params"]["model"],
-                        "model_info": deployment.get("model_info", {}),
-                        "api_base": deployment.get("litellm_params", {}).get("api_base"),
-                    }
-    ```
-    ---
-    ,
-    ```router.py#L1041-L1090
                     model=model,
                     messages=[{"role": "user", "content": prompt}],
                     specific_deployment=kwargs.pop("specific_deployment", None),
@@ -1458,20 +1164,6 @@ expression: result
     
                 rpm_semaphore = self._get_client(
                     deployment=deployment,
-    ```
-    ---
-    ,
-    ```router.py#L1081-L1130
-                        "prompt": prompt,
-                        "caching": self.cache_responses,
-                        "client": model_client,
-                        "timeout": self.timeout,
-                        **kwargs,
-                    }
-                )
-    
-                rpm_semaphore = self._get_client(
-                    deployment=deployment,
                     kwargs=kwargs,
                     client_type="max_parallel_requests",
                 )
@@ -1512,20 +1204,6 @@ expression: result
             is_async: Optional[bool] = False,
             **kwargs,
         ) -> Union[List[float], None]:
-    ```
-    ---
-    ,
-    ```router.py#L1121-L1170
-                    self.fail_calls[model] += 1
-                raise e
-    
-        def embedding(
-            self,
-            model: str,
-            input: Union[str, List],
-            is_async: Optional[bool] = False,
-            **kwargs,
-        ) -> Union[List[float], None]:
             try:
                 kwargs["model"] = model
                 kwargs["input"] = input
@@ -1546,6 +1224,20 @@ expression: result
                 deployment = self.get_available_deployment(
                     model=model,
                     input=input,
+    ```
+    ---
+    ,
+    ```router.py#L1141-L1340
+                raise e
+    
+        def _embedding(self, input: Union[str, List], model: str, **kwargs):
+            try:
+                verbose_router_logger.debug(
+                    f"Inside embedding()- model: {model}; kwargs: {kwargs}"
+                )
+                deployment = self.get_available_deployment(
+                    model=model,
+                    input=input,
                     specific_deployment=kwargs.pop("specific_deployment", None),
                 )
                 kwargs.setdefault("metadata", {}).update(
@@ -1556,20 +1248,6 @@ expression: result
                 )
                 kwargs["model_info"] = deployment.get("model_info", {})
                 data = deployment["litellm_params"].copy()
-                model_name = data["model"]
-                for k, v in self.default_litellm_params.items():
-                    if (
-                        k not in kwargs
-                    ):  # prioritize model-specific params > default router params
-                        kwargs[k] = v
-                    elif k == "metadata":
-                        kwargs[k].update(v)
-    
-                potential_model_client = self._get_client(
-    ```
-    ---
-    ,
-    ```router.py#L1161-L1210
                 model_name = data["model"]
                 for k, v in self.default_litellm_params.items():
                     if (
@@ -1620,20 +1298,6 @@ expression: result
                     self.fail_calls[model_name] += 1
                 raise e
     
-    ```
-    ---
-    ,
-    ```router.py#L1201-L1250
-                )
-                return response
-            except Exception as e:
-                verbose_router_logger.info(
-                    f"litellm.embedding(model={model_name})\033[31m Exception {str(e)}\033[0m"
-                )
-                if model_name is not None:
-                    self.fail_calls[model_name] += 1
-                raise e
-    
         async def aembedding(
             self,
             model: str,
@@ -1664,20 +1328,6 @@ expression: result
                     input=input,
                     specific_deployment=kwargs.pop("specific_deployment", None),
                 )
-                kwargs.setdefault("metadata", {}).update(
-                    {
-                        "deployment": deployment["litellm_params"]["model"],
-                        "model_info": deployment.get("model_info", {}),
-                        "api_base": deployment.get("litellm_params", {}).get("api_base"),
-                    }
-                )
-                kwargs["model_info"] = deployment.get("model_info", {})
-                data = deployment["litellm_params"].copy()
-                model_name = data["model"]
-    ```
-    ---
-    ,
-    ```router.py#L1241-L1290
                 kwargs.setdefault("metadata", {}).update(
                     {
                         "deployment": deployment["litellm_params"]["model"],
@@ -1728,20 +1378,6 @@ expression: result
                     client_type="max_parallel_requests",
                 )
     
-    ```
-    ---
-    ,
-    ```router.py#L1281-L1330
-                    }
-                )
-    
-                ### CONCURRENCY-SAFE RPM CHECKS ###
-                rpm_semaphore = self._get_client(
-                    deployment=deployment,
-                    kwargs=kwargs,
-                    client_type="max_parallel_requests",
-                )
-    
                 if rpm_semaphore is not None and isinstance(
                     rpm_semaphore, asyncio.Semaphore
                 ):
@@ -1782,20 +1418,20 @@ expression: result
             context_window_fallbacks = kwargs.get(
                 "context_window_fallbacks", self.context_window_fallbacks
             )
+            try:
+                if mock_testing_fallbacks is not None and mock_testing_fallbacks == True:
+                    raise Exception(
+                        f"This is a mock exception for model={model_group}, to trigger a fallback. Fallbacks={fallbacks}"
+                    )
+    
+                response = await self.async_function_with_retries(*args, **kwargs)
+                verbose_router_logger.debug(f"Async Response: {response}")
+                return response
+            except Exception as e:
     ```
     ---
     ,
-    ```router.py#L1321-L1370
-            """
-            Try calling the function_with_retries
-            If it fails after num_retries, fall back to another model group
-            """
-            mock_testing_fallbacks = kwargs.pop("mock_testing_fallbacks", None)
-            model_group = kwargs.get("model")
-            fallbacks = kwargs.get("fallbacks", self.fallbacks)
-            context_window_fallbacks = kwargs.get(
-                "context_window_fallbacks", self.context_window_fallbacks
-            )
+    ```router.py#L1331-L1530
             try:
                 if mock_testing_fallbacks is not None and mock_testing_fallbacks == True:
                     raise Exception(
@@ -1826,20 +1462,6 @@ expression: result
                             item
                         ) in context_window_fallbacks:  # [{"gpt-3.5-turbo": ["gpt-4"]}]
                             if list(item.keys())[0] == model_group:
-                                fallback_model_group = item[model_group]
-                                break
-    
-                        if fallback_model_group is None:
-                            raise original_exception
-    
-                        for mg in fallback_model_group:
-                            """
-                            Iterate through the model groups and try calling that deployment
-                            """
-    ```
-    ---
-    ,
-    ```router.py#L1361-L1410
                                 fallback_model_group = item[model_group]
                                 break
     
@@ -1890,20 +1512,6 @@ expression: result
                                     {"model_group": mg}
                                 )  # update model_group used, if fallbacks are done
                                 response = await self.async_function_with_fallbacks(
-    ```
-    ---
-    ,
-    ```router.py#L1401-L1450
-                                ## LOGGING
-                                kwargs = self.log_retry(kwargs=kwargs, e=original_exception)
-                                verbose_router_logger.info(
-                                    f"Falling back to model_group = {mg}"
-                                )
-                                kwargs["model"] = mg
-                                kwargs.setdefault("metadata", {}).update(
-                                    {"model_group": mg}
-                                )  # update model_group used, if fallbacks are done
-                                response = await self.async_function_with_fallbacks(
                                     *args, **kwargs
                                 )
                                 return response
@@ -1944,20 +1552,6 @@ expression: result
                     and fallbacks is not None
                 ):
                     raise original_exception
-    ```
-    ---
-    ,
-    ```router.py#L1441-L1490
-                original_exception = e
-                ### CHECK IF RATE LIMIT / CONTEXT WINDOW ERROR w/ fallbacks available / Bad Request Error
-                if (
-                    isinstance(original_exception, litellm.ContextWindowExceededError)
-                    and context_window_fallbacks is not None
-                ) or (
-                    isinstance(original_exception, openai.RateLimitError)
-                    and fallbacks is not None
-                ):
-                    raise original_exception
                 ### RETRY
                 #### check if it should retry + back-off if required
                 # if "No models available" in str(
@@ -1988,20 +1582,6 @@ expression: result
                 #         timeout = litellm._calculate_retry_after(
                 #             remaining_retries=num_retries,
                 #             max_retries=num_retries,
-                #             min_timeout=self.retry_after,
-                #         )
-                #     await asyncio.sleep(timeout)
-                # else:
-                #     raise original_exception
-    
-                ### RETRY
-                _timeout = self._router_should_retry(
-                    e=original_exception,
-                    remaining_retries=num_retries,
-    ```
-    ---
-    ,
-    ```router.py#L1481-L1530
                 #             min_timeout=self.retry_after,
                 #         )
                 #     await asyncio.sleep(timeout)
@@ -2055,7 +1635,7 @@ expression: result
     ```
     ---
     ,
-    ```router.py#L1521-L1570
+    ```router.py#L1521-L1720
                 raise original_exception
     
         def function_with_fallbacks(self, *args, **kwargs):
@@ -2106,20 +1686,6 @@ expression: result
                             Iterate through the model groups and try calling that deployment
                             """
                             try:
-    ```
-    ---
-    ,
-    ```router.py#L1561-L1610
-                                break
-    
-                        if fallback_model_group is None:
-                            raise original_exception
-    
-                        for mg in fallback_model_group:
-                            """
-                            Iterate through the model groups and try calling that deployment
-                            """
-                            try:
                                 ## LOGGING
                                 kwargs = self.log_retry(kwargs=kwargs, e=original_exception)
                                 kwargs["model"] = mg
@@ -2150,20 +1716,6 @@ expression: result
                                 kwargs = self.log_retry(kwargs=kwargs, e=original_exception)
                                 kwargs["model"] = mg
                                 kwargs.setdefault("metadata", {}).update(
-                                    {"model_group": mg}
-                                )  # update model_group used, if fallbacks are done
-                                response = self.function_with_fallbacks(*args, **kwargs)
-                                return response
-                            except Exception as e:
-                                raise e
-                except Exception as e:
-                    raise e
-                raise original_exception
-    
-    ```
-    ---
-    ,
-    ```router.py#L1601-L1650
                                     {"model_group": mg}
                                 )  # update model_group used, if fallbacks are done
                                 response = self.function_with_fallbacks(*args, **kwargs)
@@ -2214,20 +1766,6 @@ expression: result
                 response = original_function(*args, **kwargs)
                 return response
             except Exception as e:
-    ```
-    ---
-    ,
-    ```router.py#L1641-L1690
-            fallbacks = kwargs.pop("fallbacks", self.fallbacks)
-            context_window_fallbacks = kwargs.pop(
-                "context_window_fallbacks", self.context_window_fallbacks
-            )
-    
-            try:
-                # if the function call is successful, no exception will be raised and we'll break out of the loop
-                response = original_function(*args, **kwargs)
-                return response
-            except Exception as e:
                 original_exception = e
                 ### CHECK IF RATE LIMIT / CONTEXT WINDOW ERROR
                 if (
@@ -2268,20 +1806,6 @@ expression: result
                         )
                         time.sleep(_timeout)
                 raise original_exception
-    ```
-    ---
-    ,
-    ```router.py#L1681-L1730
-                        ## LOGGING
-                        kwargs = self.log_retry(kwargs=kwargs, e=e)
-                        remaining_retries = num_retries - current_attempt
-                        _timeout = self._router_should_retry(
-                            e=e,
-                            remaining_retries=remaining_retries,
-                            num_retries=num_retries,
-                        )
-                        time.sleep(_timeout)
-                raise original_exception
     
         ### HELPER FUNCTIONS
     
@@ -2312,20 +1836,20 @@ expression: result
                 custom_llm_provider = kwargs.get("litellm_params", {}).get(
                     "custom_llm_provider", None
                 )  # i.e. azure
-                metadata = kwargs.get("litellm_params", {}).get("metadata", None)
-                _model_info = kwargs.get("litellm_params", {}).get("model_info", {})
-    
-                if isinstance(_model_info, dict):
-                    deployment_id = _model_info.get("id", None)
-                    self._set_cooldown_deployments(
-                        exception_status=exception_status, deployment=deployment_id
-                    )  # setting deployment_id in cooldown deployments
-                if custom_llm_provider:
-                    model_name = f"{custom_llm_provider}/{model_name}"
     ```
     ---
     ,
-    ```router.py#L1721-L1770
+    ```router.py#L1711-L1910
+                    + "Message: "
+                    + str(exception_cause)
+                    + str(exception_message)
+                    + "Full exception"
+                    + str(exception)
+                )
+                model_name = kwargs.get("model", None)  # i.e. gpt35turbo
+                custom_llm_provider = kwargs.get("litellm_params", {}).get(
+                    "custom_llm_provider", None
+                )  # i.e. azure
                 metadata = kwargs.get("litellm_params", {}).get("metadata", None)
                 _model_info = kwargs.get("litellm_params", {}).get("model_info", {})
     
@@ -2376,20 +1900,6 @@ expression: result
     
         def _update_usage(self, deployment_id: str):
             """
-    ```
-    ---
-    ,
-    ```router.py#L1761-L1810
-                    self.previous_models.pop(0)
-    
-                self.previous_models.append(previous_model)
-                kwargs["metadata"]["previous_models"] = self.previous_models
-                return kwargs
-            except Exception as e:
-                raise e
-    
-        def _update_usage(self, deployment_id: str):
-            """
             Update deployment rpm for that minute
             """
             rpm_key = deployment_id
@@ -2420,20 +1930,6 @@ expression: result
                 return
     
             dt = get_utc_datetime()
-            current_minute = dt.strftime("%H-%M")
-            # get current fails for deployment
-            # update the number of failed calls
-            # if it's > allowed fails
-            # cooldown deployment
-            current_fails = self.failed_calls.get_cache(key=deployment) or 0
-            updated_fails = current_fails + 1
-            verbose_router_logger.debug(
-                f"Attempting to add {deployment} to cooldown list. updated_fails: {updated_fails}; self.allowed_fails: {self.allowed_fails}"
-            )
-    ```
-    ---
-    ,
-    ```router.py#L1801-L1850
             current_minute = dt.strftime("%H-%M")
             # get current fails for deployment
             # update the number of failed calls
@@ -2484,20 +1980,6 @@ expression: result
                 self.failed_calls.set_cache(
                     key=deployment, value=updated_fails, ttl=cooldown_time
                 )
-    ```
-    ---
-    ,
-    ```router.py#L1841-L1890
-                except:
-                    cached_value = [deployment]
-                    # save updated value
-                    self.cache.set_cache(
-                        value=cached_value, key=cooldown_key, ttl=cooldown_time
-                    )
-            else:
-                self.failed_calls.set_cache(
-                    key=deployment, value=updated_fails, ttl=cooldown_time
-                )
     
         async def _async_get_cooldown_deployments(self):
             """
@@ -2538,20 +2020,6 @@ expression: result
             Mimics 'async_routing_strategy_pre_call_checks'
     
             Ensures consistent update rpm implementation for 'usage-based-routing-v2'
-    ```
-    ---
-    ,
-    ```router.py#L1881-L1930
-            cooldown_models = self.cache.get_cache(key=cooldown_key) or []
-    
-            verbose_router_logger.debug(f"retrieve cooldown models: {cooldown_models}")
-            return cooldown_models
-    
-        def routing_strategy_pre_call_checks(self, deployment: dict):
-            """
-            Mimics 'async_routing_strategy_pre_call_checks'
-    
-            Ensures consistent update rpm implementation for 'usage-based-routing-v2'
     
             Returns:
             - None
@@ -2572,6 +2040,20 @@ expression: result
             Returns:
             - None
     
+    ```
+    ---
+    ,
+    ```router.py#L1901-L2100
+    
+        async def async_routing_strategy_pre_call_checks(self, deployment: dict):
+            """
+            For usage-based-routing-v2, enables running rpm checks before the call is made, inside the semaphore.
+    
+            -> makes the calls concurrency-safe, when rpm limits are set for a deployment
+    
+            Returns:
+            - None
+    
             Raises:
             - Rate Limit Exception - If the deployment is over it's tpm/rpm limits
             """
@@ -2582,20 +2064,6 @@ expression: result
         def set_client(self, model: dict):
             """
             - Initializes Azure/OpenAI clients. Stores them in cache, b/c of this - https://github.com/BerriAI/litellm/issues/1278
-            - Initializes Semaphore for client w/ rpm. Stores them in cache. b/c of this - https://github.com/BerriAI/litellm/issues/2994
-            """
-            client_ttl = self.client_ttl
-            litellm_params = model.get("litellm_params", {})
-            model_name = litellm_params.get("model")
-            model_id = model["model_info"]["id"]
-            # ### IF RPM SET - initialize a semaphore ###
-            rpm = litellm_params.get("rpm", None)
-            tpm = litellm_params.get("tpm", None)
-            max_parallel_requests = litellm_params.get("max_parallel_requests", None)
-    ```
-    ---
-    ,
-    ```router.py#L1921-L1970
             - Initializes Semaphore for client w/ rpm. Stores them in cache. b/c of this - https://github.com/BerriAI/litellm/issues/2994
             """
             client_ttl = self.client_ttl
@@ -2646,20 +2114,6 @@ expression: result
             ):
                 is_azure_ai_studio_model: bool = False
                 if custom_llm_provider == "azure":
-    ```
-    ---
-    ,
-    ```router.py#L1961-L2010
-                or custom_llm_provider == "azure"
-                or custom_llm_provider == "azure_text"
-                or custom_llm_provider == "custom_openai"
-                or custom_llm_provider == "openai"
-                or custom_llm_provider == "text-completion-openai"
-                or "ft:gpt-3.5-turbo" in model_name
-                or model_name in litellm.open_ai_embedding_models
-            ):
-                is_azure_ai_studio_model: bool = False
-                if custom_llm_provider == "azure":
                     if litellm.utils._is_non_openai_azure_model(model_name):
                         is_azure_ai_studio_model = True
                         custom_llm_provider = "openai"
@@ -2690,20 +2144,6 @@ expression: result
     
                 if not, add it - https://github.com/BerriAI/litellm/issues/2279
                 """
-                if (
-                    is_azure_ai_studio_model == True
-                    and api_base is not None
-                    and not api_base.endswith("/v1/")
-                ):
-                    # check if it ends with a trailing slash
-                    if api_base.endswith("/"):
-                        api_base += "v1/"
-                    elif api_base.endswith("/v1"):
-                        api_base += "/"
-    ```
-    ---
-    ,
-    ```router.py#L2001-L2050
                 if (
                     is_azure_ai_studio_model == True
                     and api_base is not None
@@ -2754,20 +2194,6 @@ expression: result
                 # Check if the HTTP_PROXY and HTTPS_PROXY environment variables are set and use them accordingly.
                 http_proxy = os.getenv("HTTP_PROXY", None)
                 https_proxy = os.getenv("HTTPS_PROXY", None)
-    ```
-    ---
-    ,
-    ```router.py#L2041-L2090
-                    max_retries = litellm.get_secret(max_retries_env_name)
-                    litellm_params["max_retries"] = max_retries
-    
-                # proxy support
-                import os
-                import httpx
-    
-                # Check if the HTTP_PROXY and HTTPS_PROXY environment variables are set and use them accordingly.
-                http_proxy = os.getenv("HTTP_PROXY", None)
-                https_proxy = os.getenv("HTTPS_PROXY", None)
                 no_proxy = os.getenv("NO_PROXY", None)
     
                 # Create the proxies dictionary only if the environment variables are set.
@@ -2808,20 +2234,20 @@ expression: result
                         )
                     if api_version is None:
                         api_version = "2023-07-01-preview"
+                    if "gateway.ai.cloudflare.com" in api_base:
+                        if not api_base.endswith("/"):
+                            api_base += "/"
+                        azure_model = model_name.replace("azure/", "")
+                        api_base += f"{azure_model}"
+                        cache_key = f"{model_id}_async_client"
+                        _client = openai.AsyncAzureOpenAI(
+                            api_key=api_key,
+                            base_url=api_base,
+                            api_version=api_version,
     ```
     ---
     ,
-    ```router.py#L2081-L2130
-                    organization = litellm.get_secret(organization_env_name)
-                    litellm_params["organization"] = organization
-    
-                if "azure" in model_name:
-                    if api_base is None:
-                        raise ValueError(
-                            f"api_base is required for Azure OpenAI. Set it on your config. Model - {model}"
-                        )
-                    if api_version is None:
-                        api_version = "2023-07-01-preview"
+    ```router.py#L2091-L2290
                     if "gateway.ai.cloudflare.com" in api_base:
                         if not api_base.endswith("/"):
                             api_base += "/"
@@ -2852,20 +2278,6 @@ expression: result
                         )  # cache for 1 hr
     
                         cache_key = f"{model_id}_client"
-                        _client = openai.AzureOpenAI(  # type: ignore
-                            api_key=api_key,
-                            base_url=api_base,
-                            api_version=api_version,
-                            timeout=timeout,
-                            max_retries=max_retries,
-                            http_client=httpx.Client(
-                                transport=CustomHTTPTransport(
-                                    limits=httpx.Limits(
-                                        max_connections=1000, max_keepalive_connections=100
-    ```
-    ---
-    ,
-    ```router.py#L2121-L2170
                         _client = openai.AzureOpenAI(  # type: ignore
                             api_key=api_key,
                             base_url=api_base,
@@ -2916,20 +2328,6 @@ expression: result
                         cache_key = f"{model_id}_stream_client"
                         _client = openai.AzureOpenAI(  # type: ignore
                             api_key=api_key,
-    ```
-    ---
-    ,
-    ```router.py#L2161-L2210
-                        self.cache.set_cache(
-                            key=cache_key,
-                            value=_client,
-                            ttl=client_ttl,
-                            local_only=True,
-                        )  # cache for 1 hr
-    
-                        cache_key = f"{model_id}_stream_client"
-                        _client = openai.AzureOpenAI(  # type: ignore
-                            api_key=api_key,
                             base_url=api_base,
                             api_version=api_version,
                             timeout=stream_timeout,
@@ -2970,20 +2368,6 @@ expression: result
                         azure_client_params = select_azure_base_url_or_endpoint(
                             azure_client_params
                         )
-    ```
-    ---
-    ,
-    ```router.py#L2201-L2250
-                            "azure_endpoint": api_base,
-                            "api_version": api_version,
-                        }
-                        from litellm.llms.azure import select_azure_base_url_or_endpoint
-    
-                        # this decides if we should set azure_endpoint or base_url on Azure OpenAI Client
-                        # required to support GPT-4 vision enhancements, since base_url needs to be set on Azure OpenAI Client
-                        azure_client_params = select_azure_base_url_or_endpoint(
-                            azure_client_params
-                        )
     
                         cache_key = f"{model_id}_async_client"
                         _client = openai.AsyncAzureOpenAI(  # type: ignore
@@ -3014,20 +2398,6 @@ expression: result
                             max_retries=max_retries,
                             http_client=httpx.Client(
                                 transport=CustomHTTPTransport(
-                                    verify=litellm.ssl_verify,
-                                    limits=httpx.Limits(
-                                        max_connections=1000, max_keepalive_connections=100
-                                    ),
-                                ),
-                                mounts=sync_proxy_mounts,
-                            ),  # type: ignore
-                        )
-                        self.cache.set_cache(
-                            key=cache_key,
-    ```
-    ---
-    ,
-    ```router.py#L2241-L2290
                                     verify=litellm.ssl_verify,
                                     limits=httpx.Limits(
                                         max_connections=1000, max_keepalive_connections=100
@@ -3081,7 +2451,7 @@ expression: result
     ```
     ---
     ,
-    ```router.py#L2281-L2330
+    ```router.py#L2281-L2480
                             **azure_client_params,
                             timeout=stream_timeout,
                             max_retries=max_retries,
@@ -3132,20 +2502,6 @@ expression: result
                         value=_client,
                         ttl=client_ttl,
                         local_only=True,
-    ```
-    ---
-    ,
-    ```router.py#L2321-L2370
-                                verify=litellm.ssl_verify,
-                            ),
-                            mounts=async_proxy_mounts,
-                        ),  # type: ignore
-                    )
-                    self.cache.set_cache(
-                        key=cache_key,
-                        value=_client,
-                        ttl=client_ttl,
-                        local_only=True,
                     )  # cache for 1 hr
     
                     cache_key = f"{model_id}_client"
@@ -3186,20 +2542,6 @@ expression: result
                                     max_connections=1000, max_keepalive_connections=100
                                 ),
                                 verify=litellm.ssl_verify,
-    ```
-    ---
-    ,
-    ```router.py#L2361-L2410
-                        base_url=api_base,
-                        timeout=stream_timeout,
-                        max_retries=max_retries,
-                        organization=organization,
-                        http_client=httpx.AsyncClient(
-                            transport=AsyncCustomHTTPTransport(
-                                limits=httpx.Limits(
-                                    max_connections=1000, max_keepalive_connections=100
-                                ),
-                                verify=litellm.ssl_verify,
                             ),
                             mounts=async_proxy_mounts,
                         ),  # type: ignore
@@ -3230,20 +2572,6 @@ expression: result
                         ),  # type: ignore
                     )
                     self.cache.set_cache(
-                        key=cache_key,
-                        value=_client,
-                        ttl=client_ttl,
-                        local_only=True,
-                    )  # cache for 1 hr
-    
-        def _generate_model_id(self, model_group: str, litellm_params: dict):
-            """
-            Helper function to consistently generate the same id for a deployment
-    
-    ```
-    ---
-    ,
-    ```router.py#L2401-L2450
                         key=cache_key,
                         value=_client,
                         ttl=client_ttl,
@@ -3294,20 +2622,6 @@ expression: result
                             _litellm_params[k] = litellm.get_secret(v)
     
                 _model_info: dict = model.pop("model_info", {})
-    ```
-    ---
-    ,
-    ```router.py#L2441-L2490
-            for model in original_model_list:
-                _model_name = model.pop("model_name")
-                _litellm_params = model.pop("litellm_params")
-                ## check if litellm params in os.environ
-                if isinstance(_litellm_params, dict):
-                    for k, v in _litellm_params.items():
-                        if isinstance(v, str) and v.startswith("os.environ/"):
-                            _litellm_params[k] = litellm.get_secret(v)
-    
-                _model_info: dict = model.pop("model_info", {})
     
                 # check if model info has id
                 if "id" not in _model_info:
@@ -3338,20 +2652,20 @@ expression: result
             ############ Users can either pass tpm/rpm as a litellm_param or a router param ###########
             # for get_available_deployment, we use the litellm_param["rpm"]
             # in this snippet we also set rpm to be a litellm_param
-            if (
-                deployment.litellm_params.rpm is None
-                and getattr(deployment, "rpm", None) is not None
-            ):
-                deployment.litellm_params.rpm = getattr(deployment, "rpm")
-    
-            if (
-                deployment.litellm_params.tpm is None
-                and getattr(deployment, "tpm", None) is not None
-            ):
     ```
     ---
     ,
-    ```router.py#L2481-L2530
+    ```router.py#L2471-L2670
+            self.model_names = [m["model_name"] for m in model_list]
+    
+        def _add_deployment(self, deployment: Deployment) -> Deployment:
+            import os
+    
+            #### DEPLOYMENT NAMES INIT ########
+            self.deployment_names.append(deployment.litellm_params.model)
+            ############ Users can either pass tpm/rpm as a litellm_param or a router param ###########
+            # for get_available_deployment, we use the litellm_param["rpm"]
+            # in this snippet we also set rpm to be a litellm_param
             if (
                 deployment.litellm_params.rpm is None
                 and getattr(deployment, "rpm", None) is not None
@@ -3402,20 +2716,6 @@ expression: result
             self.set_client(model=deployment.to_json(exclude_none=True))
     
             return deployment
-    ```
-    ---
-    ,
-    ```router.py#L2521-L2570
-                        params[param_key] = os.environ.get(env_name, "")
-    
-            # done reading model["litellm_params"]
-            if custom_llm_provider not in litellm.provider_list:
-                raise Exception(f"Unsupported provider - {custom_llm_provider}")
-    
-            # init OpenAI, Azure clients
-            self.set_client(model=deployment.to_json(exclude_none=True))
-    
-            return deployment
     
         def add_deployment(self, deployment: Deployment) -> Optional[Deployment]:
             """
@@ -3446,20 +2746,6 @@ expression: result
             """
             Parameters:
             - id: str - the id of the deployment to be deleted
-    
-            Returns:
-            - The deleted deployment
-            - OR None (if deleted deployment not found)
-            """
-            deployment_idx = None
-            for idx, m in enumerate(self.model_list):
-                if m["model_info"]["id"] == id:
-                    deployment_idx = idx
-    
-    ```
-    ---
-    ,
-    ```router.py#L2561-L2610
     
             Returns:
             - The deleted deployment
@@ -3510,20 +2796,6 @@ expression: result
             _all_vars = vars(self)
             _settings_to_return = {}
             vars_to_include = [
-    ```
-    ---
-    ,
-    ```router.py#L2601-L2650
-            return None
-    
-        def get_settings(self):
-            """
-            Get router settings method, returns a dictionary of the settings and their values.
-            For example get the set values for routing_strategy_args, routing_strategy, allowed_fails, cooldown_time, num_retries, timeout, max_retries, retry_after
-            """
-            _all_vars = vars(self)
-            _settings_to_return = {}
-            vars_to_include = [
                 "routing_strategy_args",
                 "routing_strategy",
                 "allowed_fails",
@@ -3564,20 +2836,6 @@ expression: result
             _int_settings = [
                 "timeout",
                 "num_retries",
-    ```
-    ---
-    ,
-    ```router.py#L2641-L2690
-                "timeout",
-                "max_retries",
-                "retry_after",
-                "fallbacks",
-                "context_window_fallbacks",
-            ]
-    
-            _int_settings = [
-                "timeout",
-                "num_retries",
                 "retry_after",
                 "allowed_fails",
                 "cooldown_time",
@@ -3598,6 +2856,20 @@ expression: result
             """
             Returns the appropriate client based on the given deployment, kwargs, and client_type.
     
+    ```
+    ---
+    ,
+    ```router.py#L2661-L2860
+                    else:
+                        setattr(self, var, kwargs[var])
+                else:
+                    verbose_router_logger.debug("Setting {} is not allowed".format(var))
+            verbose_router_logger.debug(f"Updated Router settings: {self.get_settings()}")
+    
+        def _get_client(self, deployment, kwargs, client_type=None):
+            """
+            Returns the appropriate client based on the given deployment, kwargs, and client_type.
+    
             Parameters:
                 deployment (dict): The deployment dictionary containing the clients.
                 kwargs (dict): The keyword arguments passed to the function.
@@ -3608,20 +2880,6 @@ expression: result
             """
             model_id = deployment["model_info"]["id"]
             if client_type == "max_parallel_requests":
-                cache_key = "{}_max_parallel_requests_client".format(model_id)
-                client = self.cache.get_cache(key=cache_key, local_only=True)
-                return client
-            elif client_type == "async":
-                if kwargs.get("stream") == True:
-                    cache_key = f"{model_id}_stream_async_client"
-                    client = self.cache.get_cache(key=cache_key, local_only=True)
-                    if client is None:
-                        """
-                        Re-initialize the client
-    ```
-    ---
-    ,
-    ```router.py#L2681-L2730
                 cache_key = "{}_max_parallel_requests_client".format(model_id)
                 client = self.cache.get_cache(key=cache_key, local_only=True)
                 return client
@@ -3672,20 +2930,6 @@ expression: result
             self,
             model: str,
             healthy_deployments: List,
-    ```
-    ---
-    ,
-    ```router.py#L2721-L2770
-                        Re-initialize the client
-                        """
-                        self.set_client(model=deployment)
-                        client = self.cache.get_cache(key=cache_key)
-                    return client
-    
-        def _pre_call_checks(
-            self,
-            model: str,
-            healthy_deployments: List,
             messages: List[Dict[str, str]],
         ):
             """
@@ -3716,20 +2960,6 @@ expression: result
             current_minute = dt.strftime("%H-%M")
             rpm_key = f"{model}:rpm:{current_minute}"
             model_group_cache = (
-                self.cache.get_cache(key=rpm_key, local_only=True) or {}
-            )  # check the in-memory cache used by lowest_latency and usage-based routing. Only check the local cache.
-            for idx, deployment in enumerate(_returned_deployments):
-                # see if we have the info for this model
-                try:
-                    base_model = deployment.get("model_info", {}).get("base_model", None)
-                    if base_model is None:
-                        base_model = deployment.get("litellm_params", {}).get(
-                            "base_model", None
-                        )
-    ```
-    ---
-    ,
-    ```router.py#L2761-L2810
                 self.cache.get_cache(key=rpm_key, local_only=True) or {}
             )  # check the in-memory cache used by lowest_latency and usage-based routing. Only check the local cache.
             for idx, deployment in enumerate(_returned_deployments):
@@ -3780,20 +3010,6 @@ expression: result
                     if (
                         isinstance(_litellm_params, dict)
                         and _litellm_params.get("rpm", None) is not None
-    ```
-    ---
-    ,
-    ```router.py#L2801-L2850
-                ):
-                    model_group_cache[model_id] = model_group_cache.get(model_id, 0)
-    
-                    current_request = max(
-                        current_request_cache_local, model_group_cache[model_id]
-                    )
-    
-                    if (
-                        isinstance(_litellm_params, dict)
-                        and _litellm_params.get("rpm", None) is not None
                     ):
                         if (
                             isinstance(_litellm_params["rpm"], int)
@@ -3834,20 +3050,20 @@ expression: result
             self,
             model: str,
             messages: Optional[List[Dict[str, str]]] = None,
+            input: Optional[Union[str, List]] = None,
+            specific_deployment: Optional[bool] = False,
+        ):
+            """
+            Common checks for 'get_available_deployment' across sync + async call.
+    
+            If 'healthy_deployments' returned is None, this means the user chose a specific deployment
+            """
+            # check if aliases set on litellm model alias map
+            if specific_deployment == True:
     ```
     ---
     ,
-    ```router.py#L2841-L2890
-            if len(invalid_model_indices) > 0:
-                for idx in reversed(invalid_model_indices):
-                    _returned_deployments.pop(idx)
-    
-            return _returned_deployments
-    
-        def _common_checks_available_deployment(
-            self,
-            model: str,
-            messages: Optional[List[Dict[str, str]]] = None,
+    ```router.py#L2851-L3050
             input: Optional[Union[str, List]] = None,
             specific_deployment: Optional[bool] = False,
         ):
@@ -3878,20 +3094,6 @@ expression: result
             if model not in self.model_names and self.default_deployment is not None:
                 updated_deployment = copy.deepcopy(
                     self.default_deployment
-                )  # self.default_deployment
-                updated_deployment["litellm_params"]["model"] = model
-                return updated_deployment, None
-    
-            ## get healthy deployments
-            ### get all deployments
-            healthy_deployments = [m for m in self.model_list if m["model_name"] == model]
-            if len(healthy_deployments) == 0:
-                # check if the user sent in a deployment name instead
-                healthy_deployments = [
-    ```
-    ---
-    ,
-    ```router.py#L2881-L2930
                 )  # self.default_deployment
                 updated_deployment["litellm_params"]["model"] = model
                 return updated_deployment, None
@@ -3942,20 +3144,6 @@ expression: result
                     model=model,
                     messages=messages,
                     input=input,
-    ```
-    ---
-    ,
-    ```router.py#L2921-L2970
-            Allows all cache calls to be made async => 10x perf impact (8rps -> 100 rps).
-            """
-            if (
-                self.routing_strategy != "usage-based-routing-v2"
-                and self.routing_strategy != "simple-shuffle"
-            ):  # prevent regressions for other routing strategies, that don't have async get available deployments implemented.
-                return self.get_available_deployment(
-                    model=model,
-                    messages=messages,
-                    input=input,
                     specific_deployment=specific_deployment,
                     request_kwargs=request_kwargs,
                 )
@@ -3996,20 +3184,6 @@ expression: result
                 raise ValueError(
                     f"{RouterErrors.no_deployments_available.value}, passed model={model}"
                 )
-    ```
-    ---
-    ,
-    ```router.py#L2961-L3010
-            # filter pre-call checks
-            if self.enable_pre_call_checks and messages is not None:
-                healthy_deployments = self._pre_call_checks(
-                    model=model, healthy_deployments=healthy_deployments, messages=messages
-                )
-    
-            if len(healthy_deployments) == 0:
-                raise ValueError(
-                    f"{RouterErrors.no_deployments_available.value}, passed model={model}"
-                )
     
             if (
                 self.routing_strategy == "usage-based-routing-v2"
@@ -4040,20 +3214,6 @@ expression: result
                         f"get_available_deployment for model: {model}, Selected deployment: {self.print_deployment(deployment) or deployment[0]} for model: {model}"
                     )
                     return deployment or deployment[0]
-                ############## Check if we can do a RPM/TPM based weighted pick #################
-                tpm = healthy_deployments[0].get("litellm_params").get("tpm", None)
-                if tpm is not None:
-                    # use weight-random pick if rpms provided
-                    tpms = [m["litellm_params"].get("tpm", 0) for m in healthy_deployments]
-                    verbose_router_logger.debug(f"\ntpms {tpms}")
-                    total_tpm = sum(tpms)
-                    weights = [tpm / total_tpm for tpm in tpms]
-                    verbose_router_logger.debug(f"\n weights {weights}")
-                    # Perform weighted random pick
-    ```
-    ---
-    ,
-    ```router.py#L3001-L3050
                 ############## Check if we can do a RPM/TPM based weighted pick #################
                 tpm = healthy_deployments[0].get("litellm_params").get("tpm", None)
                 if tpm is not None:
@@ -4107,7 +3267,7 @@ expression: result
     ```
     ---
     ,
-    ```router.py#L3041-L3090
+    ```router.py#L3041-L3239
             request_kwargs: Optional[Dict] = None,
         ):
             """
@@ -4158,20 +3318,6 @@ expression: result
                     # use weight-random pick if rpms provided
                     rpms = [m["litellm_params"].get("rpm", 0) for m in healthy_deployments]
                     verbose_router_logger.debug(f"\nrpms {rpms}")
-    ```
-    ---
-    ,
-    ```router.py#L3081-L3130
-                    model_group=model, healthy_deployments=healthy_deployments
-                )
-            elif self.routing_strategy == "simple-shuffle":
-                # if users pass rpm or tpm, we do a random weighted pick - based on rpm/tpm
-                ############## Check if we can do a RPM/TPM based weighted pick #################
-                rpm = healthy_deployments[0].get("litellm_params").get("rpm", None)
-                if rpm is not None:
-                    # use weight-random pick if rpms provided
-                    rpms = [m["litellm_params"].get("rpm", 0) for m in healthy_deployments]
-                    verbose_router_logger.debug(f"\nrpms {rpms}")
                     total_rpm = sum(rpms)
                     weights = [rpm / total_rpm for rpm in rpms]
                     verbose_router_logger.debug(f"\n weights {weights}")
@@ -4202,20 +3348,6 @@ expression: result
                     return deployment or deployment[0]
     
                 ############## No RPM/TPM passed, we do a random pick #################
-                item = random.choice(healthy_deployments)
-                return item or item[0]
-            elif (
-                self.routing_strategy == "latency-based-routing"
-                and self.lowestlatency_logger is not None
-            ):
-                deployment = self.lowestlatency_logger.get_available_deployments(
-                    model_group=model,
-                    healthy_deployments=healthy_deployments,
-                    request_kwargs=request_kwargs,
-    ```
-    ---
-    ,
-    ```router.py#L3121-L3170
                 item = random.choice(healthy_deployments)
                 return item or item[0]
             elif (
@@ -4266,20 +3398,6 @@ expression: result
                 model = litellm_params.get("model", "")
     
                 model_id = deployment.get("model_info", {}).get("id", None)
-    ```
-    ---
-    ,
-    ```router.py#L3161-L3210
-            )
-            return deployment
-    
-        def _track_deployment_metrics(self, deployment, response=None):
-            try:
-                litellm_params = deployment["litellm_params"]
-                api_base = litellm_params.get("api_base", "")
-                model = litellm_params.get("model", "")
-    
-                model_id = deployment.get("model_info", {}).get("id", None)
                 if response is None:
     
                     # update self.deployment_stats
@@ -4320,20 +3438,6 @@ expression: result
                         else:
                             self.deployment_stats[model_id] = {
                                 "api_base": api_base,
-    ```
-    ---
-    ,
-    ```router.py#L3201-L3239
-                                self.deployment_stats[model_id]["avg_latency"] = response_ms
-    
-                            # check if num_successes exists
-                            if "num_successes" in self.deployment_stats[model_id]:
-                                self.deployment_stats[model_id]["num_successes"] += 1
-                            else:
-                                self.deployment_stats[model_id]["num_successes"] = 1
-                        else:
-                            self.deployment_stats[model_id] = {
-                                "api_base": api_base,
                                 "model": model,
                                 "num_successes": 1,
                                 "avg_latency": response_ms,
@@ -4354,6 +3458,18 @@ expression: result
         def flush_cache(self):
             litellm.cache = None
             self.cache.flush_cache()
+    
+        def reset(self):
+            ## clean up on close
+            litellm.success_callback = []
+            litellm.__async_success_callback = []
+            litellm.failure_callback = []
+            litellm._async_failure_callback = []
+            self.flush_cache()
+    ```
+    ---
+    ,
+    ```router.py#L3231-L3239
     
         def reset(self):
             ## clean up on close
