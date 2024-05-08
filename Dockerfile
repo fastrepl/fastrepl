@@ -23,6 +23,11 @@ WORKDIR /app
 COPY native/code_utils ./
 RUN cargo rustc --release
 
+FROM rust:1.76.0-bullseye as git_utils_builder
+WORKDIR /app
+COPY native/git_utils ./
+RUN cargo rustc --release
+
 FROM ${BUILDER_IMAGE} as app_builder
 
 # install build dependencies
@@ -65,6 +70,7 @@ WORKDIR /app
 RUN mix assets.deploy
 
 COPY --from=code_utils_builder /app/target/release/libcode_utils.so priv/native/libcode_utils.so
+COPY --from=git_utils_builder /app/target/release/libgit_utils.so priv/native/libgit_utils.so
 
 # Compile the release
 RUN mix compile

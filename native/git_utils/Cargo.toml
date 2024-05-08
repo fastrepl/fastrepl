@@ -1,0 +1,19 @@
+[package]
+name = "git_utils"
+version = "0.1.0"
+edition = "2021"
+description = "Git utils used in Fastrepl"
+license = "MIT"
+
+[lib]
+name = "git_utils"
+path = "src/lib.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+rustler = "0.32.1"
+anyhow = "1.0"
+git2 = "0.18.3"
+
+[dev-dependencies]
+nanoid = "0.4.0"
