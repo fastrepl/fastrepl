@@ -14,6 +14,7 @@ defmodule Fastrepl.Orchestrator do
   alias Fastrepl.Tool.SemanticSearch
   alias Fastrepl.Tool.PathSearch
 
+  alias Fastrepl.Native.CodeUtils
   alias Fastrepl.Chain.PlanningChat
 
   def start(%{thread_id: thread_id, repo_full_name: _, issue_number: _} = args) do
@@ -48,6 +49,11 @@ defmodule Fastrepl.Orchestrator do
        current_step: state.current_step,
        messages: state.messages
      }, state}
+  end
+
+  @impl true
+  def handle_call(:patch, _from, state) do
+    {:reply, CodeUtils.patch(state.repo.root_path), state}
   end
 
   @impl true

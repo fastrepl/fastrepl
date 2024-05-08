@@ -38,6 +38,12 @@ defmodule FastreplWeb.Router do
     end
   end
 
+  scope "/api", FastreplWeb do
+    pipe_through [:api]
+
+    get "/patch/:id", GitPatchController, :patch
+  end
+
   scope "/auth/github", FastreplWeb do
     pipe_through [:browser]
 
