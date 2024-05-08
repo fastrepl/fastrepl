@@ -1,5 +1,6 @@
 import { SvelteRenderer } from "svelte-tiptap";
-import Mention from "@tiptap/extension-mention";
+import { PluginKey } from "@tiptap/pm/state";
+import TiptapMention from "@tiptap/extension-mention";
 import { type SuggestionOptions } from "@tiptap/suggestion";
 
 import tippy from "tippy.js";
@@ -7,15 +8,17 @@ import Fuse from "fuse.js";
 
 import SelectableList from "$components/SelectableList.svelte";
 
-export const ReferenceFile = ({
+export const Mention = ({
+  id,
   trigger,
   names,
 }: {
+  id: string;
   trigger: string;
   names: string[];
 }) => {
-  return Mention.configure({
-    suggestion: suggestion(trigger, names),
+  return TiptapMention.extend({ name: id }).configure({
+    suggestion: suggestion(id, trigger, names),
     HTMLAttributes: {
       class: "border border-gray-300 rounded-md px-2 py-1 text-sm",
     },
@@ -34,6 +37,7 @@ export const ReferenceFile = ({
 };
 
 const suggestion = (
+  id: string,
   trigger: string,
   names: string[],
 ): Omit<SuggestionOptions, "editor"> => {
@@ -41,6 +45,7 @@ const suggestion = (
 
   return {
     char: trigger,
+    pluginKey: new PluginKey(id),
     items: ({ query }) => {
       if (!query) {
         return [];

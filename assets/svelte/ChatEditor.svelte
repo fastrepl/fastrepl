@@ -6,7 +6,7 @@
   import { createEditor, Editor, EditorContent } from "svelte-tiptap";
 
   import { Shared } from "$lib/extensions/shared";
-  import { ReferenceFile } from "$lib/extensions/referenceFile";
+  import { Mention } from "$lib/extensions/mention";
   import { Placeholder } from "@tiptap/extension-placeholder";
 
   import type { Message } from "$lib/interfaces";
@@ -41,10 +41,7 @@
     editor = createEditor({
       extensions: [
         ...Shared,
-        ReferenceFile({
-          trigger: "/",
-          names: paths,
-        }),
+        Mention({ id: "mentionFile", trigger: "/", names: paths }),
         Placeholder.configure({
           placeholder,
           emptyEditorClass:
