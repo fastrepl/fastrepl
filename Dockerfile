@@ -18,12 +18,12 @@ ARG DEBIAN_VERSION=bullseye-20240130-slim
 ARG BUILDER_IMAGE="hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-debian-${DEBIAN_VERSION}"
 ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
 
-FROM rust:1.76.0-bullseye as rust
+FROM rust:1.76.0-bullseye as code_utils_builder
 WORKDIR /app
 COPY native/code_utils ./
-RUN cargo rustc --release 
+RUN cargo rustc --release
 
-FROM ${BUILDER_IMAGE} as builder
+FROM ${BUILDER_IMAGE} as app_builder
 
 # install build dependencies
 RUN apt-get update -y && apt-get install -y build-essential git curl \
@@ -64,7 +64,7 @@ WORKDIR /app
 # compile assets
 RUN mix assets.deploy
 
-COPY --from=rust /app/target/release/libcode_utils.so priv/native/libcode_utils.so
+COPY --from=code_utils_builder /app/target/release/libcode_utils.so priv/native/libcode_utils.so
 
 # Compile the release
 RUN mix compile
@@ -80,7 +80,7 @@ RUN mix release
 FROM ${RUNNER_IMAGE}
 
 RUN apt-get update -y && \
-  apt-get install -y libstdc++6 openssl libncurses5 locales ca-certificates curl git \
+  apt-get install -y libstdc++6 openssl libncurses5 locales ca-certificates curl \
   && apt-get clean && rm -f /var/lib/apt/lists/*_*
 
 RUN curl -fsSL https://deb.nodesource.com/setup_19.x | bash - && apt-get install -y nodejs
@@ -99,7 +99,7 @@ RUN chown nobody /app
 ENV MIX_ENV="prod"
 
 # Only copy the final release from the build stage
-COPY --from=builder --chown=nobody:root /app/_build/${MIX_ENV}/rel/fastrepl ./
+COPY --from=app_builder --chown=nobody:root /app/_build/${MIX_ENV}/rel/fastrepl ./
 
 USER nobody
 
