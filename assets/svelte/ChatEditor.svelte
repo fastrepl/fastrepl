@@ -1,6 +1,6 @@
 <script lang="ts">
   import { clsx } from "clsx";
-  import { onDestroy, onMount } from "svelte";
+  import { onMount } from "svelte";
   import type { Readable } from "svelte/store";
 
   import { createEditor, Editor, EditorContent } from "svelte-tiptap";
@@ -22,8 +22,12 @@
   const handleSubmitWrapper = () => {
     const html = $editor.getHTML();
     const md = turndownService.turndown(html);
-    handleSubmit({ role: "user", content: md });
 
+    if (md === "") {
+      return;
+    }
+
+    handleSubmit({ role: "user", content: md });
     $editor.commands.clearContent();
   };
 
@@ -58,14 +62,14 @@
 
     $editor.commands.focus();
   });
-
-  window.addEventListener("keydown", keydownListener);
-  onDestroy(() => {
-    window.removeEventListener("keydown", keydownListener);
-  });
 </script>
 
-<div class="w-full relative">
+<div
+  tabindex="0"
+  role="textbox"
+  on:keydown={keydownListener}
+  class="w-full relative"
+>
   <EditorContent editor={$editor} />
   <button
     type="submit"

@@ -1,7 +1,6 @@
 <script lang="ts">
   import { clsx } from "clsx";
   import Fuse from "fuse.js";
-  import { onMount } from "svelte";
 
   export let paths: string[];
   export let handleSelectFile: (path: string) => void;
@@ -19,27 +18,25 @@
     matches = paths;
   }
 
-  onMount(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Enter") {
-        handleSelectFile(matches[currentIndex]);
-      }
-      if (e.key === "ArrowUp") {
-        currentIndex = (currentIndex + matches.length - 1) % matches.length;
-      }
-      if (e.key === "ArrowDown") {
-        currentIndex = (currentIndex + 1) % matches.length;
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  });
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSelectFile(matches[currentIndex]);
+    }
+    if (e.key === "ArrowUp") {
+      currentIndex = (currentIndex + matches.length - 1) % matches.length;
+    }
+    if (e.key === "ArrowDown") {
+      currentIndex = (currentIndex + 1) % matches.length;
+    }
+  };
 </script>
 
-<div class="flex flex-col gap-2 w-[500px]">
+<div
+  tabindex="0"
+  role="textbox"
+  on:keydown={handleKeyDown}
+  class="flex flex-col gap-2 w-[500px]"
+>
   <!-- svelte-ignore a11y-autofocus -->
   <input
     autofocus
