@@ -4,6 +4,7 @@
   import { fade } from "svelte/transition";
   import tippy, { type Instance as TippyInstance } from "tippy.js";
   import { Tabs, Dialog } from "bits-ui";
+  import { PaneGroup, Pane, PaneResizer } from "paneforge";
 
   import TreeView from "$components/TreeView.svelte";
   import CodeSnippet from "$components/CodeSnippet.svelte";
@@ -280,91 +281,92 @@
   </Dialog.Portal>
 </Dialog.Root>
 
-<div
-  class={clsx([
-    "grid grid-cols-6 gap-2 w-full",
-    "border border-gray-200 rounded-lg p-2",
-  ])}
->
-  <div
-    class="col-span-2 h-[calc(100vh-170px)] border border-gray-200 rounded-lg"
-  >
-    <Tabs.Root
-      value={currentTab}
-      onValueChange={(value) => (currentTab = value)}
-      class="h-full"
-    >
-      <Tabs.List
-        class={clsx([
-          "border-t border-x border-gray-200 px-1 rounded-t-lg",
-          "flex flex-row gap-0.5",
-          "text-xs bg-gray-200",
-        ])}
+<PaneGroup direction="horizontal">
+  <Pane defaultSize={2 / 6} order={1}>
+    <div class="h-[calc(100vh-170px)] border border-gray-200 rounded-lg">
+      <Tabs.Root
+        value={currentTab}
+        onValueChange={(value) => (currentTab = value)}
+        class="h-full"
       >
-        <Tabs.Trigger
-          value={TABS[0]}
-          class="data-[state=active]:font-semibold data-[state=inactive]:opacity-40 px-1 py-0.5"
-        >
-          {TABS[0]}
-        </Tabs.Trigger>
-        <Tabs.Trigger
-          value={TABS[1]}
-          class="data-[state=active]:font-semibold data-[state=inactive]:opacity-40 px-1 py-0.5"
-        >
-          {TABS[1]}
-        </Tabs.Trigger>
-      </Tabs.List>
-      <Tabs.Content
-        value={TABS[0]}
-        class="bg-gray-50 border-b border-gray-200 rounded-b-lg p-4 h-full"
-      >
-        <Comments
-          items={comments}
-          {handleClickComment}
-          {handleUpdateComments}
-          {handleClickExecute}
-        />
-      </Tabs.Content>
-      <Tabs.Content
-        value={TABS[1]}
-        class={clsx([
-          "bg-gray-50 h-full relative",
-          "border-b border-gray-200 rounded-b-lg p-4",
-        ])}
-      >
-        <Messages {messages} />
-        <div
+        <Tabs.List
           class={clsx([
-            "w-full px-3",
-            "absolute bottom-1 left-0",
-            "flex flex-col gap-2",
+            "border-t border-x border-gray-200 px-1 rounded-t-lg",
+            "flex flex-row gap-0.5",
+            "text-xs bg-gray-200",
           ])}
         >
-          <References {references} handleDelete={handleDeleteReference} />
-          <ChatEditor
-            {paths}
-            handleSubmit={handleSubmitChat}
-            placeholder="Type something..."
+          <Tabs.Trigger
+            value={TABS[0]}
+            class="data-[state=active]:font-semibold data-[state=inactive]:opacity-40 px-1 py-0.5"
+          >
+            {TABS[0]}
+          </Tabs.Trigger>
+          <Tabs.Trigger
+            value={TABS[1]}
+            class="data-[state=active]:font-semibold data-[state=inactive]:opacity-40 px-1 py-0.5"
+          >
+            {TABS[1]}
+          </Tabs.Trigger>
+        </Tabs.List>
+        <Tabs.Content
+          value={TABS[0]}
+          class="bg-gray-50 border-b border-gray-200 rounded-b-lg p-4 h-full"
+        >
+          <Comments
+            items={comments}
+            {handleClickComment}
+            {handleUpdateComments}
+            {handleClickExecute}
           />
-        </div>
-      </Tabs.Content>
-    </Tabs.Root>
-  </div>
+        </Tabs.Content>
+        <Tabs.Content
+          value={TABS[1]}
+          class={clsx([
+            "bg-gray-50 h-full relative",
+            "border-b border-gray-200 rounded-b-lg p-4",
+          ])}
+        >
+          <Messages {messages} />
+          <div
+            class={clsx([
+              "w-full px-3",
+              "absolute bottom-1 left-0",
+              "flex flex-col gap-2",
+            ])}
+          >
+            <References {references} handleDelete={handleDeleteReference} />
+            <ChatEditor
+              {paths}
+              {references}
+              {handleResetReferences}
+              {handleDeleteReference}
+              handleSubmit={handleSubmitChat}
+              placeholder="Type something..."
+            />
+          </div>
+        </Tabs.Content>
+      </Tabs.Root>
+    </div>
+  </Pane>
+  <PaneResizer class="w-2" />
 
   {#if files.length === 0}
-    <div
-      class={clsx([
-        "col-span-3 h-[calc(100vh-150px)]",
-        "flex items-center justify-center",
-        "bg-gray-50 border border-gray-200 rounded-lg",
-      ])}
-    >
-      <span class="text-sm text-gray-500 font-semibold">
-        No file selected.
-      </span>
-    </div>
+    <Pane defaultSize={3 / 6} order={2}>
+      <div
+        class={clsx([
+          "h-[calc(100vh-150px)]",
+          "flex items-center justify-center",
+          "bg-gray-50 border border-gray-200 rounded-lg",
+        ])}
+      >
+        <span class="text-sm text-gray-500 font-semibold">
+          No file selected.
+        </span>
+      </div>
+    </Pane>
   {:else}
-    <div class="col-span-3 relative">
+    <Pane defaultSize={3 / 6} order={2} class="relative">
       <div class="flex flex-col">
         <span class="text-xs rounded-t-lg bg-gray-200 py-0.5 px-2">
           {currentFile.path}
@@ -397,37 +399,39 @@
           <Minimap root={codeSnippetContainer} />
         </div>
       {/if}
-    </div>
+    </Pane>
   {/if}
 
-  <div
-    class={clsx([
-      "col-span-1",
-      "flex flex-col",
-      "overflow-x-hidden hover:overflow-x-auto",
-      "h-[calc(100vh-150px)] overflow-y-hidden hover:overflow-y-auto",
-      "bg-gray-50 rounded-lg",
-      "border border-gray-200 px-2 py-1",
-    ])}
-  >
-    <div class="flex flex-row justify-between items-center">
-      <span class="text-xs font-semibold truncate">
-        {repoFullName}
-      </span>
-      <button
-        type="button"
-        class="text-lg text-gray-400 hover:text-gray-800 pl-2"
-        on:click={() => handleOpenFileSearch()}
-      >
-        +
-      </button>
+  <PaneResizer class="w-2" />
+  <Pane defaultSize={1 / 6} order={3}>
+    <div
+      class={clsx([
+        "flex flex-col",
+        "overflow-x-hidden hover:overflow-x-auto",
+        "h-[calc(100vh-150px)] overflow-y-hidden hover:overflow-y-auto",
+        "bg-gray-50 rounded-lg",
+        "border border-gray-200 px-2 py-1",
+      ])}
+    >
+      <div class="flex flex-row justify-between items-center">
+        <span class="text-xs font-semibold truncate">
+          {repoFullName}
+        </span>
+        <button
+          type="button"
+          class="text-lg text-gray-400 hover:text-gray-800 pl-2"
+          on:click={() => handleOpenFileSearch()}
+        >
+          +
+        </button>
+      </div>
+      <div class="pl-2">
+        <TreeView
+          items={tree}
+          {handleClickFile}
+          currentFilePath={currentFile?.path}
+        />
+      </div>
     </div>
-    <div class="pl-2">
-      <TreeView
-        items={tree}
-        {handleClickFile}
-        currentFilePath={currentFile?.path}
-      />
-    </div>
-  </div>
-</div>
+  </Pane>
+</PaneGroup>
