@@ -302,13 +302,21 @@
         >
           <Tabs.Trigger
             value={TABS[0]}
-            class="data-[state=active]:font-semibold data-[state=inactive]:opacity-40 px-1 py-0.5"
+            class={clsx([
+              "data-[state=active]:font-semibold",
+              "data-[state=active]:border-b-2 border-b-gray-500",
+              "data-[state=inactive]:opacity-40 mx-1.5 py-0.5",
+            ])}
           >
             {TABS[0]}
           </Tabs.Trigger>
           <Tabs.Trigger
             value={TABS[1]}
-            class="data-[state=active]:font-semibold data-[state=inactive]:opacity-40 px-1 py-0.5"
+            class={clsx([
+              "data-[state=active]:font-semibold",
+              "data-[state=active]:border-b-2 border-b-gray-500",
+              "data-[state=inactive]:opacity-40 mx-1.5 py-0.5",
+            ])}
           >
             {TABS[1]}
           </Tabs.Trigger>
