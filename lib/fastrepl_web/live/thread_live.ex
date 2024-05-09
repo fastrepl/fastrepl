@@ -2,7 +2,6 @@ defmodule FastreplWeb.ThreadLive do
   use FastreplWeb, :live_view
 
   alias Fastrepl.Repository
-  alias FastreplWeb.Utils.SharedTask
 
   def render(assigns) do
     ~H"""
@@ -42,7 +41,6 @@ defmodule FastreplWeb.ThreadLive do
       |> assign(:thread_id, thread_id)
       |> assign(:steps, ["Initialization", "Planning", "Execution"])
       |> assign(:current_step, nil)
-      |> assign(:shared_tasks, [])
       |> assign(:messages, [])
 
     if socket.assigns[:live_action] != :demo and socket.assigns[:current_user] == nil do
@@ -138,25 +136,6 @@ defmodule FastreplWeb.ThreadLive do
   defp update_socket(socket, state) when is_map(state) do
     state
     |> Enum.reduce(socket, fn {k, v}, acc -> update_socket(acc, {k, v}) end)
-  end
-
-  defp update_socket(socket, {:task, {id, name}}) do
-    Enum.find_index(socket.assigns.shared_tasks, fn task -> task.id == id end)
-    |> case do
-      nil ->
-        socket
-        |> assign(
-          :shared_tasks,
-          [SharedTask.loading(id, name) | socket.assigns.shared_tasks]
-        )
-
-      index ->
-        socket
-        |> assign(
-          :shared_tasks,
-          List.update_at(socket.assigns.shared_tasks, index, &SharedTask.ok(&1, name))
-        )
-    end
   end
 
   defp update_socket(socket, {k, v}) do

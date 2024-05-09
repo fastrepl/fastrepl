@@ -8,11 +8,6 @@ defmodule Fastrepl.Orchestrator do
 
   alias Fastrepl.Retrieval.Chunker
   alias Fastrepl.Retrieval.Vectordb
-  alias Fastrepl.Retrieval.Planner
-
-  alias Fastrepl.Tool.KeywordSearch
-  alias Fastrepl.Tool.SemanticSearch
-  alias Fastrepl.Tool.PathSearch
 
   alias Fastrepl.Native.CodeUtils
   alias Fastrepl.Chain.PlanningChat
@@ -30,7 +25,7 @@ defmodule Fastrepl.Orchestrator do
       |> Map.put(:orchestrator_pid, self())
       |> Map.put(:thread_id, args.thread_id)
       |> Map.put(:repo, %Repository{full_name: args.repo_full_name})
-      |> Map.put(:issue, %{title: "", number: args.issue_number})
+      |> Map.put(:issue, %{title: "", number: args.issue_number, comments: []})
       |> Map.put(:current_step, "Initialization")
       |> Map.put(:messages, [])
 
@@ -54,12 +49,6 @@ defmodule Fastrepl.Orchestrator do
   @impl true
   def handle_call(:patch, _from, state) do
     {:reply, CodeUtils.patch(state.repo.root_path), state}
-  end
-
-  @impl true
-  def handle_cast({:submit, instruction}, state) do
-    send(self(), {:planning, %{query: instruction}})
-    {:noreply, state}
   end
 
   @impl true
@@ -130,11 +119,9 @@ defmodule Fastrepl.Orchestrator do
     issue = Github.get_issue!(state.repo.full_name, state.issue.number)
     comments = Github.list_issue_comments!(state.repo.full_name, state.issue.number)
 
-    state = state |> Map.put(:issue, %{state.issue | title: issue.title})
+    state = state |> Map.put(:issue, %{state.issue | title: issue.title, comments: comments})
 
     sync_with_views(state.thread_id, %{issue: state.issue})
-    send(state.orchestrator_pid, {:planning, %{issue: issue, comments: comments}})
-
     {:noreply, state}
   end
 
@@ -181,15 +168,15 @@ defmodule Fastrepl.Orchestrator do
       |> Enum.flat_map(&Chunker.chunk_file/1)
 
     Task.start(fn ->
-      send(state.orchestrator_pid, {:indexing, {:start, length(chunks)}})
+      send(state.orchestrator_pid, {:repo_indexing, {:start, length(chunks)}})
 
       Vectordb.ingest(
         vectordb_pid,
         chunks,
-        fn n -> send(state.orchestrator_pid, {:indexing, {:progress, n}}) end
+        fn n -> send(state.orchestrator_pid, {:repo_indexing, {:progress, n}}) end
       )
 
-      send(state.orchestrator_pid, {:indexing, {:done, length(chunks)}})
+      send(state.orchestrator_pid, {:repo_indexing, {:done, length(chunks)}})
     end)
 
     state =
@@ -206,102 +193,17 @@ defmodule Fastrepl.Orchestrator do
   end
 
   @impl true
-  def handle_info({:planning, %{query: query}}, state) do
-    task_id = Nanoid.generate()
-    sync_with_views(state.thread_id, %{task: {task_id, "Query understanding: running..."}})
-
-    Task.start(fn ->
-      {:ok, plans} = Planner.from_query(query)
-      send(state.orchestrator_pid, {:run_plans, plans})
-      sync_with_views(state.thread_id, %{task: {task_id, "Query understanding"}})
-    end)
-
-    {:noreply, state}
-  end
-
-  @impl true
-  def handle_info({:planning, %{issue: issue, comments: comments}}, state) do
-    task_id = Nanoid.generate()
-    sync_with_views(state.thread_id, %{task: {task_id, "Issue understanding: running..."}})
-
-    Task.start(fn ->
-      {:ok, plans} = Planner.from_issue(issue, comments)
-      send(state.orchestrator_pid, {:run_plans, plans})
-      sync_with_views(state.thread_id, %{task: {task_id, "Issue understanding"}})
-    end)
-
-    {:noreply, state}
-  end
-
-  @impl true
-  def handle_info({:run_plans, plans}, state) do
-    plans
-    |> Enum.each(fn plan ->
-      case plan do
-        {"semantic_search", %{"query" => query} = args} ->
-          if state.repo.vectordb_pid do
-            task_id = Nanoid.generate()
-
-            sync_with_views(state.thread_id, %{
-              task: {task_id, "Semantic search - '#{query}': running..."}
-            })
-
-            Task.start(fn ->
-              chunks =
-                SemanticSearch.run(args, %{
-                  vectordb_pid: state.repo.vectordb_pid,
-                  root_path: state.repo.root_path
-                })
-
-              send(state.orchestrator_pid, {:chunks, chunks})
-              sync_with_views(state.thread_id, %{task: {task_id, "Semantic search - '#{query}'"}})
-            end)
-          end
-
-        {"keyword_search", %{"query" => query} = args} ->
-          task_id = Nanoid.generate()
-
-          sync_with_views(state.thread_id, %{
-            task: {task_id, "Keyword search - '#{query}': running..."}
-          })
-
-          Task.start(fn ->
-            chunks = KeywordSearch.run(args, %{root_path: state.repo.root_path})
-            send(state.orchestrator_pid, {:chunks, chunks})
-            sync_with_views(state.thread_id, %{task: {task_id, "Keyword search - '#{query}'"}})
-          end)
-
-        {"path_search", %{"query" => query} = args} ->
-          task_id = Nanoid.generate()
-
-          sync_with_views(state.thread_id, %{
-            task: {task_id, "Path search - '#{query}': running..."}
-          })
-
-          Task.start(fn ->
-            chunks = PathSearch.run(args, %{root_path: state.repo.root_path})
-            send(state.orchestrator_pid, {:chunks, chunks})
-            sync_with_views(state.thread_id, %{task: {task_id, "Path search - '#{query}'"}})
-          end)
-      end
-    end)
-
-    {:noreply, state}
-  end
-
-  @impl true
-  def handle_info({:indexing, {type, value}}, state) do
+  def handle_info({:repo_indexing, {type, value}}, state) do
     state =
       case type do
         :start ->
           state |> Map.put(:repo, %{state.repo | indexing_progress: 0, indexing_total: value})
 
         :progress ->
+          progress = (state.repo.indexing_progress || 0) + value
+
           state
-          |> Map.put(:repo, %{
-            state.repo
-            | indexing_progress: (state.repo.indexing_progress || 0) + value
-          })
+          |> Map.put(:repo, %{state.repo | indexing_progress: progress})
 
         :done ->
           state |> Map.put(:repo, %{state.repo | indexing_progress: value})
