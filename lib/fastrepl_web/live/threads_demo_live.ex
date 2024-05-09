@@ -139,7 +139,8 @@ defmodule FastreplWeb.ThreadsDemoLive do
   end
 
   def handle_event("issue:select", %{"number" => number}, socket) do
-    {:noreply, socket |> assign(:selected_issue, number |> String.to_integer())}
+    issue = if String.to_integer(number) == 0, do: nil, else: String.to_integer(number)
+    {:noreply, socket |> assign(:selected_issue, issue)}
   end
 
   def handle_async(:fetch_issues, {:ok, issues}, socket) do
