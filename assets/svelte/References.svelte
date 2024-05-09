@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { fly } from "svelte/transition";
   import type { Reference } from "$lib/types";
 
   export let references: Reference[];
@@ -8,6 +9,8 @@
 <div class="flex flex-row gap-2 items-center text-xs">
   {#each references as reference, index}
     <div
+      in:fly={{ duration: 300, y: 30 }}
+      out:fly={{ duration: 300, y: 30 }}
       class="relative flex flex-col gap-1 px-2 py-1 border border-gray-200 bg-gray-100 rounded-md"
     >
       <button
