@@ -52,7 +52,7 @@
         Placeholder.configure({
           placeholder,
           emptyEditorClass:
-            "text-sm text-gray-500 first:float-left first:h-0 first:pointer-events-none first:before:content-[attr(data-placeholder)]",
+            "text-xs text-gray-500 first:float-left first:h-0 first:pointer-events-none first:before:content-[attr(data-placeholder)]",
         }),
       ],
       content: "",

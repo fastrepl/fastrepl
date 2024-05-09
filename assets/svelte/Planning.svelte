@@ -44,7 +44,7 @@
   };
 
   const TABS = ["Comments", "Chat"];
-  let currentTab: (typeof TABS)[number] = TABS[0];
+  let currentTab: (typeof TABS)[number] = TABS[1];
 
   let currentFile: File | null = null;
 
@@ -286,7 +286,7 @@
 </Dialog.Root>
 
 <PaneGroup direction="horizontal">
-  <Pane defaultSize={2 / 6} order={1}>
+  <Pane defaultSize={34} minSize={10} order={1}>
     <div class="h-[calc(100vh-170px)] border border-gray-200 rounded-lg">
       <Tabs.Root
         value={currentTab}
@@ -353,7 +353,7 @@
               {handleResetReferences}
               {handleDeleteReference}
               handleSubmit={handleSubmitChat}
-              placeholder="Type something..."
+              placeholder="Ask anything about making changes to the codebase..."
             />
           </div>
         </Tabs.Content>
@@ -363,7 +363,7 @@
   <PaneResizer class="w-2" />
 
   {#if files.length === 0}
-    <Pane defaultSize={3 / 6} order={2}>
+    <Pane defaultSize={50} minSize={10} order={2}>
       <div
         class={clsx([
           "h-[calc(100vh-150px)]",
@@ -377,9 +377,9 @@
       </div>
     </Pane>
   {:else}
-    <Pane defaultSize={3 / 6} order={2} class="relative">
+    <Pane defaultSize={50} order={2} minSize={10} class="relative">
       <div class="flex flex-col">
-        <span class="text-xs rounded-t-lg bg-gray-200 py-0.5 px-2">
+        <span class="text-xs rounded-t-lg bg-gray-200 py-1 px-2">
           {currentFile.path}
         </span>
         <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -414,7 +414,7 @@
   {/if}
 
   <PaneResizer class="w-2" />
-  <Pane defaultSize={1 / 6} order={3}>
+  <Pane defaultSize={10} minSize={5} order={3}>
     <div
       class={clsx([
         "flex flex-col",
