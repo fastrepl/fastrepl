@@ -1,5 +1,7 @@
 <script lang="ts">
   import type { Comment, File, Diff, Message } from "$lib/interfaces";
+  import type { Reference } from "$lib/types";
+
   import Stepper from "$components/Stepper.svelte";
   import Initialization from "$components/Initialization.svelte";
   import Planning from "$components/Planning.svelte";
@@ -54,8 +56,8 @@
     live.pushEvent("file:add", { path });
   };
 
-  const handleSubmitChat = (message: Message) => {
-    live.pushEvent("chat:submit", { message });
+  const handleSubmitChat = (message: Message, references: Reference[]) => {
+    live.pushEvent("chat:submit", { message, references });
   };
 </script>
 

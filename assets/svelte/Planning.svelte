@@ -14,8 +14,6 @@
   import ChatEditor from "$components/ChatEditor.svelte";
   import SearchFile from "$components/SearchFile.svelte";
   import Messages from "$components/Messages.svelte";
-  import References from "./References.svelte";
-
   import type { Comment, File, Message } from "$lib/interfaces";
   import type { Reference } from "$lib/types";
   import { buildTree } from "$lib/utils/tree";
@@ -29,9 +27,15 @@
   export let handleSetComments: (comments: Comment[]) => void;
   export let handleClickExecute: () => void;
   export let handleAddFile: (path: string) => void;
-  export let handleSubmitChat: (message: Message) => void;
+  export let handleSubmitChat: (
+    message: Message,
+    references: Reference[],
+  ) => void;
 
   let references: Reference[] = [];
+  const handleResetReferences = () => {
+    references = [];
+  };
   const handleDeleteReference = (index: number) => {
     references = [
       ...references.slice(0, index),
@@ -335,7 +339,6 @@
               "flex flex-col gap-2",
             ])}
           >
-            <References {references} handleDelete={handleDeleteReference} />
             <ChatEditor
               {paths}
               {references}

@@ -98,9 +98,13 @@ defmodule FastreplWeb.ThreadLive do
     {:noreply, socket}
   end
 
-  def handle_event("chat:submit", %{"message" => message}, socket) do
+  def handle_event("chat:submit", %{"message" => message, "references" => references}, socket) do
     messages = socket.assigns.messages ++ [message, %{role: "assistant", content: ""}]
-    GenServer.cast(socket.assigns.orchestrator_pid, {:chat, %{messages: messages}})
+
+    GenServer.cast(
+      socket.assigns.orchestrator_pid,
+      {:chat, %{messages: messages, references: references}}
+    )
 
     {:noreply, socket |> assign(:messages, messages)}
   end

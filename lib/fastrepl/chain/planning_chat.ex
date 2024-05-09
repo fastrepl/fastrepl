@@ -7,15 +7,18 @@ defmodule Fastrepl.Chain.PlanningChat do
 
   @model_id "gpt-4-turbo-2024-04-09"
 
-  def run(text, callback \\ fn data -> IO.puts(inspect(data)) end) do
+  def run(
+        %{messages: msgs, references: _refs},
+        callback \\ fn data -> IO.puts(inspect(data)) end
+      ) do
     messages = [
-      Message.new_system!(
-        """
-        You are a helpful coding assistant.
-        """
-        |> String.trim()
-      ),
-      Message.new_user!(text |> String.trim())
+      Message.new_system!("You are a helpful coding assistant."),
+      Message.new_user!("""
+      These are recent conversations:
+      #{msgs |> Enum.map(&"#{&1["role"]}: #{&1["content"]}") |> Enum.join("\n")}
+
+      Now, respond to the user.
+      """)
     ]
 
     retry with:

@@ -69,7 +69,7 @@ defmodule Fastrepl.Orchestrator do
   end
 
   @impl true
-  def handle_cast({:chat, %{messages: messages}}, state) do
+  def handle_cast({:chat, %{messages: messages, references: references}}, state) do
     callback = fn
       {:update, content} ->
         send(
@@ -84,7 +84,7 @@ defmodule Fastrepl.Orchestrator do
         )
     end
 
-    PlanningChat.run(messages |> get_in([Access.at(-2), Access.key!("content")]), callback)
+    PlanningChat.run(%{messages: messages, references: references}, callback)
     {:noreply, state |> Map.put(:messages, messages)}
   end
 

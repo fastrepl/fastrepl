@@ -9,13 +9,19 @@
   import { Mention } from "$lib/extensions/mention";
   import { Placeholder } from "@tiptap/extension-placeholder";
 
+  import type { Reference } from "$lib/types";
   import type { Message } from "$lib/interfaces";
   import { turndownService } from "$lib/turndown";
   import { tippy } from "$lib/actions";
+  import References from "$components/References.svelte";
 
   export let placeholder = "Type something...";
   export let paths: string[] = [];
-  export let handleSubmit: (message: Message) => void;
+
+  export let handleSubmit: (message: Message, references: Reference[]) => void;
+  export let references: Reference[] = [];
+  export let handleResetReferences: () => void;
+  export let handleDeleteReference: (index: number) => void;
 
   let editor: Readable<Editor>;
 
@@ -27,7 +33,8 @@
       return;
     }
 
-    handleSubmit({ role: "user", content: md });
+    handleSubmit({ role: "user", content: md }, references);
+    handleResetReferences();
     $editor.commands.clearContent();
   };
 
@@ -61,6 +68,7 @@
   });
 </script>
 
+<References handleDelete={handleDeleteReference} {references} />
 <div
   tabindex="0"
   role="textbox"
