@@ -3,6 +3,7 @@ export interface Comment {
   line_start: number;
   line_end: number;
   content: string;
+  read_only: boolean;
 }
 
 export interface File {
