@@ -1,7 +1,7 @@
 <script lang="ts">
   import { clsx } from "clsx";
   import { DropdownMenu, Dialog } from "bits-ui";
-  import { fade } from "svelte/transition";
+  import { fly, fade } from "svelte/transition";
 
   import CodeDiff from "$components/CodeDiff.svelte";
   import type { Diff } from "$lib/interfaces";
@@ -138,7 +138,7 @@
 
     <ol class="mt-2">
       {#each diffs as diff}
-        <li>
+        <li in:fly={{ duration: 300, x: -30 }}>
           <button
             on:click={() => handleClickFile(diff.file_path)}
             type="button"
@@ -159,7 +159,11 @@
   <div class="col-span-4 border border-gray-200 rounded-lg bg-gray-50">
     {#if currentFilePath}
       {@const diff = diffs.find((diff) => diff.file_path === currentFilePath)}
-      <div class="flex flex-col">
+      <div
+        id={currentFilePath}
+        class="flex flex-col"
+        in:fly={{ duration: 300, x: -30 }}
+      >
         <span class="text-xs rounded-t-lg bg-gray-200 py-0.5 px-2">
           {diff.file_path}
         </span>
