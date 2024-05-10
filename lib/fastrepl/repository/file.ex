@@ -50,12 +50,13 @@ defmodule Fastrepl.Repository.File do
 end
 
 defmodule Fastrepl.Repository.Comment do
-  defstruct file_path: "", line_start: 0, line_end: 0, content: ""
+  defstruct file_path: "", line_start: 0, line_end: 0, content: "", read_only: false
 
   @type t :: %__MODULE__{
           file_path: String.t(),
           line_start: pos_integer(),
           line_end: pos_integer(),
-          content: String.t()
+          content: String.t(),
+          read_only: boolean()
         }
 end

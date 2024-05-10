@@ -1,4 +1,4 @@
-defmodule Fastrepl.Chain.PlanningChat do
+defmodule Fastrepl.SemanticFunction.PlanningChat do
   use Retry
 
   alias LangChain.Chains.LLMChain
