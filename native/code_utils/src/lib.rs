@@ -13,14 +13,13 @@ rustler::init!(
     "Elixir.Fastrepl.Native.CodeUtils",
     [
         clone,
-        patch,
-        patches,
         commits,
+        unified_diffs,
+        readable_diff,
+        unified_diff,
         chunker_version,
         chunk_code,
         grep_file,
-        readable_diff,
-        unified_diff
     ]
 );
 
@@ -33,12 +32,7 @@ fn clone<'a>(repo_url: &'a str, dest_path: &'a str, depth: i32) -> bool {
 }
 
 #[rustler::nif]
-fn patch<'a>(repo_root_path: &'a str) -> String {
-    git::patch(repo_root_path).unwrap_or_default()
-}
-
-#[rustler::nif]
-fn patches<'a>(repo_root_path: &'a str) -> HashMap<String, String> {
+fn unified_diffs<'a>(repo_root_path: &'a str) -> HashMap<String, String> {
     git::patches(repo_root_path).unwrap_or_default()
 }
 
@@ -99,6 +93,11 @@ fn readable_diff<'a>(old: &'a str, new: &'a str) -> String {
 }
 
 #[rustler::nif]
-fn unified_diff<'a>(old: &'a str, new: &'a str) -> String {
-    diff::unified(old, new)
+fn unified_diff<'a>(
+    old_path: &'a str,
+    new_path: &'a str,
+    old_content: &'a str,
+    new_content: &'a str,
+) -> String {
+    diff::unified(old_path, new_path, old_content, new_content)
 }

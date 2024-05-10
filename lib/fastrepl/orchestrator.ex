@@ -48,7 +48,7 @@ defmodule Fastrepl.Orchestrator do
 
   @impl true
   def handle_call(:patch, _from, state) do
-    {:reply, CodeUtils.patch(state.repo.root_path), state}
+    {:reply, "NOT IMPLEMENTED", state}
   end
 
   @impl true

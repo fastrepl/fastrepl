@@ -37,26 +37,6 @@ pub fn patches<'a>(repo_root_path: &'a str) -> anyhow::Result<HashMap<String, St
     Ok(patches)
 }
 
-pub fn patch<'a>(repo_root_path: &'a str) -> anyhow::Result<String> {
-    let repo = git2::Repository::open(repo_root_path)?;
-
-    let mut index = repo.index()?;
-    index.add_all(["*"].iter(), git2::IndexAddOption::DEFAULT, None)?;
-    index.write()?;
-
-    let head = repo.head()?.peel_to_tree()?;
-    let diff = repo.diff_tree_to_index(Some(&head), Some(&index), None)?;
-    let mut patch = String::new();
-
-    diff.print(git2::DiffFormat::Patch, |_delta, _hunk, line| {
-        let content = std::str::from_utf8(line.content()).unwrap();
-        patch.push_str(content);
-        true
-    })?;
-
-    Ok(patch)
-}
-
 pub fn commits<'a>(repo_root_path: &'a str) -> anyhow::Result<HashMap<String, Vec<String>>> {
     let repo = git2::Repository::open(repo_root_path)?;
 

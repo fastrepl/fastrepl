@@ -3,30 +3,13 @@ use crate::git;
 use nanoid::nanoid;
 use std::{env::temp_dir, io::Write};
 
+use insta::assert_snapshot;
+
 #[test]
 fn clone() {
     let repo_url = "https://github.com/fastrepl/fastrepl.git";
     let dest_path = temp_dir().join(nanoid!()).to_str().unwrap().to_string();
     git::clone(repo_url, &dest_path, 1).unwrap();
-}
-
-#[test]
-fn patch() {
-    let repo_url = "https://github.com/fastrepl/fastrepl.git";
-    let dest_path = temp_dir().join(nanoid!()).to_str().unwrap().to_string();
-    git::clone(repo_url, &dest_path, 1).unwrap();
-
-    let result = git::patches(&dest_path).unwrap();
-    assert_eq!(result.len(), 0);
-
-    let mut file = std::fs::File::create(dest_path.clone() + "/random.txt").unwrap();
-    file.write(b"hello").unwrap();
-
-    let mut file = std::fs::File::create(dest_path.clone() + "/README.md").unwrap();
-    file.write(b"hello").unwrap();
-
-    let result = git::patch(&dest_path).unwrap();
-    assert_eq!(result.split("diff --git").count(), 2 + 1);
 }
 
 #[test]
@@ -46,11 +29,34 @@ fn patches() {
 
     let result = git::patches(&dest_path).unwrap();
 
-    assert_eq!(result.len(), 1 + 1);
-    assert!(result.contains_key("random.txt"));
-    assert!(result.contains_key("README.md"));
-    assert!(result.get("random.txt").unwrap().contains("diff --git"));
-    assert!(result.get("README.md").unwrap().contains("diff --git"));
+    assert_eq!(result.len(), 2);
+
+    assert_snapshot!(result.get("random.txt").unwrap(), @r###"
+    diff --git a/random.txt b/random.txt
+    new file mode 100644
+    index 0000000..b6fc4c6
+    --- /dev/null
+    +++ b/random.txt
+    @@ -0,0 +1 @@
+    +hello
+    \ No newline at end of file
+    "###);
+
+    assert_snapshot!(result.get("README.md").unwrap(), @r###"
+    diff --git a/README.md b/README.md
+    index f6d2639..b6fc4c6 100644
+    --- a/README.md
+    +++ b/README.md
+    @@ -1,6 +1 @@
+    -<h1 align="center">Fastrepl</h1>
+    -<h4 align="center">
+    -    <a href="https://discord.gg/Y8bJkzuQZU" target="_blank">
+    -        <img src="https://dcbadge.vercel.app/api/server/nMQ8ZqAegc?style=flat">
+    -    </a>
+    -</h4>
+    +hello
+    \ No newline at end of file
+    "###);
 }
 
 #[test]
