@@ -48,7 +48,12 @@ defmodule Fastrepl.Orchestrator do
 
   @impl true
   def handle_call(:patch, _from, state) do
-    {:reply, "NOT IMPLEMENTED", state}
+    diffs =
+      state.repo.diffs
+      |> Enum.map(& &1.unified_diff)
+      |> Enum.join("\n")
+
+    {:reply, diffs, state}
   end
 
   @impl true
@@ -79,9 +84,37 @@ defmodule Fastrepl.Orchestrator do
 
   @impl true
   def handle_cast(:execute, state) do
-    Task.start(fn ->
-      :timer.sleep(1000)
-      send(state.orchestrator_pid, {:diff, %{file_path: "test.md", content: "+ Hello\n- World"}})
+    state.repo.comments
+    |> Enum.map(&Map.new(&1, fn {k, v} -> {String.to_existing_atom(k), v} end))
+    |> Enum.map(&struct!(Fastrepl.Repository.Comment, &1))
+    |> Enum.map(fn comment ->
+      file = Repository.File.from!(state.repo.root_path, comment.file_path)
+      {comment, file}
+    end)
+    |> Enum.each(fn {comment, file} ->
+      Task.start(fn ->
+        {:ok, modified_file} = Fastrepl.SemanticFunction.Modify.run(file, [comment])
+
+        send(
+          state.orchestrator_pid,
+          {:diff,
+           %{
+             file_path: modified_file.path,
+             unified_diff:
+               CodeUtils.unified_diff(
+                 file.path,
+                 modified_file.path,
+                 file.content,
+                 modified_file.content
+               ),
+             readable_diff:
+               CodeUtils.readable_diff(
+                 file.content,
+                 modified_file.content
+               )
+           }}
+        )
+      end)
     end)
 
     {:noreply, state}

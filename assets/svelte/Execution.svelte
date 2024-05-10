@@ -184,7 +184,7 @@
             "border-b border-x border-gray-200 rounded-b-lg",
           ])}
         >
-          <CodeDiff content={diff.content} />
+          <CodeDiff content={diff.readable_diff} />
         </div>
 
         {#if codeDiffContainer}

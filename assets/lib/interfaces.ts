@@ -13,7 +13,7 @@ export interface File {
 
 export interface Diff {
   file_path: string;
-  content: string;
+  readable_diff: string;
 }
 
 export interface Message {
