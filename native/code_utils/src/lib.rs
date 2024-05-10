@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 mod chunk;
+mod diff;
 mod ds;
 mod git;
 mod query;
@@ -17,7 +18,9 @@ rustler::init!(
         commits,
         chunker_version,
         chunk_code,
-        grep_file
+        grep_file,
+        readable_diff,
+        unified_diff
     ]
 );
 
@@ -88,4 +91,14 @@ fn grep_file(path: &str, pattern: &str) -> Vec<usize> {
 
 fn _grep<R: std::io::Read>(reader: R, pattern: &str) -> Vec<usize> {
     query::grep(reader, pattern).unwrap_or(vec![])
+}
+
+#[rustler::nif]
+fn readable_diff<'a>(old: &'a str, new: &'a str) -> String {
+    diff::readable(old, new)
+}
+
+#[rustler::nif]
+fn unified_diff<'a>(old: &'a str, new: &'a str) -> String {
+    diff::unified(old, new)
 }

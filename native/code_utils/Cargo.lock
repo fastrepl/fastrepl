@@ -125,6 +125,7 @@ dependencies = [
  "rustler",
  "serde",
  "serde_json",
+ "similar",
  "tree-sitter",
 ]
 
