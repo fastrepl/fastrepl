@@ -6,7 +6,7 @@
   import MergeView from "$components/MergeView.svelte";
 
   export let threadId: string;
-  export let unifiedDiff: string;
+  export let diffs: string[] = [];
 
   let openPrDialog = false;
   let openPatchDialog = false;
@@ -64,10 +64,10 @@
 <div
   class="relative mt-6 w-[calc(100vw-4rem)] h-[calc(100vh-170px)] overflow-y-hidden hover:overflow-y-auto"
 >
-  <MergeView {unifiedDiff} />
+  <MergeView content={diffs.join("\n")} />
 </div>
 
-{#if unifiedDiff}
+{#if diffs.length > 0}
   <DropdownMenu.Root>
     <div
       class={clsx([

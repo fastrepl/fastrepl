@@ -48,7 +48,7 @@ defmodule Fastrepl.Orchestrator do
 
   @impl true
   def handle_call(:patch, _from, state) do
-    {:reply, state.repo.unified_diff, state}
+    {:reply, state.repo.diffs |> Enum.join("\n"), state}
   end
 
   @impl true
@@ -93,16 +93,12 @@ defmodule Fastrepl.Orchestrator do
         send(
           state.orchestrator_pid,
           {:diff,
-           %{
-             file_path: modified_file.path,
-             unified_diff:
-               CodeUtils.unified_diff(
-                 file.path,
-                 modified_file.path,
-                 file.content,
-                 modified_file.content
-               )
-           }}
+           CodeUtils.unified_diff(
+             file.path,
+             modified_file.path,
+             file.content,
+             modified_file.content
+           )}
         )
       end)
     end)
@@ -250,9 +246,8 @@ defmodule Fastrepl.Orchestrator do
   end
 
   @impl true
-  def handle_info({:diff, diff}, state) do
-    unified_diff = "#{state.repo.unified_diff}\n#{diff.unified_diff}"
-    state = state |> Map.put(:repo, %{state.repo | unified_diff: unified_diff})
+  def handle_info({:diff, content}, state) do
+    state = state |> Map.put(:repo, %{state.repo | diffs: [content | state.repo.diffs]})
     sync_with_views(state.thread_id, %{repo: state.repo})
     {:noreply, state}
   end

@@ -24,7 +24,7 @@
   export let paths: string[] = [];
   export let comments: Comment[];
   export let messages: Message[] = [];
-  export let unifiedDiff: string;
+  export let diffs: string[];
 
   const handleChangeStep = (step: string) => {
     currentStep = step;
@@ -90,6 +90,6 @@
       {handleSubmitChat}
     />
   {:else if currentStep === steps[2]}
-    <Execution {threadId} {unifiedDiff} />
+    <Execution {threadId} {diffs} />
   {/if}
 </div>

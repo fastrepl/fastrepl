@@ -2,11 +2,11 @@
   import { Diff2HtmlUI } from "diff2html/lib/ui/js/diff2html-ui";
   import codeTheme from "svelte-highlight/styles/one-light";
 
-  export let unifiedDiff: string;
-  let diffElement: HTMLElement;
+  export let content: string;
+  let element: HTMLElement;
 
-  $: if (diffElement && unifiedDiff) {
-    const diff2htmlUi = new Diff2HtmlUI(diffElement, unifiedDiff, {
+  $: if (element && content) {
+    const diff2htmlUi = new Diff2HtmlUI(element, content, {
       fileListStartVisible: false,
       fileContentToggle: false,
       outputFormat: "side-by-side",
@@ -30,4 +30,4 @@
   />
 </svelte:head>
 
-<div bind:this={diffElement} />
+<div bind:this={element} />
