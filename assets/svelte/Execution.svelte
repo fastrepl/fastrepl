@@ -3,8 +3,9 @@
   import { DropdownMenu, Dialog } from "bits-ui";
   import { fly, fade } from "svelte/transition";
 
-  import CodeDiff from "$components/CodeDiff.svelte";
   import type { Diff } from "$lib/interfaces";
+  import CodeDiff from "$components/CodeDiff.svelte";
+  import Minimap from "$components/Minimap.svelte";
 
   export let threadId: string;
   export let diffs: Diff[] = [];
@@ -12,6 +13,14 @@
   let currentFilePath = null;
   $: if (!currentFilePath && diffs.length > 0) {
     currentFilePath = diffs[0].file_path;
+  }
+
+  $: if (codeDiffContainer && currentFilePath) {
+    const firstDiff = codeDiffContainer.querySelector(
+      ".hljs-addition, .hljs-deletion",
+    );
+
+    firstDiff?.scrollIntoView({ behavior: "smooth" });
   }
 
   let openPrDialog = false;
@@ -143,13 +152,18 @@
             on:click={() => handleClickFile(diff.file_path)}
             type="button"
             class={clsx([
-              "px-2 py-1 w-full rounded-sm text-left truncate",
+              "px-2 py-1 w-full rounded-sm text-left text-gray-500 truncate",
               diff.file_path === currentFilePath
                 ? "bg-gray-200"
                 : "bg-gray-50 hover:bg-gray-100",
             ])}
           >
-            {diff.file_path.split("/").pop()}
+            <span class="text-sm text-black">
+              {diff.file_path.split("/").pop()}
+            </span>
+            <span class="text-xs">
+              {diff.file_path}
+            </span>
           </button>
         </li>
       {/each}
@@ -161,7 +175,7 @@
       {@const diff = diffs.find((diff) => diff.file_path === currentFilePath)}
       <div
         id={currentFilePath}
-        class="flex flex-col"
+        class="flex flex-col relative"
         in:fly={{ duration: 300, x: -30 }}
       >
         <span class="text-xs rounded-t-lg bg-gray-200 py-0.5 px-2">
@@ -177,6 +191,24 @@
         >
           <CodeDiff content={diff.content} />
         </div>
+
+        {#if codeDiffContainer}
+          <div class="absolute right-0 top-7">
+            <Minimap
+              root={codeDiffContainer}
+              config={{
+                "hljs-addition": {
+                  alpha: 1,
+                  fillStyle: "rgb(0 200 0)",
+                },
+                "hljs-deletion": {
+                  alpha: 1,
+                  fillStyle: "rgb(200 0 0)",
+                },
+              }}
+            />
+          </div>
+        {/if}
       </div>
     {/if}
   </div>
