@@ -94,6 +94,7 @@ defmodule Fastrepl.Orchestrator do
           state.orchestrator_pid,
           {:diff,
            CodeUtils.unified_diff(
+             :modify,
              file.path,
              modified_file.path,
              file.content,

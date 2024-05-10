@@ -51,11 +51,15 @@
       class="fixed left-[50%] top-[50%] z-50 translate-x-[-50%] translate-y-[-50%]"
     >
       <div
-        class="w-[400px] h-[300px] bg-gray-100 text-black rounded-md flex flex-col items-center justify-center"
+        class="w-[630px] h-[160px] bg-gray-100 text-black rounded-md flex flex-col items-center justify-center"
       >
         <a href="/api/patch/{threadId}" class="text-blue-500 underline">
-          Download Git Patch
+          Git Patch
         </a>
+
+        <span class="text-sm mt-4"
+          >{`curl http://${window.location.host}/api/patch/${threadId} | git apply`}</span
+        >
       </div>
     </Dialog.Content>
   </Dialog.Portal>
