@@ -44,14 +44,16 @@
     handleUpdateComments(newComments);
   };
 
-  const handlePressedChange = (index: number) => {
-    const newComments = items.map((comment, i) => {
-      if (i === index) {
-        return { ...comment, read_only: !comment.read_only };
-      }
-
-      return comment;
-    });
+  const handlePressedChange = (commentId: string) => {
+    const newComments = Object.entries(map)
+      .map(([_, comments]) =>
+        comments.map((comment) =>
+          comment.id === commentId
+            ? { ...comment, read_only: !comment.read_only }
+            : comment,
+        ),
+      )
+      .flat();
 
     handleUpdateComments(newComments);
   };
@@ -88,14 +90,14 @@
         out:fly={{ duration: 300, x: -30 }}
         class="pl-4 mt-1 flex flex-col gap-2 text-sm text-gray-700"
       >
-        {#each comments as comment, index (`${comment.file_path}-${comment.line_start}`)}
+        {#each comments as comment (`${comment.file_path}-${comment.line_start}`)}
           <div
             in:fly={{ duration: 300, x: 30 }}
             out:fly={{ duration: 300, x: -30 }}
             class="flex flex-row gap-2 items-center group"
           >
             <Toggle.Root
-              onPressedChange={(_pressed) => handlePressedChange(index)}
+              onPressedChange={(_pressed) => handlePressedChange(comment.id)}
             >
               <div
                 class="w-[24px] border border-gray-100 rounded-md p-1 text-xs text-gray-400 hover:text-gray-600"
