@@ -407,7 +407,12 @@
 
       {#if codeSnippetContainer}
         <div class="absolute right-0 top-7">
-          <Minimap root={codeSnippetContainer} />
+          <Minimap
+            root={codeSnippetContainer}
+            config={{
+              "line-background": { alpha: 0.8, fillStyle: "rgb(253 224 71)" },
+            }}
+          />
         </div>
       {/if}
     </Pane>

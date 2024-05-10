@@ -1,7 +1,15 @@
 <script lang="ts">
   import { onMount } from "svelte";
 
+  type Config = {
+    [className: string]: {
+      alpha: number;
+      fillStyle: CanvasFillStrokeStyles["fillStyle"];
+    };
+  };
+
   export let root: HTMLElement;
+  export let config: Config;
 
   let canvas: HTMLCanvasElement;
   let canvasContext: CanvasRenderingContext2D;
@@ -50,18 +58,20 @@
 
     const rootRect = root.getBoundingClientRect();
 
-    for (const element of root.getElementsByClassName("line-background")) {
-      const elementRect = element.getBoundingClientRect();
+    Object.entries(config).forEach(([className, { fillStyle, alpha }]) => {
+      for (const element of root.getElementsByClassName(className)) {
+        const elementRect = element.getBoundingClientRect();
 
-      canvasContext.fillStyle = "rgb(253 224 71)";
-      canvasContext.globalAlpha = 0.8;
-      canvasContext.fillRect(
-        0,
-        elementRect.y - rootRect.y + root.scrollTop,
-        elementRect.width,
-        elementRect.height,
-      );
-    }
+        canvasContext.fillStyle = fillStyle;
+        canvasContext.globalAlpha = alpha;
+        canvasContext.fillRect(
+          0,
+          elementRect.y - rootRect.y + root.scrollTop,
+          root.clientWidth,
+          elementRect.height,
+        );
+      }
+    });
 
     canvasContext.fillStyle = "gray";
     canvasContext.globalAlpha = 0.2;
