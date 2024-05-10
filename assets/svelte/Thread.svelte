@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Comment, File, Diff, Message } from "$lib/interfaces";
+  import type { Comment, File, Message } from "$lib/interfaces";
   import type { Reference } from "$lib/types";
 
   import Stepper from "$components/Stepper.svelte";
@@ -24,7 +24,7 @@
   export let paths: string[] = [];
   export let comments: Comment[];
   export let messages: Message[] = [];
-  export let diffs: Diff[] = [];
+  export let unifiedDiff: string;
 
   const handleChangeStep = (step: string) => {
     currentStep = step;
@@ -90,6 +90,6 @@
       {handleSubmitChat}
     />
   {:else if currentStep === steps[2]}
-    <Execution {threadId} {diffs} />
+    <Execution {threadId} {unifiedDiff} />
   {/if}
 </div>

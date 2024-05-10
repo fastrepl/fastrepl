@@ -1,26 +1,29 @@
 <script lang="ts">
   import { clsx } from "clsx";
   import { DropdownMenu, Dialog } from "bits-ui";
-  import { fly, fade } from "svelte/transition";
+  import { fade } from "svelte/transition";
 
-  import type { Diff } from "$lib/interfaces";
-  import CodeDiff from "$components/CodeDiff.svelte";
-  import Minimap from "$components/Minimap.svelte";
+  import { Diff2HtmlUI } from "diff2html/lib/ui/js/diff2html-ui";
+  import codeTheme from "svelte-highlight/styles/one-light";
 
   export let threadId: string;
-  export let diffs: Diff[] = [];
+  export let unifiedDiff: string;
 
-  let currentFilePath = null;
-  $: if (!currentFilePath && diffs.length > 0) {
-    currentFilePath = diffs[0].file_path;
-  }
+  let diffElement: HTMLElement;
 
-  $: if (codeDiffContainer && currentFilePath) {
-    const firstDiff = codeDiffContainer.querySelector(
-      ".hljs-addition, .hljs-deletion",
-    );
+  $: if (diffElement && unifiedDiff) {
+    const diff2htmlUi = new Diff2HtmlUI(diffElement, unifiedDiff, {
+      fileListStartVisible: false,
+      fileContentToggle: false,
+      outputFormat: "side-by-side",
+      synchronisedScroll: true,
+      highlight: true,
+      renderNothingWhenEmpty: false,
+      drawFileList: false,
+    });
 
-    firstDiff?.scrollIntoView({ behavior: "smooth" });
+    diff2htmlUi.draw();
+    diff2htmlUi.highlightCode();
   }
 
   let openPrDialog = false;
@@ -32,15 +35,6 @@
 
   const handleOpenPatchDialog = () => {
     openPatchDialog = true;
-  };
-
-  let codeDiffContainer: HTMLElement;
-
-  const handleClickFile = (path: string) => {
-    currentFilePath = path;
-
-    const startLine = codeDiffContainer.getElementsByTagName("tr")[0];
-    startLine.scrollIntoView({ behavior: "smooth" });
   };
 </script>
 
@@ -85,126 +79,53 @@
   </Dialog.Portal>
 </Dialog.Root>
 
-<div class={clsx(["w-full grid grid-cols-5 gap-2"])}>
-  <div
-    class={clsx([
-      "col-span-1 h-[calc(100vh-170px)]",
-      "border border-gray-200 rounded-lg py-1 px-2",
-      "text-sm bg-gray-50 ",
-    ])}
-  >
-    <DropdownMenu.Root>
-      <div
-        class={clsx([
-          "relative flex flex-row justify-center items-center",
-          "px-3 py-1 my-3",
-          "w-full bg-gray-800 text-white rounded-md",
-        ])}
-      >
-        <button on:click={() => handleOpenPrDialog()}> Create PR </button>
-        <DropdownMenu.Trigger
-          class={clsx([
-            "absolute right-2",
-            "text-lg text-gray-300 hover:text-white",
-          ])}
-        >
-          +
-        </DropdownMenu.Trigger>
-      </div>
-      <DropdownMenu.Content
-        class="z-50 text-sm bg-white rounded-md shadow-lg border border-gray-200"
-      >
-        <DropdownMenu.Item
-          on:click={() => handleOpenPatchDialog()}
-          class="px-2 py-1 border-b border-gray-200 hover:bg-gray-100"
-        >
-          Download Patch
-        </DropdownMenu.Item>
-        <DropdownMenu.Item
-          on:click={() => handleOpenPrDialog()}
-          class="px-2 py-1 hover:bg-gray-100"
-        >
-          Create PR
-        </DropdownMenu.Item>
-      </DropdownMenu.Content>
-    </DropdownMenu.Root>
+<svelte:head>
+  {@html codeTheme}
+  <link
+    rel="stylesheet"
+    type="text/css"
+    href="https://cdn.jsdelivr.net/npm/diff2html/bundles/css/diff2html.min.css"
+  />
+</svelte:head>
 
-    <div
-      class="flex flex-row justify-between items-center mt-1 border-b border-gray-200 py-1"
-    >
-      <div>Changes</div>
-      <div
-        class="w-[20px] h-[20px] bg-gray-700 text-gray-100 rounded-full flex justify-center items-center"
-      >
-        {diffs.length}
-      </div>
-    </div>
-
-    <ol class="mt-2">
-      {#each diffs as diff}
-        <li in:fly={{ duration: 300, x: -30 }}>
-          <button
-            on:click={() => handleClickFile(diff.file_path)}
-            type="button"
-            class={clsx([
-              "px-2 py-1 w-full rounded-sm text-left text-gray-500 truncate",
-              diff.file_path === currentFilePath
-                ? "bg-gray-200"
-                : "bg-gray-50 hover:bg-gray-100",
-            ])}
-          >
-            <span class="text-sm text-black">
-              {diff.file_path.split("/").pop()}
-            </span>
-            <span class="text-xs">
-              {diff.file_path}
-            </span>
-          </button>
-        </li>
-      {/each}
-    </ol>
-  </div>
-
-  <div class="col-span-4 border border-gray-200 rounded-lg bg-gray-50">
-    {#if currentFilePath}
-      {@const diff = diffs.find((diff) => diff.file_path === currentFilePath)}
-      <div
-        id={currentFilePath}
-        class="flex flex-col relative"
-        in:fly={{ duration: 300, x: -30 }}
-      >
-        <span class="text-xs rounded-t-lg bg-gray-200 py-0.5 px-2">
-          {diff.file_path}
-        </span>
-        <div
-          bind:this={codeDiffContainer}
-          class={clsx([
-            "h-[calc(100vh-190px)] overflow-y-auto scrollbar-hide",
-            "text-sm rounded-b-lg  selection:bg-[#fef16033]",
-            "border-b border-x border-gray-200 rounded-b-lg",
-          ])}
-        >
-          <CodeDiff content={diff.readable_diff} />
-        </div>
-
-        {#if codeDiffContainer}
-          <div class="absolute right-0 top-7">
-            <Minimap
-              root={codeDiffContainer}
-              config={{
-                "hljs-addition": {
-                  alpha: 1,
-                  fillStyle: "rgb(0 200 0)",
-                },
-                "hljs-deletion": {
-                  alpha: 1,
-                  fillStyle: "rgb(200 0 0)",
-                },
-              }}
-            />
-          </div>
-        {/if}
-      </div>
-    {/if}
-  </div>
+<div
+  class="relative mt-6 w-[calc(100vw-4rem)] h-[calc(100vh-170px)] overflow-y-hidden hover:overflow-y-auto"
+>
+  <div bind:this={diffElement} />
 </div>
+
+{#if unifiedDiff}
+  <DropdownMenu.Root>
+    <div
+      class={clsx([
+        "absolute right-[32px] top-[110px]",
+        "w-[136px] h-[24px] flex flex-row gap-2 justify-center items-center",
+        "px-2 py-1",
+        "bg-gray-700 hover:bg-gray-800 font-[500] text-white text-xs rounded-md ",
+      ])}
+    >
+      <button on:click={() => handleOpenPatchDialog()}> Download Patch </button>
+      <DropdownMenu.Trigger
+        class={clsx(["text-gray-200 hover:text-white text-md"])}
+      >
+        +
+      </DropdownMenu.Trigger>
+    </div>
+    <DropdownMenu.Content
+      class="z-50 bg-white rounded-md shadow-lg border border-gray-200"
+    >
+      <DropdownMenu.Item
+        on:click={() => handleOpenPatchDialog()}
+        class="px-2 py-1 border-b border-gray-200 hover:bg-gray-100 text-xs"
+      >
+        Download Patch
+      </DropdownMenu.Item>
+      <DropdownMenu.Item
+        on:click={() => handleOpenPrDialog()}
+        class="px-2 py-1 hover:bg-gray-100 text-xs"
+      >
+        Create PR
+      </DropdownMenu.Item>
+    </DropdownMenu.Content>
+  </DropdownMenu.Root>
+{/if}

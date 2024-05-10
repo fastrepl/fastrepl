@@ -17,9 +17,6 @@ defmodule Fastrepl.Native.CodeUtils do
   @spec commits(String.t()) :: map()
   def commits(_repo_root_path), do: error()
 
-  @spec readable_diff(String.t(), String.t()) :: String.t()
-  def readable_diff(_old_content, _new_content), do: error()
-
   @spec unified_diff(String.t(), String.t(), String.t(), String.t()) :: String.t()
   def unified_diff(_old_path, _new_path, _old_content, _new_content), do: error()
 

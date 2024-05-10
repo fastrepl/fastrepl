@@ -11,11 +11,6 @@ export interface File {
   content: string;
 }
 
-export interface Diff {
-  file_path: string;
-  readable_diff: string;
-}
-
 export interface Message {
   role: "assistant" | "user";
   content: string;
