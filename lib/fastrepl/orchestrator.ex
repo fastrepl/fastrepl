@@ -10,7 +10,7 @@ defmodule Fastrepl.Orchestrator do
   alias Fastrepl.Retrieval.Vectordb
 
   alias Fastrepl.Native.CodeUtils
-  alias Fastrepl.Chain.PlanningChat
+  alias Fastrepl.SemanticFunction.PlanningChat
 
   def start(%{thread_id: thread_id, repo_full_name: _, issue_number: _} = args) do
     GenServer.start(__MODULE__, args, name: via_registry(thread_id, args[:is_demo]))
