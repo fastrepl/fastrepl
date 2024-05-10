@@ -85,12 +85,7 @@
   </Dialog.Portal>
 </Dialog.Root>
 
-<div
-  class={clsx([
-    "w-full grid grid-cols-5 gap-2",
-    "border border-gray-200 rounded-lg p-2",
-  ])}
->
+<div class={clsx(["w-full grid grid-cols-5 gap-2"])}>
   <div
     class={clsx([
       "col-span-1 h-[calc(100vh-170px)]",
