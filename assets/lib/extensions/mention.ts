@@ -8,17 +8,27 @@ import Fuse from "fuse.js";
 
 import SelectableList from "$components/SelectableList.svelte";
 
+export const setCandidates = (trigger: string, candidates: string[]) => {
+  window[`_fastrepl_mention_${trigger}_candidates`] = candidates;
+};
+
+const getCandidates = (trigger: string) => {
+  return window[`_fastrepl_mention_${trigger}_candidates`];
+};
+
 export const Mention = ({
-  id,
   trigger,
   names,
+  filter,
 }: {
-  id: string;
   trigger: string;
   names: string[];
+  filter: boolean;
 }) => {
-  return TiptapMention.extend({ name: id }).configure({
-    suggestion: suggestion(id, trigger, names),
+  return TiptapMention.extend({
+    name: `mention-${trigger}`,
+  }).configure({
+    suggestion: suggestion(trigger, names, filter),
     HTMLAttributes: {
       class: "border border-gray-300 rounded-md px-2 py-1 text-sm",
     },
@@ -37,19 +47,25 @@ export const Mention = ({
 };
 
 const suggestion = (
-  id: string,
   trigger: string,
   names: string[],
+  filter: boolean,
 ): Omit<SuggestionOptions, "editor"> => {
-  const fuse = new Fuse(names, { threshold: 0.4 });
-
   return {
     char: trigger,
-    pluginKey: new PluginKey(id),
+    pluginKey: new PluginKey(`mention-${trigger}`),
     items: ({ query }) => {
       if (!query) {
         return [];
       }
+
+      const candidates = getCandidates(trigger) ?? names;
+
+      if (!filter) {
+        return candidates;
+      }
+
+      const fuse = new Fuse(candidates, { threshold: 0.4 });
 
       const results = fuse.search(query, { limit: 20 });
       return results.map(({ item }) => item);

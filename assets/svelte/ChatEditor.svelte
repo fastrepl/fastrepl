@@ -6,7 +6,7 @@
   import { createEditor, Editor, EditorContent } from "svelte-tiptap";
 
   import { Shared } from "$lib/extensions/shared";
-  import { Mention } from "$lib/extensions/mention";
+  import { Mention, setCandidates } from "$lib/extensions/mention";
   import { Placeholder } from "@tiptap/extension-placeholder";
 
   import type { Reference } from "$lib/types";
@@ -22,6 +22,11 @@
   export let references: Reference[] = [];
   export let handleResetReferences: () => void;
   export let handleDeleteReference: (index: number) => void;
+
+  $: setCandidates(
+    "#",
+    Array.from({ length: references.length }, (_, i) => `#${i + 1}`),
+  );
 
   let editor: Readable<Editor>;
 
@@ -48,7 +53,8 @@
     editor = createEditor({
       extensions: [
         ...Shared,
-        Mention({ id: "mentionFile", trigger: "/", names: paths }),
+        Mention({ trigger: "/", names: paths, filter: true }),
+        Mention({ trigger: "#", names: [], filter: false }),
         Placeholder.configure({
           placeholder,
           emptyEditorClass:
