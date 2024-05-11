@@ -24,31 +24,37 @@ defmodule Fastrepl.SemanticFunction.Modify do
       |> Enum.join("\n")
 
     messages = [
-      Message.new_system!("""
-      You are a senior software engineer with extensive experience in modifying existing codebases.
+      Message.new_system!(
+        """
+        You are a senior software engineer with extensive experience in modifying existing codebases.
 
-      The user will provide you with a file and comments about the file.
-      Finally, the user will provide you a section of the file that needs to be modified.
+        The user will provide you with a file and comments about the file.
+        Finally, the user will provide you a section of the file that needs to be modified.
 
-      This has a specific format. For example:
-      #{section_to_modify_example()}
+        This has a specific format. For example:
+        #{section_to_modify_example()}
 
-      You should think step by step and respond with the modified section.
+        You should think step by step and respond with the modified section.
 
-      For example:
-      #{section_modified_example()}
-      """),
-      Message.new_user!("""
-      Here's the file:
+        For example:
+        #{section_modified_example()}
+        """
+        |> String.trim()
+      ),
+      Message.new_user!(
+        """
+        Here's the file:
 
-      ```#{file.path}
-      #{file.content}
-      ```
+        ```#{file.path}
+        #{file.content}
+        ```
 
-      Here's the section that needs to be modified:
+        Here's the section that needs to be modified:
 
-      #{section_to_modify(editable_section, editable_comment.content)}
-      """)
+        #{section_to_modify(editable_section, editable_comment.content)}
+        """
+        |> String.trim()
+      )
     ]
 
     case llm(messages) do
