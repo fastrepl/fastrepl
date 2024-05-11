@@ -15,6 +15,7 @@
 
   export let repoFullName: string;
   export let repoDescription: string;
+  export let repoSha: string;
   export let issueTitle: string;
   export let issueNumber: number;
   export let indexingTotal: number;
@@ -70,6 +71,7 @@
     <Initialization
       {repoFullName}
       {repoDescription}
+      {repoSha}
       {issueTitle}
       {issueNumber}
       {indexingTotal}

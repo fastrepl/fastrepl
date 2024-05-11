@@ -13,6 +13,7 @@ defmodule FastreplWeb.ThreadLive do
         %{
           repoFullName: assigns |> get_in([Access.key(:repo), Access.key(:full_name)]),
           repoDescription: assigns |> get_in([Access.key(:repo), Access.key(:description)]),
+          repoSha: assigns |> get_in([Access.key(:repo), Access.key(:sha)]),
           issueTitle: assigns |> get_in([Access.key(:issue), Access.key(:title)]),
           issueNumber: assigns |> get_in([Access.key(:issue), Access.key(:number)]),
           indexingTotal: assigns |> get_in([Access.key(:repo), Access.key(:indexing_total)]),

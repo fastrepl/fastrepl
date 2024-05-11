@@ -6,6 +6,7 @@
 
   export let repoFullName: string;
   export let repoDescription: string;
+  export let repoSha: string;
   export let issueTitle: string;
   export let issueNumber: number;
 
@@ -29,6 +30,7 @@
   <Repository
     {repoFullName}
     {repoDescription}
+    {repoSha}
     {indexingTotal}
     {indexingProgress}
   />
