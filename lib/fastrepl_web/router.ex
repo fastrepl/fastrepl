@@ -32,9 +32,11 @@ defmodule FastreplWeb.Router do
       on_mount: [{FastreplWeb.GithubAuth, :mount_current_user}] do
       live "/", ThreadsLive, :none
       live "/thread/:id", ThreadLive, :none
+      live "/thread/debug/:id", ThreadDebugLive, :none
 
       live "/demo", ThreadsDemoLive, :demo
       live "/demo/thread/:id", ThreadLive, :demo
+      live "/demo/thread/debug/:id", ThreadDebugLive, :demo
     end
   end
 

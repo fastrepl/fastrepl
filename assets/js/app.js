@@ -32,6 +32,22 @@ posthog.init("phc_qdLGlOK8YuOSe6dbBNlD3QbSzjASgIuJevfB9Xi4gKz", {
 });
 window.posthog = posthog;
 
+const Autoscroll = {
+  mounted() {
+    this.autoScroll = true;
+    this.el.addEventListener("scroll", this.handleScroll.bind(this));
+  },
+  updated() {
+    if (this.autoScroll) {
+      this.el.scrollTop = this.el.scrollHeight;
+    }
+  },
+  handleScroll() {
+    const { scrollTop, clientHeight, scrollHeight } = this.el;
+    this.autoScroll = scrollTop + clientHeight === scrollHeight;
+  },
+};
+
 const Tooltip = {
   mounted() {
     this._fn();
@@ -54,6 +70,7 @@ const liveSocket = new LiveSocket("/live", Socket, {
   hooks: {
     ...getHooks(Components),
     Tooltip,
+    Autoscroll,
   },
   params: { _csrf_token: csrfToken },
 });
