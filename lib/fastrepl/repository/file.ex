@@ -24,6 +24,16 @@ defmodule Fastrepl.Repository.File do
       content: File.read!(Path.join(root_path, file_path))
     }
   end
+
+  @spec replace(t(), pos_integer(), pos_integer(), [String.t()]) :: t()
+  def replace(%__MODULE__{} = file, line_start, line_end, new_lines) do
+    existing_lines = file.content |> String.split("\n")
+
+    left = existing_lines |> Enum.slice(0, line_start - 1)
+    right = existing_lines |> Enum.slice(line_end - 1, length(existing_lines) - line_end + 1)
+
+    %__MODULE__{file | content: Enum.join(left ++ new_lines ++ right, "\n")}
+  end
 end
 
 defimpl String.Chars, for: Fastrepl.Repository.File do
