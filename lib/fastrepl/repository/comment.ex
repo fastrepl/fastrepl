@@ -1,6 +1,15 @@
-defmodule Fastrepl.Repository.Operation.WriteComments do
-  alias Fastrepl.Repository
+defmodule Fastrepl.Repository.Comment do
+  defstruct file_path: "", line_start: 0, line_end: 0, content: "", read_only: false
 
+  @type t :: %__MODULE__{
+          file_path: String.t(),
+          line_start: pos_integer(),
+          line_end: pos_integer(),
+          content: String.t(),
+          read_only: boolean()
+        }
+
+  alias Fastrepl.Repository
   alias LangChain.Chains.LLMChain
   alias LangChain.ChatModels.ChatOpenAI, as: ChatModel
   alias LangChain.Message
@@ -8,8 +17,8 @@ defmodule Fastrepl.Repository.Operation.WriteComments do
 
   @model_id "gpt-4-turbo-2024-04-09"
 
-  @spec run(String.t(), Repository.File.t()) :: {:ok, [Repository.Comment.t()]} | {:error, any()}
-  def run(goal, file) do
+  @spec from(String.t(), Repository.File.t()) :: {:ok, [Repository.Comment.t()]} | {:error, any()}
+  def from(goal, %Repository.File{} = file) when is_binary(goal) do
     {:ok, _, %Message{} = message} =
       LLMChain.new!(%{llm: ChatModel.new!(%{model: @model_id, stream: false, temperature: 0})})
       |> LLMChain.add_tools(tools())
