@@ -97,7 +97,8 @@ defmodule Fastrepl.FSTest do
         "fastrepl_web/live/threads_demo_live.ex",
         "fastrepl_web/live/thread_live.ex",
         "fastrepl_web/live/threads_live.ex",
-        "fastrepl_web/components/thread_components.ex"
+        "fastrepl_web/components/thread_components.ex",
+        "fastrepl_web/live/thread_debug_live.ex"
       ]
 
       assert Enum.sort(actual) == Enum.sort(expected)
