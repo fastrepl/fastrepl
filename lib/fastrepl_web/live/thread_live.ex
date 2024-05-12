@@ -23,7 +23,10 @@ defmodule FastreplWeb.ThreadLive do
           paths: assigns |> get_in([Access.key(:repo), Access.key(:paths)]),
           comments: assigns |> get_in([Access.key(:repo), Access.key(:comments)]),
           messages: @messages,
-          diffs: assigns |> get_in([Access.key(:repo), Access.key(:diffs)]),
+          diffs:
+            assigns
+            |> get_in([Access.key(:repo, %{}), Access.key(:diffs, [])])
+            |> Enum.map(&Repository.Diff.to_patch/1),
           steps: @steps,
           currentStep: @current_step,
           threadId: @thread_id

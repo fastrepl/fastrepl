@@ -83,26 +83,18 @@ defmodule Fastrepl.Orchestrator do
   @impl true
   def handle_cast(:execute, state) do
     state.repo.comments
-    |> Enum.map(&Map.new(&1, fn {k, v} -> {String.to_existing_atom(k), v} end))
-    |> Enum.map(&struct!(Fastrepl.Repository.Comment, &1))
-    |> Enum.map(fn comment ->
-      file = Repository.File.from!(state.repo, comment.file_path)
-      {comment, file}
-    end)
-    |> Enum.each(fn {comment, file} ->
+    |> Enum.group_by(& &1.file_path)
+    |> Enum.each(fn {_file_path, comments} ->
       Task.start(fn ->
-        {:ok, modified_file} = Fastrepl.SemanticFunction.Modify.run(file, [comment])
+        {:ok, ops} =
+          Fastrepl.SemanticFunction.Modify.run(state.repo, comments)
 
-        send(
-          state.orchestrator_pid,
-          {:diff,
-           CodeUtils.unified_diff(
-             file.path,
-             modified_file.path,
-             file.content,
-             modified_file.content
-           )}
-        )
+        diffs =
+          ops
+          |> Enum.reduce(state.repo, &Repository.Mutation.run!(&2, &1))
+          |> Repository.Diff.from()
+
+        send(state.orchestrator_pid, {:diffs, diffs})
       end)
     end)
 
@@ -242,8 +234,9 @@ defmodule Fastrepl.Orchestrator do
   end
 
   @impl true
-  def handle_info({:diff, content}, state) do
-    state = state |> Map.put(:repo, %{state.repo | diffs: [content | state.repo.diffs]})
+  def handle_info({:diffs, diffs}, state) do
+    new_diffs = state.repo.diffs ++ diffs
+    state = state |> Map.put(:repo, %{state.repo | diffs: new_diffs})
     sync_with_views(state.thread_id, %{repo: state.repo})
     {:noreply, state}
   end
