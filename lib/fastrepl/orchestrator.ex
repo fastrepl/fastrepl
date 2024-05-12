@@ -5,11 +5,8 @@ defmodule Fastrepl.Orchestrator do
   alias Fastrepl.FS
   alias Fastrepl.Github
   alias Fastrepl.Repository
-
   alias Fastrepl.Retrieval.Chunker
   alias Fastrepl.Retrieval.Vectordb
-
-  alias Fastrepl.Native.CodeUtils
   alias Fastrepl.SemanticFunction.PlanningChat
 
   def start(%{thread_id: thread_id, repo_full_name: _, issue_number: _} = args) do
@@ -86,11 +83,9 @@ defmodule Fastrepl.Orchestrator do
     |> Enum.group_by(& &1.file_path)
     |> Enum.each(fn {_file_path, comments} ->
       Task.start(fn ->
-        {:ok, ops} =
-          Fastrepl.SemanticFunction.Modify.run(state.repo, comments)
-
         diffs =
-          ops
+          comments
+          |> Enum.map(&Fastrepl.SemanticFunction.Modify.run!(state.repo, &1))
           |> Enum.reduce(state.repo, &Repository.Mutation.run!(&2, &1))
           |> Repository.Diff.from()
 

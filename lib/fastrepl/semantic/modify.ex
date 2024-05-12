@@ -2,6 +2,8 @@ defmodule Fastrepl.SemanticFunction.Modify do
   use Retry
 
   alias Fastrepl.Repository
+  alias Fastrepl.Repository.Mutation
+  alias Fastrepl.Repository.Comment
 
   alias LangChain.Chains.LLMChain
   alias LangChain.ChatModels.ChatOpenAI, as: ChatModel
@@ -9,19 +11,16 @@ defmodule Fastrepl.SemanticFunction.Modify do
 
   @model_id "gpt-4-turbo-2024-04-09"
 
-  @spec run(Repository.t(), [Repository.Comment.t()]) ::
-          {:ok, [Repository.Mutation.t()]} | {:error, any()}
-  def run(repo, comments) do
-    # TODO: currently, we only consider a single comment.
-    editable_comment = comments |> Enum.find(&(&1.read_only == false))
-    file = repo.current_files |> Enum.find(&(&1.path == editable_comment.file_path))
+  @spec run(Repository.t(), Comment.t()) :: {:ok, Mutation.t()} | {:error, any()}
+  def run(repo, comment) do
+    file = repo.current_files |> Enum.find(&(&1.path == comment.file_path))
 
-    editable_section =
+    target =
       file.content
       |> String.split("\n")
       |> Enum.slice(
-        editable_comment.line_start - 1,
-        editable_comment.line_end - editable_comment.line_start + 1
+        comment.line_start - 1,
+        comment.line_end - comment.line_start + 1
       )
       |> Enum.join("\n")
 
@@ -53,26 +52,26 @@ defmodule Fastrepl.SemanticFunction.Modify do
 
         Here's the section that needs to be modified:
 
-        #{section_to_modify(editable_section, editable_comment.content)}
+        #{section_to_modify(target, comment.content)}
         """
         |> String.trim()
       )
     ]
 
     case llm(messages) do
-      {:ok, code} ->
-        op =
-          Repository.Mutation.new_edit!(%{
-            file_path: file.path,
-            target: editable_section,
-            content: code
-          })
-
-        {:ok, [op]}
+      {:ok, content} ->
+        mut = Mutation.new_edit!(%{file_path: file.path, target: target, content: content})
+        {:ok, mut}
 
       {:error, message} ->
         {:error, message}
     end
+  end
+
+  @spec run!(Repository.t(), Comment.t()) :: Mutation.t()
+  def run!(repo, comment) do
+    {:ok, mut} = run(repo, comment)
+    mut
   end
 
   defp llm(messages) do
