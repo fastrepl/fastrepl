@@ -72,6 +72,10 @@
   const handleEditComment = (commentId: string, content: string) => {
     editingComment = null;
 
+    if (!content) {
+      return;
+    }
+
     const newComments = Object.entries(map)
       .map(([_, comments]) =>
         comments.map((comment) =>
@@ -79,8 +83,6 @@
         ),
       )
       .flat();
-
-    console.log(newComments);
 
     handleUpdateComments(newComments);
   };
@@ -109,7 +111,7 @@
           on:click={() => handleDeleteFile(filePath)}
           class="hidden group-hover:block text-gray-400 hover:text-gray-700"
         >
-          (X)
+          <span class="hero-backspace h-4 w-4" />
         </button>
       </div>
       <div
@@ -127,7 +129,7 @@
               onPressedChange={(_pressed) => handlePressedChange(comment.id)}
             >
               <div
-                class="w-[24px] border border-gray-100 rounded-md p-1 text-xs text-gray-400 hover:text-gray-600"
+                class="w-[24px] border border-gray-100 rounded-md p-1 text-xs text-gray-600 hover:text-gray-900"
               >
                 {#if comment.read_only}
                   <span> R </span>
@@ -136,6 +138,7 @@
                 {/if}
               </div>
             </Toggle.Root>
+
             <button
               type="button"
               class={clsx([
@@ -177,11 +180,12 @@
                 {comment.content}
               </button>
             {/if}
+
             <button
               on:click={() => handleDeleteComment(comment.id)}
-              class="hidden group-hover:block text-gray-400 hover:text-gray-700"
+              class="hidden group-hover:flex text-gray-400 hover:text-gray-700"
             >
-              (X)
+              <span class="hero-backspace h-4 w-4" />
             </button>
           </div>
         {/each}
