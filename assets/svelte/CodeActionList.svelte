@@ -5,7 +5,16 @@
   export let handleSubmitReference: () => void;
   export let placeholder = "Instruction or information...";
 
-  const items = ["Comment", "Chat"];
+  const items = [
+    {
+      name: "Comment",
+      icon: "hero-pencil-square h-4 w-4",
+    },
+    {
+      name: "Chat",
+      icon: "hero-chat-bubble-bottom-center-text h-4 w-4",
+    },
+  ];
 
   let currentIndex = null;
   let value = "";
@@ -40,7 +49,7 @@
   ])}
 >
   {#if currentIndex === null}
-    {#each items as item, index}
+    {#each items as { name, icon }, index}
       <button
         on:click={() => handleChangeIndex(index)}
         class={clsx([
@@ -49,7 +58,8 @@
           "bg-gray-100 hover:bg-gray-200",
         ])}
       >
-        {item}
+        <span class={icon} />
+        <span>{name}</span>
       </button>
     {/each}
   {:else if currentIndex === 0}
