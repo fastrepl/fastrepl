@@ -64,7 +64,7 @@ defmodule Fastrepl.RepositoryTest do
   end
 
   describe "multiple mutation" do
-    test "editing same file" do
+    test "editing a single file twice" do
       files = [Repository.File.new!(%{path: "a.py", content: "a"})]
       repo = Repository.new!(%{original_files: files, current_files: files})
 
@@ -92,6 +92,37 @@ defmodule Fastrepl.RepositoryTest do
                \\ No newline at end of file
                """
              ]
+    end
+
+    test "editing two files twice" do
+      files = [
+        Repository.File.new!(%{path: "a.py", content: "a"}),
+        Repository.File.new!(%{path: "b.py", content: "b"})
+      ]
+
+      repo = Repository.new!(%{original_files: files, current_files: files})
+
+      ops = [
+        Repository.Mutation.new_edit!(%{file_path: "a.py", target: "a", content: "c"}),
+        Repository.Mutation.new_edit!(%{file_path: "b.py", target: "b", content: "d"})
+      ]
+
+      repo = ops |> Enum.reduce(repo, &Repository.Mutation.run!(&2, &1))
+      assert length(repo.current_files) == 2
+      diffs = Repository.Diff.from(repo)
+      assert length(diffs) == 2
+      assert diffs |> Enum.map(fn diff -> diff.new_content end) == ["c", "d"]
+
+      ops = [
+        Repository.Mutation.new_edit!(%{file_path: "a.py", target: "c", content: "e"}),
+        Repository.Mutation.new_edit!(%{file_path: "b.py", target: "d", content: "f"})
+      ]
+
+      repo = ops |> Enum.reduce(repo, &Repository.Mutation.run!(&2, &1))
+      assert length(repo.current_files) == 2
+      diffs = Repository.Diff.from(repo)
+      assert length(diffs) == 2
+      assert diffs |> Enum.map(fn diff -> diff.new_content end) == ["e", "f"]
     end
   end
 end
