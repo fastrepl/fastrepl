@@ -79,7 +79,7 @@ defmodule FastreplWeb.ThreadLive do
     comments =
       comments
       |> Enum.map(&Map.new(&1, fn {k, v} -> {String.to_existing_atom(k), v} end))
-      |> Enum.map(&struct!(Fastrepl.Repository.Comment, &1))
+      |> Enum.map(&struct(Fastrepl.Repository.Comment, &1))
 
     socket =
       socket
