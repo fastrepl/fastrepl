@@ -5,7 +5,7 @@
 </script>
 
 <div
-  class="flex flex-col gap-1 p-2 border border-black rounded-xl bg-gray-100 text-sm"
+  class="flex flex-col gap-1 p-2 border border-black rounded-xl bg-gray-100 text-sm w-full"
 >
   <a
     href="https://github.com/{repoFullName}/issues/{issueNumber}"

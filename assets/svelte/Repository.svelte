@@ -2,9 +2,6 @@
   export let repoFullName: string;
   export let repoDescription: string;
   export let repoSha: string;
-
-  export let indexingTotal: number;
-  export let indexingProgress: number;
 </script>
 
 <div
@@ -29,13 +26,4 @@
   <span class="text-xs truncate max-w-72">
     {repoDescription}
   </span>
-
-  {#if indexingTotal && indexingProgress}
-    <div class="w-[calc(100%-2rem)] bg-gray-200 rounded-full h-1">
-      <div
-        class="bg-gray-500 h-1 rounded-full"
-        style="width: {Math.round((indexingProgress / indexingTotal) * 100)}%"
-      ></div>
-    </div>
-  {/if}
 </div>
