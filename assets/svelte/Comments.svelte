@@ -29,6 +29,17 @@
       {} as Record<string, (Comment & { id: string })[]>,
     );
 
+  let editingComment: (Comment & { id: string }) | null = null;
+
+  $: if (
+    editingComment &&
+    map[editingComment.file_path].findIndex(
+      (c) => c.id === editingComment.id,
+    ) === -1
+  ) {
+    editingComment = null;
+  }
+
   const handleDeleteFile = (filePath: string) => {
     const newComments = items.filter((item) => item.file_path !== filePath);
     handleUpdateComments(newComments);
@@ -54,6 +65,22 @@
         ),
       )
       .flat();
+
+    handleUpdateComments(newComments);
+  };
+
+  const handleEditComment = (commentId: string, content: string) => {
+    editingComment = null;
+
+    const newComments = Object.entries(map)
+      .map(([_, comments]) =>
+        comments.map((comment) =>
+          comment.id === commentId ? { ...comment, content } : comment,
+        ),
+      )
+      .flat();
+
+    console.log(newComments);
 
     handleUpdateComments(newComments);
   };
@@ -120,9 +147,36 @@
             >
               L{comment.line_start}-{comment.line_end}
             </button>
-            <div class="truncate">
-              {comment.content}
-            </div>
+
+            {#if editingComment && editingComment.id === comment.id}
+              <!-- svelte-ignore a11y-autofocus -->
+              <input
+                type="text"
+                autofocus={true}
+                value={comment.content}
+                class={clsx([
+                  "py-0.5 px-1 border rounded-md",
+                  "border-gray-300 focus:border-gray-300 focus:ring-0",
+                  "truncate text-sm",
+                ])}
+                on:blur={(e) =>
+                  handleEditComment(comment.id, e.target["value"])}
+                on:keydown={(e) => {
+                  if (e.key === "Enter") {
+                    console.log(e.target);
+                    handleEditComment(comment.id, e.target["value"]);
+                  }
+                }}
+              />
+            {:else}
+              <button
+                type="button"
+                on:click={() => (editingComment = comment)}
+                class="truncate px-1"
+              >
+                {comment.content}
+              </button>
+            {/if}
             <button
               on:click={() => handleDeleteComment(comment.id)}
               class="hidden group-hover:block text-gray-400 hover:text-gray-700"
