@@ -16,9 +16,10 @@ defmodule FastreplWeb.ThreadLive do
           repoSha: assigns |> get_in([Access.key(:repo), Access.key(:sha)]),
           issueTitle: assigns |> get_in([Access.key(:issue), Access.key(:title)]),
           issueNumber: assigns |> get_in([Access.key(:issue), Access.key(:number)]),
-          indexingTotal: assigns |> get_in([Access.key(:repo), Access.key(:indexing_total)]),
-          indexingProgress: assigns |> get_in([Access.key(:repo), Access.key(:indexing_progress)]),
-          files: assigns |> get_in([Access.key(:repo), Access.key(:files)]),
+          indexingTotal: assigns |> get_in([Access.key(:vector_db), Access.key(:indexing_total)]),
+          indexingProgress:
+            assigns |> get_in([Access.key(:vector_db), Access.key(:indexing_progress)]),
+          files: assigns |> get_in([Access.key(:repo), Access.key(:original_files)]),
           paths: assigns |> get_in([Access.key(:repo), Access.key(:paths)]),
           comments: assigns |> get_in([Access.key(:repo), Access.key(:comments)]),
           messages: @messages,
@@ -75,6 +76,11 @@ defmodule FastreplWeb.ThreadLive do
   end
 
   def handle_event("comment:set", %{"comments" => comments}, socket) do
+    comments =
+      comments
+      |> Enum.map(&Map.new(&1, fn {k, v} -> {String.to_existing_atom(k), v} end))
+      |> Enum.map(&struct(Fastrepl.Repository.Comment, &1))
+
     socket =
       socket
       |> assign(:repo, %{socket.assigns.repo | comments: comments})
@@ -85,12 +91,12 @@ defmodule FastreplWeb.ThreadLive do
   end
 
   def handle_event("file:add", %{"path" => path}, socket) do
-    file = Repository.File.from!(socket.assigns.repo.root_path, path)
-    files = [file | socket.assigns.repo.files]
+    file = Repository.File.from!(socket.assigns.repo, path)
+    repo = socket.assigns.repo |> Repository.add_file!(file)
 
     socket =
       socket
-      |> assign(:repo, %{socket.assigns.repo | files: files})
+      |> assign(:repo, repo)
       |> sync_with_orchestrator(:repo)
       |> sync_with_views(:repo)
 

@@ -20,19 +20,6 @@ defmodule Fastrepl.Native.CodeUtils do
   @spec unified_diff(String.t(), String.t(), String.t(), String.t()) :: String.t()
   def unified_diff(_old_path, _new_path, _old_content, _new_content), do: error()
 
-  @spec unified_diff(atom(), String.t(), String.t(), String.t(), String.t()) :: String.t()
-  def unified_diff(:create, _old_path, new_path, _old_content, new_content) do
-    unified_diff("/dev/null", Path.join("b", new_path), "", new_content)
-  end
-
-  def unified_diff(:delete, old_path, _new_path, old_content, _new_content) do
-    unified_diff(Path.join("a", old_path), "/dev/null", old_content, "")
-  end
-
-  def unified_diff(:modify, old_path, new_path, old_content, new_content) do
-    unified_diff(Path.join("a", old_path), Path.join("b", new_path), old_content, new_content)
-  end
-
   @spec unified_diffs(String.t()) :: map()
   def unified_diffs(_repo_root_path), do: error()
 

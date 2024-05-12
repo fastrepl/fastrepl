@@ -1,21 +1,63 @@
 defmodule Fastrepl.Repository.Comment do
-  defstruct file_path: "", line_start: 0, line_end: 0, content: "", read_only: false
+  @moduledoc """
+  Comment contains information or instruction about a specific part of a file.
+  Eventually, it will be used to create a list of Mutations.
+  """
 
-  @type t :: %__MODULE__{
-          file_path: String.t(),
-          line_start: pos_integer(),
-          line_end: pos_integer(),
-          content: String.t(),
-          read_only: boolean()
-        }
+  use Ecto.Schema
+  import Ecto.Changeset
+
+  alias __MODULE__
+  alias Fastrepl.Repository
 
   use Retry
-  alias Fastrepl.Repository
+
+  @model_id "gpt-4-turbo-2024-04-09"
+
   alias LangChain.Chains.LLMChain
   alias LangChain.ChatModels.ChatOpenAI, as: ChatModel
   alias LangChain.Message
 
-  @model_id "gpt-4-turbo-2024-04-09"
+  @type t :: %Comment{}
+
+  @derive Jason.Encoder
+  @primary_key false
+  embedded_schema do
+    field :file_path, :string
+    field :line_start, :integer
+    field :line_end, :integer
+    field :content, :string
+    field :read_only, :boolean, default: false
+  end
+
+  @spec new(attrs :: map()) :: {:ok, t} | {:error, Ecto.Changeset.t()}
+  def new(attrs \\ %{}) do
+    %Comment{}
+    |> cast(attrs, [:file_path, :line_start, :line_end, :content, :read_only])
+    |> validate_required([:file_path, :line_start, :line_end, :content])
+    |> validate_comment()
+    |> apply_action(:insert)
+  end
+
+  defp validate_comment(changeset) do
+    line_start = changeset |> get_field(:line_start)
+    line_end = changeset |> get_field(:line_end)
+    lines = changeset |> get_field(:content) |> String.split("\n")
+
+    cond do
+      line_start < 1 ->
+        add_error(changeset, :line_start, "should be greater than 0")
+
+      line_start >= line_end ->
+        add_error(changeset, :line_end, "should be greater than line start")
+
+      length(lines) < line_end ->
+        add_error(changeset, :line_end, "should be less than the number of total lines")
+
+      true ->
+        changeset
+    end
+  end
 
   @spec from(String.t(), [Repository.File.t()]) ::
           {:ok, [Repository.Comment.t()]} | {:error, any()}
