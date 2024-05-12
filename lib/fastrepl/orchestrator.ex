@@ -43,7 +43,8 @@ defmodule Fastrepl.Orchestrator do
        repo: state.repo,
        issue: state.issue,
        current_step: state.current_step,
-       messages: state.messages
+       messages: state.messages,
+       vector_db: state.vector_db
      }, state}
   end
 
