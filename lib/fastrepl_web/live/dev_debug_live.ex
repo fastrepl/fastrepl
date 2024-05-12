@@ -1,4 +1,4 @@
-defmodule FastreplWeb.ThreadDebugLive do
+defmodule FastreplWeb.DevDebugLive do
   use FastreplWeb, :live_view
 
   def render(assigns) do

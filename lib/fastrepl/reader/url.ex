@@ -35,9 +35,13 @@ defmodule Fastrepl.Reader.URL do
         end
 
       true ->
-        html
-        |> Readability.article()
-        |> Readability.readable_text()
+        try do
+          html
+          |> Readability.article()
+          |> Readability.readable_text()
+        rescue
+          _ -> ""
+        end
     end
   end
 

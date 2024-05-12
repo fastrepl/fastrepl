@@ -112,4 +112,18 @@ defmodule Fastrepl.Github.URL do
   def issue(repo_full_name, issue_numner) do
     "https://github.com/#{repo_full_name}/issues/#{issue_numner}"
   end
+
+  def create_issue(repo_full_name, opts \\ []) do
+    url =
+      "https://github.com/#{repo_full_name}/issues/new"
+      |> URI.new!()
+
+    opts
+    |> Enum.reduce(url, fn {key, value}, acc ->
+      %{key => value}
+      |> URI.encode_query()
+      |> then(&URI.append_query(acc, &1))
+    end)
+    |> URI.to_string()
+  end
 end

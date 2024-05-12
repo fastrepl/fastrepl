@@ -13,13 +13,11 @@ defimpl Fastrepl.LLM, for: GitHub.Issue do
         title: title,
         number: number,
         body: body,
-        url: issue_url,
-        user: %{name: name}
+        url: issue_url
       }) do
     text = """
-    ##{number}: #{title} (#{name})
+    ##{number}: #{title}
     ---
-
     #{body}
     """
 
