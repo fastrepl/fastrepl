@@ -41,6 +41,25 @@ defmodule Fastrepl.Repository do
     repo
   end
 
+  @spec add_file(t(), Repository.File.t()) :: {:ok, t()} | {:error, Ecto.Changeset.t()}
+  def add_file(repo, file) do
+    repo
+    |> change()
+    |> validate_file_not_added(file.path)
+    |> then(fn changeset ->
+      changeset
+      |> put_change(:original_files, [file | get_field(changeset, :original_files)])
+      |> put_change(:current_files, [file | get_field(changeset, :current_files)])
+    end)
+    |> apply_action(:update)
+  end
+
+  @spec add_file!(t(), Repository.File.t()) :: t()
+  def add_file!(repo, path) do
+    {:ok, repo} = add_file(repo, path)
+    repo
+  end
+
   @spec replace_file(t(), Repository.File.t()) :: {:ok, t()} | {:error, Ecto.Changeset.t()}
   def replace_file(repo, file) do
     repo
@@ -101,6 +120,15 @@ defmodule Fastrepl.Repository do
   defp validate_file_not_exists(changeset, path) do
     if changeset |> get_field(:current_files) |> Enum.any?(&(&1.path == path)) do
       add_error(changeset, :path, "already exists")
+    else
+      changeset
+    end
+  end
+
+  defp validate_file_not_added(changeset, path) do
+    if changeset |> get_field(:original_files) |> Enum.any?(&(&1.path == path)) or
+         changeset |> get_field(:current_files) |> Enum.any?(&(&1.path == path)) do
+      add_error(changeset, :path, "already added")
     else
       changeset
     end

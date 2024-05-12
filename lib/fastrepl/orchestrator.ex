@@ -28,6 +28,7 @@ defmodule Fastrepl.Orchestrator do
       |> Map.put(:issue, %{title: "", number: args.issue_number, comments: []})
       |> Map.put(:current_step, "Initialization")
       |> Map.put(:messages, [])
+      |> Map.put(:vector_db, %{pid: nil, indexing_progress: nil, indexing_total: nil})
 
     send(state.orchestrator_pid, :fetch_issue)
     send(state.orchestrator_pid, :clone_repo)
@@ -48,7 +49,8 @@ defmodule Fastrepl.Orchestrator do
 
   @impl true
   def handle_call(:patch, _from, state) do
-    {:reply, state.repo.diffs |> Enum.join("\n"), state}
+    patch = state.repo.diffs |> Enum.map(&Repository.Diff.to_patch/1) |> Enum.join("\n")
+    {:reply, patch, state}
   end
 
   @impl true
@@ -83,7 +85,7 @@ defmodule Fastrepl.Orchestrator do
     |> Enum.map(&Map.new(&1, fn {k, v} -> {String.to_existing_atom(k), v} end))
     |> Enum.map(&struct!(Fastrepl.Repository.Comment, &1))
     |> Enum.map(fn comment ->
-      file = Repository.File.from!(state.repo.root_path, comment.file_path)
+      file = Repository.File.from!(state.repo, comment.file_path)
       {comment, file}
     end)
     |> Enum.each(fn {comment, file} ->
@@ -94,7 +96,6 @@ defmodule Fastrepl.Orchestrator do
           state.orchestrator_pid,
           {:diff,
            CodeUtils.unified_diff(
-             :modify,
              file.path,
              modified_file.path,
              file.content,
@@ -171,11 +172,11 @@ defmodule Fastrepl.Orchestrator do
 
   @impl true
   def handle_info({:post_clone_repo, root_path}, state) do
-    if state.repo.vectordb_pid do
-      Vectordb.stop(state.repo.vectordb_pid)
+    if state.vector_db.pid do
+      Vectordb.stop(state.vector_db.pid)
     end
 
-    {:ok, vectordb_pid} = Vectordb.start(state.thread_id)
+    {:ok, pid} = Vectordb.start(state.thread_id)
 
     paths =
       root_path
@@ -191,7 +192,7 @@ defmodule Fastrepl.Orchestrator do
       send(state.orchestrator_pid, {:repo_indexing, {:start, length(chunks)}})
 
       Vectordb.ingest(
-        vectordb_pid,
+        pid,
         chunks,
         fn n -> send(state.orchestrator_pid, {:repo_indexing, {:progress, n}}) end
       )
@@ -201,14 +202,10 @@ defmodule Fastrepl.Orchestrator do
 
     state =
       state
-      |> Map.put(:repo, %{
-        state.repo
-        | root_path: root_path,
-          paths: paths,
-          vectordb_pid: vectordb_pid
-      })
+      |> Map.put(:repo, %{state.repo | root_path: root_path, paths: paths})
+      |> Map.put(:vector_db, %{state.vector_db | pid: pid})
 
-    sync_with_views(state.thread_id, %{repo: state.repo})
+    sync_with_views(state.thread_id, %{repo: state.repo, vector_db: state.vector_db})
     {:noreply, state}
   end
 
@@ -217,19 +214,20 @@ defmodule Fastrepl.Orchestrator do
     state =
       case type do
         :start ->
-          state |> Map.put(:repo, %{state.repo | indexing_progress: 0, indexing_total: value})
+          state
+          |> Map.put(:vector_db, %{state.vector_db | indexing_progress: 0, indexing_total: value})
 
         :progress ->
-          progress = (state.repo.indexing_progress || 0) + value
+          progress = (state.vector_db.indexing_progress || 0) + value
 
           state
-          |> Map.put(:repo, %{state.repo | indexing_progress: progress})
+          |> Map.put(:vector_db, %{state.vector_db | indexing_progress: progress})
 
         :done ->
-          state |> Map.put(:repo, %{state.repo | indexing_progress: value})
+          state |> Map.put(:vector_db, %{state.vector_db | indexing_progress: value})
       end
 
-    sync_with_views(state.thread_id, %{repo: state.repo})
+    sync_with_views(state.thread_id, %{vector_db: state.vector_db})
     {:noreply, state}
   end
 
@@ -237,11 +235,7 @@ defmodule Fastrepl.Orchestrator do
   def handle_info({:chunks, chunks}, state) do
     chunks = Chunker.dedupe(state.repo.chunks ++ chunks)
 
-    repo =
-      state.repo
-      |> Map.put(:chunks, chunks)
-      |> Map.put(:files, Enum.map(chunks, &Repository.File.from/1))
-
+    repo = state.repo |> Map.put(:chunks, chunks)
     sync_with_views(state.thread_id, %{repo: repo})
     {:noreply, state |> Map.put(:repo, repo)}
   end
@@ -264,7 +258,6 @@ defmodule Fastrepl.Orchestrator do
       Registry.unregister(registry_module(), state.thread_id)
     end
 
-    state.repo |> Repository.clean_up()
     :ok
   end
 

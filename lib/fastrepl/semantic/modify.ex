@@ -9,10 +9,11 @@ defmodule Fastrepl.SemanticFunction.Modify do
 
   @model_id "gpt-4-turbo-2024-04-09"
 
-  @spec run(Repository.File.t(), [Repository.Comment.t()]) ::
-          {:ok, Repository.File.t()} | {:error, any()}
-  def run(file, comments) do
+  @spec run(Repository.t(), [Repository.Comment.t()]) ::
+          {:ok, Repository.Mutation.t()} | {:error, any()}
+  def run(repo, comments) do
     editable_comment = comments |> Enum.find(&(&1.read_only == false))
+    file = repo.current_files |> Enum.find(&(&1.path == editable_comment.file_path))
 
     editable_section =
       file.content
