@@ -23,6 +23,19 @@ defmodule Fastrepl.Github do
     result
   end
 
+  def get_commit(repo_full_name, commit_hash) do
+    [owner, repo] = String.split(repo_full_name, "/")
+
+    GitHub.Repos.get_commit(owner, repo, commit_hash,
+      request_headers: [{"Accept", "application/vnd.github.diff"}]
+    )
+  end
+
+  def get_commit!(repo_full_name, commit_hash) do
+    {:ok, result} = get_commit(repo_full_name, commit_hash)
+    result
+  end
+
   def list_open_issues(repo_full_name) do
     [owner, repo] = String.split(repo_full_name, "/")
 

@@ -24,10 +24,10 @@ defimpl Fastrepl.LLM, for: GitHub.Issue do
     """
 
     body
-    |> Reader.urls_from_text()
+    |> Reader.URL.urls_from_text()
     |> Enum.reject(&String.contains?(&1, issue_url))
     |> Enum.reduce(text, fn url, acc ->
-      content = Reader.text_from_url(url)
+      content = Reader.URL.text_from_html(url)
       String.replace(acc, url, "```#{url}\n#{content}\n```")
     end)
     |> String.trim()
@@ -42,17 +42,17 @@ defimpl Fastrepl.LLM, for: GitHub.Issue.Comment do
         issue_url: issue_url,
         user: %{name: name}
       }) do
-    text = """
-    #{name}:
-
-    #{body}
-    """
+    text =
+      """
+      #{name}:
+      #{body}
+      """
 
     body
-    |> Reader.urls_from_text()
+    |> Reader.URL.urls_from_text()
     |> Enum.reject(&String.contains?(&1, issue_url))
     |> Enum.reduce(text, fn url, acc ->
-      content = Reader.text_from_url(url)
+      content = Reader.URL.text_from_html(url)
       String.replace(acc, url, "```#{url}\n#{content}\n```")
     end)
     |> String.trim()
