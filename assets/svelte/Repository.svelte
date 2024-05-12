@@ -5,7 +5,7 @@
 </script>
 
 <div
-  class="flex flex-col items-center gap-2 p-2 border border-black rounded-xl bg-gray-100 relative w-full"
+  class="flex flex-col items-center gap-2 p-2 border border-black rounded-lg bg-gray-100 relative w-full"
 >
   <div class="flex flex-row items-center truncate max-w-72">
     <a
