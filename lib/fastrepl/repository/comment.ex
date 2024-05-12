@@ -20,6 +20,7 @@ defmodule Fastrepl.Repository.Comment do
 
   @type t :: %Comment{}
 
+  @derive Jason.Encoder
   @primary_key false
   embedded_schema do
     field :file_path, :string
