@@ -10,7 +10,7 @@
 
   $: fuse = new Fuse(paths, { threshold: 0.4 });
   $: matches = fuse.search(query, { limit: 20 }).map((match) => match.item);
-  $: if (matches.length > 0 && currentIndex === null) {
+  $: if (matches.length > 0) {
     currentIndex = 0;
   }
 
