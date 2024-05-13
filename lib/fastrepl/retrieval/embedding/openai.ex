@@ -65,6 +65,9 @@ defmodule Fastrepl.Retrieval.Embedding.OpenAI do
           {:error, message}
         end
 
+      {:ok, %{status: 502} = res} ->
+        {:error, res}
+
       {:error, exception} ->
         {:error, exception}
     end
