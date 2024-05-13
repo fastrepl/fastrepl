@@ -80,7 +80,7 @@ defmodule FastreplWeb.ThreadLive do
   def handle_event("comment:set", %{"comments" => comments}, socket) do
     comments =
       comments
-      |> Enum.map(&Map.new(&1, fn {k, v} -> {String.to_existing_atom(k), v} end))
+      |> Enum.map(&Map.new(&1, fn {k, v} -> {String.to_atom(k), v} end))
       |> Enum.map(&struct(Fastrepl.Repository.Comment, &1))
 
     socket =
