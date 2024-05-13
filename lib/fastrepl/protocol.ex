@@ -25,7 +25,7 @@ defimpl Fastrepl.LLM, for: GitHub.Issue do
     |> Reader.URL.urls_from_text()
     |> Enum.reject(&String.contains?(&1, issue_url))
     |> Enum.reduce(text, fn url, acc ->
-      content = Reader.URL.text_from_html(url)
+      content = Reader.URL.text_from_url(url)
       String.replace(acc, url, "```#{url}\n#{content}\n```")
     end)
     |> String.trim()
@@ -50,7 +50,7 @@ defimpl Fastrepl.LLM, for: GitHub.Issue.Comment do
     |> Reader.URL.urls_from_text()
     |> Enum.reject(&String.contains?(&1, issue_url))
     |> Enum.reduce(text, fn url, acc ->
-      content = Reader.URL.text_from_html(url)
+      content = Reader.URL.text_from_url(url)
       String.replace(acc, url, "```#{url}\n#{content}\n```")
     end)
     |> String.trim()
