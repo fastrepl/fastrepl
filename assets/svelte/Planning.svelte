@@ -44,7 +44,7 @@
   };
 
   const TABS = ["Comments", "Chat"];
-  let currentTab: (typeof TABS)[number] = TABS[1];
+  let currentTab: (typeof TABS)[number] = TABS[0];
 
   let currentFile: File | null = null;
 

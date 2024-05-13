@@ -1,17 +1,16 @@
 defmodule Fastrepl.Retrieval.Planner do
-  @model_id "gpt-4-turbo-2024-04-09"
-
   use Retry
 
   alias LangChain.Chains.LLMChain
   alias LangChain.ChatModels.ChatOpenAI, as: ChatModel
   alias LangChain.Message
 
-  alias Fastrepl.Tool.KeywordSearch
   alias Fastrepl.Tool.SemanticSearch
   alias Fastrepl.Tool.PathSearch
 
   alias Fastrepl.Renderer
+
+  @model_id "gpt-4-turbo-2024-04-09"
 
   def from_query(chat) do
     messages = [
@@ -40,11 +39,7 @@ defmodule Fastrepl.Retrieval.Planner do
       ),
       Message.new_user!(
         """
-        [Github issue]
-
         #{Renderer.Github.render_issue(issue)}
-        ---
-
         #{comments |> Enum.map(&Renderer.Github.render_comment/1) |> Enum.join("\n")}
         ---
 
@@ -60,7 +55,6 @@ defmodule Fastrepl.Retrieval.Planner do
 
   defp request(messages) do
     tools = [
-      KeywordSearch.as_function(),
       SemanticSearch.as_function(),
       PathSearch.as_function()
     ]

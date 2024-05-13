@@ -13,6 +13,9 @@ defmodule Fastrepl.Tool.PathSearch do
   def as_function() do
     LangChain.Function.new!(%{
       name: "path_search",
+      description: """
+      Use this function if you have file path in mind, or it is mentioned in the context.
+      """,
       function: fn _args, _context -> :noop end,
       parameters_schema: %{
         type: "object",

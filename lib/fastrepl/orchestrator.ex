@@ -5,6 +5,7 @@ defmodule Fastrepl.Orchestrator do
   alias Fastrepl.FS
   alias Fastrepl.Github
   alias Fastrepl.Repository
+  alias Fastrepl.Retrieval
   alias Fastrepl.Retrieval.Chunker
   alias Fastrepl.Retrieval.Vectordb
   alias Fastrepl.SemanticFunction.PlanningChat
@@ -22,12 +23,15 @@ defmodule Fastrepl.Orchestrator do
       |> Map.put(:orchestrator_pid, self())
       |> Map.put(:thread_id, args.thread_id)
       |> Map.put(:repo, %Repository{full_name: args.repo_full_name})
-      |> Map.put(:issue, %{title: "", number: args.issue_number, comments: []})
       |> Map.put(:current_step, "Initialization")
       |> Map.put(:messages, [])
       |> Map.put(:vector_db, %{pid: nil, indexing_progress: nil, indexing_total: nil})
 
-    send(state.orchestrator_pid, :fetch_issue)
+    send(
+      state.orchestrator_pid,
+      {:fetch_issue, %{repo_full_name: args.repo_full_name, issue_number: args.issue_number}}
+    )
+
     send(state.orchestrator_pid, :clone_repo)
 
     {:ok, state}
@@ -38,7 +42,7 @@ defmodule Fastrepl.Orchestrator do
     {:reply,
      %{
        repo: state.repo,
-       issue: state.issue,
+       github_issue: state.github_issue,
        current_step: state.current_step,
        messages: state.messages,
        vector_db: state.vector_db
@@ -124,14 +128,14 @@ defmodule Fastrepl.Orchestrator do
   end
 
   @impl true
-  def handle_info(:fetch_issue, state) do
-    issue = Github.get_issue!(state.repo.full_name, state.issue.number)
-    comments = Github.list_issue_comments!(state.repo.full_name, state.issue.number)
+  def handle_info({:fetch_issue, data}, state) do
+    new_data = %{
+      github_issue: Github.get_issue!(data.repo_full_name, data.issue_number),
+      github_issue_comments: Github.list_issue_comments!(data.repo_full_name, data.issue_number)
+    }
 
-    state = state |> Map.put(:issue, %{state.issue | title: issue.title, comments: comments})
-
-    sync_with_views(state.thread_id, %{issue: state.issue})
-    {:noreply, state}
+    sync_with_views(state.thread_id, new_data)
+    {:noreply, state |> Map.merge(new_data)}
   end
 
   @impl true

@@ -14,8 +14,8 @@ defmodule FastreplWeb.ThreadLive do
           repoFullName: assigns |> get_in([Access.key(:repo), Access.key(:full_name)]),
           repoDescription: assigns |> get_in([Access.key(:repo), Access.key(:description)]),
           repoSha: assigns |> get_in([Access.key(:repo), Access.key(:sha)]),
-          issueTitle: assigns |> get_in([Access.key(:issue), Access.key(:title)]),
-          issueNumber: assigns |> get_in([Access.key(:issue), Access.key(:number)]),
+          issueTitle: assigns |> get_in([Access.key(:github_issue), Access.key(:title)]),
+          issueNumber: assigns |> get_in([Access.key(:github_issue), Access.key(:number)]),
           indexingTotal: assigns |> get_in([Access.key(:vector_db), Access.key(:indexing_total)]),
           indexingProgress:
             assigns |> get_in([Access.key(:vector_db), Access.key(:indexing_progress)]),

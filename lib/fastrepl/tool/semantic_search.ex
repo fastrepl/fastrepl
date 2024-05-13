@@ -12,6 +12,9 @@ defmodule Fastrepl.Tool.SemanticSearch do
   def as_function() do
     LangChain.Function.new!(%{
       name: "semantic_search",
+      description: """
+      use this function if you have description or similar code in mind that you want to retrieve.
+      """,
       function: fn _args, _context -> :noop end,
       parameters_schema: %{
         type: "object",
