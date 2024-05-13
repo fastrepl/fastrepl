@@ -9,11 +9,14 @@ defmodule Fastrepl.Renderer.Github do
         url: pr_url
       }) do
     text = """
+    <pr>
+    <pr_title>
     #PR ##{number}: #{title}
-
+    </pr_title>
     <pr_body>
     #{body}
     </pr_body>
+    </pr>
     """
 
     body
@@ -33,11 +36,14 @@ defmodule Fastrepl.Renderer.Github do
         url: issue_url
       }) do
     text = """
-    #[Issue ##{number}]: #{title}
-
+    <issue>
+    <issue_title>
+    [Issue ##{number}]: #{title}
+    </issue_title>
     <issue_body>
     #{body}
     </issue_body>
+    <issue>
     """
 
     body
@@ -57,7 +63,9 @@ defmodule Fastrepl.Renderer.Github do
       }) do
     text =
       """
+      <comment>
       [#{name}]: #{body}
+      </comment>
       """
 
     body
