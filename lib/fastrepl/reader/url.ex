@@ -77,6 +77,7 @@ defmodule Fastrepl.Reader.URL do
 
             comments =
               list_issue_comments(repo_full_name, issue_number)
+              |> Enum.filter(&(&1.performed_via_github_app == nil))
               |> Enum.map(&Fastrepl.LLM.render/1)
               |> Enum.join("\n\n")
 
@@ -97,6 +98,7 @@ defmodule Fastrepl.Reader.URL do
 
             comments =
               list_issue_comments(repo_full_name, pr_number)
+              |> Enum.filter(&(&1.performed_via_github_app == nil))
               |> Enum.map(&Fastrepl.LLM.render/1)
               |> Enum.join("\n\n")
 
