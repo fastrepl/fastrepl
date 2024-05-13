@@ -1,33 +1,37 @@
 <script lang="ts">
-  import { Highlight, LineNumbers } from "svelte-highlight";
-  import language from "svelte-highlight/languages/diff";
-  import theme from "svelte-highlight/styles/one-light";
+  import { Diff2HtmlUI } from "diff2html/lib/ui/js/diff2html-ui";
+  import codeTheme from "svelte-highlight/styles/one-light";
 
   export let content: string;
+  let element: HTMLElement;
 
-  let code = "";
+  $: if (element && content) {
+    const diff2htmlUi = new Diff2HtmlUI(element, content, {
+      fileListStartVisible: false,
+      fileContentToggle: false,
+      drawFileList: false,
+      highlight: true,
+      outputFormat: "line-by-line",
+    });
 
-  $: {
-    code = content;
-    const lines = code.split("\n");
-
-    if (lines.length < 99) {
-      code += "\n".repeat(99 - lines.length);
-    }
+    diff2htmlUi.draw();
+    diff2htmlUi.highlightCode();
   }
 </script>
 
 <svelte:head>
-  {@html theme}
+  {@html codeTheme}
+  <link
+    rel="stylesheet"
+    type="text/css"
+    href="https://cdn.jsdelivr.net/npm/diff2html/bundles/css/diff2html.min.css"
+  />
+  <style>
+    .d2h-file-header,
+    .d2h-info {
+      display: none;
+    }
+  </style>
 </svelte:head>
 
-<Highlight {language} {code} let:highlighted>
-  <LineNumbers
-    {highlighted}
-    hideBorder
-    startingLineNumber={1}
-    class="rounded-b-md"
-    --padding-left="0.2em"
-    --padding-right="1em"
-  />
-</Highlight>
+<div bind:this={element} />

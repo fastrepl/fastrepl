@@ -14,8 +14,9 @@
   import ChatEditor from "$components/ChatEditor.svelte";
   import SearchFile from "$components/SearchFile.svelte";
   import Messages from "$components/Messages.svelte";
+  import CodeDiff from "$components/CodeDiff.svelte";
 
-  import type { Comment, File, Message } from "$lib/interfaces";
+  import type { Comment, File, Message, Diff } from "$lib/interfaces";
   import type { Reference } from "$lib/types";
   import { buildTree } from "$lib/utils/tree";
   import { tippy as tippyAction } from "$lib/actions";
@@ -49,6 +50,7 @@
   let currentTab: (typeof TABS)[number] = TABS[0];
 
   let currentFile: File | null = null;
+  let currentDiff: Diff | null = null;
 
   let selectedLineStart = null;
   let selectedLineEnd = null;
@@ -389,27 +391,39 @@
         <span class="text-xs rounded-t-lg bg-gray-200 py-1 px-2">
           {currentFile.path}
         </span>
-        <!-- svelte-ignore a11y-no-static-element-interactions -->
-        <div
-          bind:this={codeSnippetContainer}
-          on:mouseup={handleMouseUp}
-          on:contextmenu={handleContextMenu}
-          class={clsx([
-            "h-[calc(100vh-170px)] overflow-y-auto scrollbar-hide",
-            "text-sm rounded-b-lg  selection:bg-[#fef16033]",
-            "border-b border-x border-gray-200 rounded-b-lg",
-          ])}
-        >
-          <CodeSnippet
-            content={currentFile.content}
-            selections={[
-              [selectedLineStart, selectedLineEnd],
-              ...comments
-                .filter(({ file_path }) => file_path === currentFile.path)
-                .map((comment) => [comment.line_start, comment.line_end]),
-            ]}
-          />
-        </div>
+
+        {#if currentDiff}
+          <div
+            class={clsx([
+              "h-[calc(100vh-170px)] bg-gray-50",
+              "border-b border-x border-gray-200 rounded-b-lg",
+            ])}
+          >
+            <CodeDiff content={currentDiff.content} />
+          </div>
+        {:else}
+          <!-- svelte-ignore a11y-no-static-element-interactions -->
+          <div
+            bind:this={codeSnippetContainer}
+            on:mouseup={handleMouseUp}
+            on:contextmenu={handleContextMenu}
+            class={clsx([
+              "h-[calc(100vh-170px)] overflow-y-auto scrollbar-hide",
+              "text-sm selection:bg-[#fef16033]",
+              "border-b border-x border-gray-200 rounded-b-lg",
+            ])}
+          >
+            <CodeSnippet
+              content={currentFile.content}
+              selections={[
+                [selectedLineStart, selectedLineEnd],
+                ...comments
+                  .filter(({ file_path }) => file_path === currentFile.path)
+                  .map((comment) => [comment.line_start, comment.line_end]),
+              ]}
+            />
+          </div>
+        {/if}
       </div>
 
       {#if codeSnippetContainer}
