@@ -13,6 +13,16 @@ defmodule Fastrepl.Github do
     repo
   end
 
+  def get_content(repo_full_name, path, ref) do
+    [owner, repo] = String.split(repo_full_name, "/")
+    GitHub.Repos.get_content(owner, repo, path, ref: ref)
+  end
+
+  def get_content!(repo_full_name, path, ref) do
+    {:ok, content} = get_content(repo_full_name, path, ref)
+    content
+  end
+
   def get_issue(repo_full_name, issue_number) do
     [owner, repo] = String.split(repo_full_name, "/")
     GitHub.Issues.get(owner, repo, issue_number)

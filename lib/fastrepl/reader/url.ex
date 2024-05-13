@@ -22,7 +22,16 @@ defmodule Fastrepl.Reader.URL do
     Github.list_issue_comments!(repo_full_name, String.to_integer(issue_number))
   end
 
-  def text_from_html(url) do
+  defmemo get_content(repo_full_name, path, ref) do
+    %{content: content} = Github.get_content!(repo_full_name, path, ref)
+
+    content
+    |> String.split("\n")
+    |> Enum.map(&Base.decode64!/1)
+    |> Enum.join("")
+  end
+
+  def text_from_url(url) do
     html = html_from_url(url)
 
     cond do
@@ -62,13 +71,19 @@ defmodule Fastrepl.Reader.URL do
       github_issue_url?(url) ->
         case Regex.run(~r/([^\/]+\/[^\/]+)\/issues\/(\d+)/, url) do
           [_, repo_full_name, issue_number] ->
-            issue = get_issue(repo_full_name, issue_number)
-            comments = list_issue_comments(repo_full_name, issue_number)
+            issue =
+              get_issue(repo_full_name, issue_number)
+              |> Fastrepl.LLM.render()
+
+            comments =
+              list_issue_comments(repo_full_name, issue_number)
+              |> Enum.map(&Fastrepl.LLM.render/1)
+              |> Enum.join("\n\n")
 
             """
-            [Issue ##{issue_number}] #{issue.title}\n\n#{issue.body}
+            #{issue}
 
-            #{comments |> Enum.map(&Fastrepl.LLM.render/1) |> Enum.join("\n\n")}
+            #{comments}
             """
 
           _ ->
@@ -79,12 +94,67 @@ defmodule Fastrepl.Reader.URL do
         case Regex.run(~r/([^\/]+\/[^\/]+)\/pull\/(\d+)/, url) do
           [_, repo_full_name, pr_number] ->
             pr = get_issue(repo_full_name, pr_number)
-            comments = list_issue_comments(repo_full_name, pr_number)
+
+            comments =
+              list_issue_comments(repo_full_name, pr_number)
+              |> Enum.map(&Fastrepl.LLM.render/1)
+              |> Enum.join("\n\n")
 
             """
             [PR ##{pr_number}] #{pr.title}\n\n#{pr.body}
 
-            #{comments |> Enum.map(&Fastrepl.LLM.render/1) |> Enum.join("\n\n")}
+            #{comments}
+            """
+
+          _ ->
+            ""
+        end
+
+      github_blob_url?(url) ->
+        case Regex.run(
+               ~r/github\.com\/([\w-]+\/[\w-]+)\/blob\/([0-9a-f]{40})\/([\w\/\.-]+)(?:#L(\d+)(?:-L(\d+))?)?/,
+               url
+             ) do
+          [_, repo, ref, file_path] ->
+            content = get_content(repo, file_path, ref)
+
+            """
+            ```#{file_path}
+            #{content}
+            ```
+            """
+
+          [_, repo, ref, file_path, line_start] ->
+            content = get_content(repo, file_path, ref)
+
+            selected =
+              content
+              |> String.split("\n")
+              |> Enum.slice(String.to_integer(line_start) - 1, 1)
+              |> Enum.join("\n")
+
+            """
+            ```#{file_path}#L#{line_start}
+            #{selected}
+            ```
+            """
+
+          [_, repo, ref, file_path, line_start, line_end] ->
+            content = get_content(repo, file_path, ref)
+
+            selected =
+              content
+              |> String.split("\n")
+              |> Enum.slice(
+                String.to_integer(line_start) - 1,
+                String.to_integer(line_end) - String.to_integer(line_start) + 1
+              )
+              |> Enum.join("\n")
+
+            """
+            ```#{file_path}#L#{line_start}-#{line_end}
+            #{selected}
+            ```
             """
 
           _ ->
@@ -137,6 +207,13 @@ defmodule Fastrepl.Reader.URL do
 
   defp github_pr_url?(url) do
     case Regex.run(~r/github\.com\/[\w-]+\/[\w-]+\/pull\/\d+/, url) do
+      nil -> false
+      _ -> true
+    end
+  end
+
+  def github_blob_url?(url) do
+    case Regex.run(~r/github\.com\/[\w-]+\/[\w-]+\/blob\/[0-9a-f]{40}/, url) do
       nil -> false
       _ -> true
     end
