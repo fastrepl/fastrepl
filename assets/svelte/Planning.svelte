@@ -237,7 +237,12 @@
         return;
       }
 
-      if (e.metaKey && e.key === "a") {
+      if (e.key === "p" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        openFileSearch = !openFileSearch;
+      }
+
+      if (e.key === "a" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
 
         document.getSelection().removeAllRanges();
