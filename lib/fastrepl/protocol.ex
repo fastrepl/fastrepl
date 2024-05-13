@@ -8,6 +8,7 @@ end
 
 defimpl Fastrepl.LLM, for: GitHub.Issue do
   alias Fastrepl.Reader
+  alias Fastrepl.URL
 
   def render(%{
         title: title,
@@ -22,7 +23,7 @@ defimpl Fastrepl.LLM, for: GitHub.Issue do
     """
 
     body
-    |> Reader.URL.urls_from_text()
+    |> URL.from()
     |> Enum.reject(&String.contains?(&1, issue_url))
     |> Enum.reduce(text, fn url, acc ->
       content = Reader.URL.text_from_url(url)
@@ -34,6 +35,7 @@ end
 
 defimpl Fastrepl.LLM, for: GitHub.Issue.Comment do
   alias Fastrepl.Reader
+  alias Fastrepl.URL
 
   def render(%{
         body: body,
@@ -46,7 +48,7 @@ defimpl Fastrepl.LLM, for: GitHub.Issue.Comment do
       """
 
     body
-    |> Reader.URL.urls_from_text()
+    |> URL.from()
     |> Enum.reject(&String.contains?(&1, issue_url))
     |> Enum.reduce(text, fn url, acc ->
       content = Reader.URL.text_from_url(url)

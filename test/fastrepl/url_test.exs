@@ -1,11 +1,11 @@
-defmodule Fastrepl.ReaderTest do
+defmodule Fastrepl.URLTest do
   use ExUnit.Case, async: true
 
-  alias Fastrepl.Reader
+  alias Fastrepl.URL
 
-  describe "urls_from_text/1" do
+  describe "from/1" do
     test "it works" do
-      assert Reader.URL.urls_from_text("""
+      assert URL.from("""
              Hi, we are fastrepl.
 
              https://fastrepl.com
