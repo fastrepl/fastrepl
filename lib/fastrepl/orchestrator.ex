@@ -26,6 +26,7 @@ defmodule Fastrepl.Orchestrator do
       |> Map.put(:current_step, "Initialization")
       |> Map.put(:messages, [])
       |> Map.put(:indexing, %{progress: nil, total: nil})
+      |> Map.put(:tasks, %{})
 
     send(
       state.orchestrator_pid,
@@ -83,19 +84,29 @@ defmodule Fastrepl.Orchestrator do
 
   @impl true
   def handle_cast(:execute, state) do
-    state.repo.comments
-    |> Enum.group_by(& &1.file_path)
-    |> Enum.each(fn {_file_path, comments} ->
-      Task.start(fn ->
-        diffs =
+    tasks =
+      state.repo.comments
+      |> Enum.group_by(& &1.file_path)
+      |> Enum.map(fn {_file_path, comments} ->
+        Task.Supervisor.async_nolink(Fastrepl.TaskSupervisor, fn ->
           comments
           |> Enum.map(&Fastrepl.SemanticFunction.Modify.run!(state.repo, &1))
           |> Enum.reduce(state.repo, &Repository.Mutation.run!(&2, &1))
           |> Repository.Diff.from()
-
-        send(state.orchestrator_pid, {:diffs, diffs})
+        end)
       end)
-    end)
+
+    callback = fn state, result ->
+      state
+      |> update_in([:repo, Access.key!(:diffs)], fn existing -> existing ++ result end)
+      |> sync_with_views(:repo)
+    end
+
+    state =
+      tasks
+      |> Enum.reduce(state, fn task, acc ->
+        update_in(acc, [:tasks, task.ref], fn _ -> %{callback: callback} end)
+      end)
 
     {:noreply, state}
   end
@@ -120,22 +131,27 @@ defmodule Fastrepl.Orchestrator do
           )
       end
 
-    if should_broadcast?(state, action) do
-      sync_with_views(state.thread_id, %{messages: messages})
-    end
+    state = state |> Map.put(:messages, messages)
 
-    {:noreply, state |> Map.put(:messages, messages)}
+    if should_broadcast?(state, action) do
+      {:noreply, state |> sync_with_views(:messages)}
+    else
+      {:noreply, state}
+    end
   end
 
   @impl true
   def handle_info({:fetch_issue, data}, state) do
-    new_data = %{
-      github_issue: Github.get_issue!(data.repo_full_name, data.issue_number),
-      github_issue_comments: Github.list_issue_comments!(data.repo_full_name, data.issue_number)
-    }
+    github_issue = Github.get_issue!(data.repo_full_name, data.issue_number)
+    github_issue_comments = Github.list_issue_comments!(data.repo_full_name, data.issue_number)
 
-    sync_with_views(state.thread_id, new_data)
-    {:noreply, state |> Map.merge(new_data)}
+    state =
+      state
+      |> Map.put(:github_issue, github_issue)
+      |> Map.put(:github_issue_comments, github_issue_comments)
+      |> sync_with_views(:github_issue)
+
+    {:noreply, state}
   end
 
   @impl true
@@ -143,7 +159,7 @@ defmodule Fastrepl.Orchestrator do
     repo = state.repo.full_name |> Github.get_repo!()
     repo_sha = repo |> Github.get_latest_commit!()
 
-    Task.start(fn ->
+    Task.Supervisor.start_child(Fastrepl.TaskSupervisor, fn ->
       repo_url = Github.URL.clone_without_token(state.repo.full_name)
 
       {:ok, root_path} =
@@ -157,8 +173,11 @@ defmodule Fastrepl.Orchestrator do
       send(state.orchestrator_pid, {:post_clone_repo, root_path})
     end)
 
-    state = state |> Map.put(:repo, %{state.repo | sha: repo_sha, description: repo.description})
-    sync_with_views(state.thread_id, %{repo: state.repo})
+    state =
+      state
+      |> Map.put(:repo, %{state.repo | sha: repo_sha, description: repo.description})
+      |> sync_with_views(:repo)
+
     {:noreply, state}
   end
 
@@ -174,7 +193,7 @@ defmodule Fastrepl.Orchestrator do
       |> FS.list_informative_files()
       |> Enum.flat_map(&Retrieval.Chunker.chunk_file/1)
 
-    Task.start(fn ->
+    Task.Supervisor.start_child(Fastrepl.TaskSupervisor, fn ->
       send(state.orchestrator_pid, {:repo_indexing, {:start, length(chunks)}})
 
       precompute_embeddings(chunks, fn n ->
@@ -187,8 +206,8 @@ defmodule Fastrepl.Orchestrator do
     state =
       state
       |> Map.put(:repo, %{state.repo | root_path: root_path, paths: paths, chunks: chunks})
+      |> sync_with_views(:repo)
 
-    sync_with_views(state.thread_id, %{repo: state.repo})
     {:noreply, state}
   end
 
@@ -200,23 +219,31 @@ defmodule Fastrepl.Orchestrator do
           state |> Map.put(:indexing, %{state.indexing | progress: 0, total: value})
 
         :progress ->
-          progress = (state.indexing.progress || 0) + value
-          state |> Map.put(:indexing, %{state.indexing | progress: progress})
+          state |> update_in([:indexing, :progress], fn existing -> (existing || 0) + value end)
 
         :done ->
-          state |> Map.put(:indexing, %{state.indexing | progress: value})
+          state |> update_in([:indexing, :progress], fn _ -> value end)
       end
 
-    sync_with_views(state.thread_id, %{indexing: state.indexing})
-    {:noreply, state}
+    {:noreply, state |> sync_with_views(:indexing)}
   end
 
-  @impl true
-  def handle_info({:diffs, diffs}, state) do
-    new_diffs = state.repo.diffs ++ diffs
-    state = state |> Map.put(:repo, %{state.repo | diffs: new_diffs})
-    sync_with_views(state.thread_id, %{repo: state.repo})
-    {:noreply, state}
+  def handle_info({ref, result}, state) when is_reference(ref) do
+    Process.demonitor(ref, [:flush])
+
+    {data, tasks} = state.tasks |> pop_in([ref])
+    state = state |> Map.put(:tasks, tasks)
+
+    if data == nil do
+      {:noreply, state}
+    else
+      {:noreply, state |> data.callback.(result)}
+    end
+  end
+
+  def handle_info({:DOWN, ref, _, _, _}, state) do
+    tasks = state.tasks |> pop_in([ref])
+    {:noreply, state |> Map.put(:tasks, tasks)}
   end
 
   @impl true
@@ -252,8 +279,14 @@ defmodule Fastrepl.Orchestrator do
     |> Stream.run()
   end
 
-  defp sync_with_views(thread_id, state) when is_map(state) do
-    Phoenix.PubSub.broadcast(Fastrepl.PubSub, "thread:#{thread_id}", {:sync, state})
+  defp sync_with_views(state, key) when is_atom(key) do
+    Phoenix.PubSub.broadcast(
+      Fastrepl.PubSub,
+      "thread:#{state.thread_id}",
+      {:sync, %{key => state[key]}}
+    )
+
+    state
   end
 
   defp should_broadcast?(state, action) do
