@@ -1,4 +1,4 @@
-defmodule Fastrepl.Reader.URL do
+defmodule Fastrepl.Renderer.URL do
   use Memoize
 
   alias Fastrepl.Github
@@ -31,7 +31,7 @@ defmodule Fastrepl.Reader.URL do
     |> Enum.join("")
   end
 
-  def text_from_url(url) do
+  def render(url) do
     html = html_from_url(url)
 
     cond do
@@ -174,7 +174,7 @@ defmodule Fastrepl.Reader.URL do
     end
   end
 
-  def github_repo_url?(url) do
+  defp github_repo_url?(url) do
     case Regex.run(~r/github\.com\/[\w-]+\/[\w-]+\/?$/, url) do
       nil -> false
       _ -> true
@@ -202,7 +202,7 @@ defmodule Fastrepl.Reader.URL do
     end
   end
 
-  def github_blob_url?(url) do
+  defp github_blob_url?(url) do
     case Regex.run(~r/github\.com\/[\w-]+\/[\w-]+\/blob\/[0-9a-f]{40}/, url) do
       nil -> false
       _ -> true

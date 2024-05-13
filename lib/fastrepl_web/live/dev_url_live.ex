@@ -1,6 +1,6 @@
 defmodule FastreplWeb.DevUrlLive do
   use FastreplWeb, :live_view
-  alias Fastrepl.Reader
+  alias Fastrepl.Renderer
   alias Fastrepl.Github
 
   def render(assigns) do
@@ -31,7 +31,7 @@ defmodule FastreplWeb.DevUrlLive do
        text: "",
        issue_url:
          Github.URL.create_issue("fastrepl/fastrepl",
-           title: "Fastrepl.Reader.URL.text_from_url/1",
+           title: "Fastrepl.Renderer.URL.render/1",
            labels: "enhancement"
          )
      )}
@@ -39,13 +39,13 @@ defmodule FastreplWeb.DevUrlLive do
 
   def handle_params(params, _url, socket) do
     if params["url"] do
-      text = Reader.URL.text_from_url(params["url"])
+      text = Renderer.URL.render(params["url"])
 
       issue_url =
         Github.URL.create_issue("fastrepl/fastrepl",
-          title: "Reader.URL.text_from_url/1 with '#{params["url"]}'",
+          title: "Renderer.URL.render/1 with '#{params["url"]}'",
           body: """
-          I tried `Reader.URL.text_from_url/1` with `#{params["url"]}`.
+          I tried `Renderer.URL.render/1` with `#{params["url"]}`.
 
           I expect it to return [TODO],
 
