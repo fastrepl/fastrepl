@@ -38,12 +38,11 @@ defimpl Fastrepl.LLM, for: GitHub.Issue.Comment do
   def render(%{
         body: body,
         issue_url: issue_url,
-        user: %{name: name}
+        user: %{login: name}
       }) do
     text =
       """
-      #{name}:
-      #{body}
+      [#{name}]: #{body}
       """
 
     body
