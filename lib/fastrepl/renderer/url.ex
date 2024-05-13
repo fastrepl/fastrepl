@@ -1,6 +1,7 @@
 defmodule Fastrepl.Renderer.URL do
   use Memoize
 
+  alias Fastrepl.Renderer
   alias Fastrepl.Github
 
   defmemo html_from_url(url, timeout \\ 2_000) do
@@ -73,12 +74,12 @@ defmodule Fastrepl.Renderer.URL do
           [_, repo_full_name, issue_number] ->
             issue =
               get_issue(repo_full_name, issue_number)
-              |> Fastrepl.LLM.render()
+              |> Renderer.Github.render_issue()
 
             comments =
               list_issue_comments(repo_full_name, issue_number)
               |> Enum.filter(&(&1.performed_via_github_app == nil))
-              |> Enum.map(&Fastrepl.LLM.render/1)
+              |> Enum.map(&Renderer.Github.render_comment/1)
               |> Enum.join("\n\n")
 
             """
@@ -94,16 +95,18 @@ defmodule Fastrepl.Renderer.URL do
       github_pr_url?(url) ->
         case Regex.run(~r/([^\/]+\/[^\/]+)\/pull\/(\d+)/, url) do
           [_, repo_full_name, pr_number] ->
-            pr = get_issue(repo_full_name, pr_number)
+            pr =
+              get_issue(repo_full_name, pr_number)
+              |> Renderer.Github.render_pr()
 
             comments =
               list_issue_comments(repo_full_name, pr_number)
               |> Enum.filter(&(&1.performed_via_github_app == nil))
-              |> Enum.map(&Fastrepl.LLM.render/1)
+              |> Enum.map(&Renderer.Github.render_comment/1)
               |> Enum.join("\n\n")
 
             """
-            [PR ##{pr_number}] #{pr.title}\n\n#{pr.body}
+            #{pr}
 
             #{comments}
             """

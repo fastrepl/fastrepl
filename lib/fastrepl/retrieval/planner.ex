@@ -7,10 +7,11 @@ defmodule Fastrepl.Retrieval.Planner do
   alias LangChain.ChatModels.ChatOpenAI, as: ChatModel
   alias LangChain.Message
 
-  alias Fastrepl.LLM
   alias Fastrepl.Tool.KeywordSearch
   alias Fastrepl.Tool.SemanticSearch
   alias Fastrepl.Tool.PathSearch
+
+  alias Fastrepl.Renderer
 
   def from_query(chat) do
     messages = [
@@ -41,10 +42,10 @@ defmodule Fastrepl.Retrieval.Planner do
         """
         [Github issue]
 
-        #{LLM.render(issue)}
+        #{Renderer.Github.render_issue(issue)}
         ---
 
-        #{comments |> Enum.map(&LLM.render/1) |> Enum.join("\n")}
+        #{comments |> Enum.map(&Renderer.Github.render_comment/1) |> Enum.join("\n")}
         ---
 
         Based on the issue above, use tools to retrieve code snippets that are useful to understand or solve the issue.
