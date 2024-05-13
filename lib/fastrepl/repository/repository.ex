@@ -17,6 +17,7 @@ defmodule Fastrepl.Repository do
     field :current_files, {:array, :any}, default: []
     field :comments, {:array, :any}, default: []
     field :diffs, {:array, :any}, default: []
+    field :chunks, {:array, :any}, default: []
   end
 
   def new(attrs \\ %{}) do

@@ -68,7 +68,6 @@ config :posthog,
 config :fastrepl, :env, Mix.env()
 config :fastrepl, :root, File.cwd!()
 
-config :fastrepl, :vectordb_registry, Fastrepl.VectordbRegistry
 config :fastrepl, :orchestrator_registry, Fastrepl.OrchestratorRegistry
 config :fastrepl, :cache, Fastrepl.Cache.Redis
 config :fastrepl, :embedding, Fastrepl.Retrieval.Embedding.OpenAIWithCache

@@ -6,9 +6,9 @@ defmodule Fastrepl.Orchestrator do
   alias Fastrepl.Github
   alias Fastrepl.Repository
   alias Fastrepl.Retrieval
-  alias Fastrepl.Retrieval.Chunker
-  alias Fastrepl.Retrieval.Vectordb
   alias Fastrepl.SemanticFunction.PlanningChat
+
+  @precompute_batch_size 50
 
   def start(%{thread_id: thread_id, repo_full_name: _, issue_number: _} = args) do
     GenServer.start(__MODULE__, args, name: via_registry(thread_id, args[:is_demo]))
@@ -25,7 +25,7 @@ defmodule Fastrepl.Orchestrator do
       |> Map.put(:repo, %Repository{full_name: args.repo_full_name})
       |> Map.put(:current_step, "Initialization")
       |> Map.put(:messages, [])
-      |> Map.put(:vector_db, %{pid: nil, indexing_progress: nil, indexing_total: nil})
+      |> Map.put(:indexing, %{progress: nil, total: nil})
 
     send(
       state.orchestrator_pid,
@@ -45,7 +45,7 @@ defmodule Fastrepl.Orchestrator do
        github_issue: state.github_issue,
        current_step: state.current_step,
        messages: state.messages,
-       vector_db: state.vector_db
+       indexing: state.indexing
      }, state}
   end
 
@@ -164,12 +164,6 @@ defmodule Fastrepl.Orchestrator do
 
   @impl true
   def handle_info({:post_clone_repo, root_path}, state) do
-    if state.vector_db.pid do
-      Vectordb.stop(state.vector_db.pid)
-    end
-
-    {:ok, pid} = Vectordb.start(state.thread_id)
-
     paths =
       root_path
       |> FS.list_informative_files()
@@ -178,26 +172,23 @@ defmodule Fastrepl.Orchestrator do
     chunks =
       root_path
       |> FS.list_informative_files()
-      |> Enum.flat_map(&Chunker.chunk_file/1)
+      |> Enum.flat_map(&Retrieval.Chunker.chunk_file/1)
 
     Task.start(fn ->
       send(state.orchestrator_pid, {:repo_indexing, {:start, length(chunks)}})
 
-      Vectordb.ingest(
-        pid,
-        chunks,
-        fn n -> send(state.orchestrator_pid, {:repo_indexing, {:progress, n}}) end
-      )
+      precompute_embeddings(chunks, fn n ->
+        send(state.orchestrator_pid, {:repo_indexing, {:progress, n}})
+      end)
 
       send(state.orchestrator_pid, {:repo_indexing, {:done, length(chunks)}})
     end)
 
     state =
       state
-      |> Map.put(:repo, %{state.repo | root_path: root_path, paths: paths})
-      |> Map.put(:vector_db, %{state.vector_db | pid: pid})
+      |> Map.put(:repo, %{state.repo | root_path: root_path, paths: paths, chunks: chunks})
 
-    sync_with_views(state.thread_id, %{repo: state.repo, vector_db: state.vector_db})
+    sync_with_views(state.thread_id, %{repo: state.repo})
     {:noreply, state}
   end
 
@@ -206,30 +197,18 @@ defmodule Fastrepl.Orchestrator do
     state =
       case type do
         :start ->
-          state
-          |> Map.put(:vector_db, %{state.vector_db | indexing_progress: 0, indexing_total: value})
+          state |> Map.put(:indexing, %{state.indexing | progress: 0, total: value})
 
         :progress ->
-          progress = (state.vector_db.indexing_progress || 0) + value
-
-          state
-          |> Map.put(:vector_db, %{state.vector_db | indexing_progress: progress})
+          progress = (state.indexing.progress || 0) + value
+          state |> Map.put(:indexing, %{state.indexing | progress: progress})
 
         :done ->
-          state |> Map.put(:vector_db, %{state.vector_db | indexing_progress: value})
+          state |> Map.put(:indexing, %{state.indexing | progress: value})
       end
 
-    sync_with_views(state.thread_id, %{vector_db: state.vector_db})
+    sync_with_views(state.thread_id, %{indexing: state.indexing})
     {:noreply, state}
-  end
-
-  @impl true
-  def handle_info({:chunks, chunks}, state) do
-    chunks = Chunker.dedupe(state.repo.chunks ++ chunks)
-
-    repo = state.repo |> Map.put(:chunks, chunks)
-    sync_with_views(state.thread_id, %{repo: repo})
-    {:noreply, state |> Map.put(:repo, repo)}
   end
 
   @impl true
@@ -260,6 +239,17 @@ defmodule Fastrepl.Orchestrator do
 
   defp registry_module() do
     Application.fetch_env!(:fastrepl, :orchestrator_registry)
+  end
+
+  defp precompute_embeddings(docs, cb) do
+    docs
+    |> Stream.map(&to_string/1)
+    |> Stream.chunk_every(@precompute_batch_size)
+    |> Stream.each(fn chunks ->
+      Retrieval.Embedding.generate(chunks)
+      cb.(length(chunks))
+    end)
+    |> Stream.run()
   end
 
   defp sync_with_views(thread_id, state) when is_map(state) do

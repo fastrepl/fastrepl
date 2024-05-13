@@ -1,61 +1,16 @@
 defmodule Fastrepl.Retrieval.Vectordb do
-  use Agent
   alias Fastrepl.Retrieval.Embedding
 
   @default_tok_k 5
   @default_threshold 0.5
-  @ingest_chunk_size 40
 
-  defp registry_module() do
-    Application.fetch_env!(:fastrepl, :vectordb_registry)
-  end
-
-  def start(id) do
-    case Registry.lookup(registry_module(), id) do
-      [{pid, _value}] ->
-        reset(pid)
-        {:ok, pid}
-
-      [] ->
-        Agent.start(fn -> %{id: id, docs: []} end, name: via_registry(id))
-    end
-  end
-
-  defp via_registry(id) do
-    {:via, Registry, {registry_module(), id}}
-  end
-
-  def stop(pid) do
-    id = Agent.get(pid, fn %{id: id} -> id end)
-    Registry.unregister(registry_module(), id)
-    Agent.stop(pid)
-  end
-
-  defp reset(pid) do
-    Agent.update(pid, fn state -> %{state | docs: []} end)
-  end
-
-  def ingest(pid, docs, cb \\ fn _ -> :ok end) do
-    Agent.update(pid, fn state -> state |> Map.put(:docs, state.docs ++ docs) end)
-
-    docs
-    |> Stream.map(&to_string/1)
-    |> Stream.chunk_every(@ingest_chunk_size)
-    |> Stream.each(fn chunks ->
-      Embedding.generate(chunks)
-      cb.(length(chunks))
-    end)
-    |> Stream.run()
-  end
-
-  def query(pid, q, opts \\ []) do
+  def query(query, docs, opts \\ []) do
     top_k = Keyword.get(opts, :top_k, @default_tok_k)
     threshold = Keyword.get(opts, :threshold, @default_threshold)
 
-    docs = Agent.get(pid, fn state -> state.docs end)
     texts = Enum.map(docs, &to_string/1)
 
-    {:ok, embeddings} = Embedding.generate([q | texts])
+    {:ok, embeddings} = Embedding.generate([query | texts])
     embeddings = Nx.tensor(embeddings)
 
     {q_tensor, docs_tensor} = Nx.split(embeddings, 1, axis: 0)
