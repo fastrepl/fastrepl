@@ -121,4 +121,13 @@ defmodule Fastrepl.Repository.Diff do
       ""
     )
   end
+
+  @spec display_path(Diff.t()) :: String.t()
+  def display_path(diff) do
+    case diff.mode do
+      :edit -> diff.old_path
+      :create -> diff.new_path
+      :delete -> diff.old_path
+    end
+  end
 end

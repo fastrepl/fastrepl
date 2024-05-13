@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Comment, File, Message } from "$lib/interfaces";
+  import type { Comment, Diff, File, Message } from "$lib/interfaces";
   import type { Reference } from "$lib/types";
 
   import Stepper from "$components/Stepper.svelte";
@@ -25,7 +25,7 @@
   export let paths: string[] = [];
   export let comments: Comment[];
   export let messages: Message[] = [];
-  export let diffs: string[];
+  export let diffs: Diff[];
 
   const handleChangeStep = (step: string) => {
     currentStep = step;

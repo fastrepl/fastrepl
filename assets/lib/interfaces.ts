@@ -11,6 +11,11 @@ export interface File {
   content: string;
 }
 
+export interface Diff {
+  path: string;
+  content: string;
+}
+
 export interface Message {
   role: "assistant" | "user";
   content: string;

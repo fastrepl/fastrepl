@@ -25,7 +25,9 @@ defmodule FastreplWeb.ThreadLive do
           diffs:
             assigns
             |> get_in([Access.key(:repo, %{}), Access.key(:diffs, [])])
-            |> Enum.map(&Repository.Diff.to_patch/1),
+            |> Enum.map(fn diff ->
+              %{path: Repository.Diff.display_path(diff), content: Repository.Diff.to_patch(diff)}
+            end),
           steps: @steps,
           currentStep: @current_step,
           threadId: @thread_id
