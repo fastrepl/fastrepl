@@ -14,9 +14,11 @@
   import ChatEditor from "$components/ChatEditor.svelte";
   import SearchFile from "$components/SearchFile.svelte";
   import Messages from "$components/Messages.svelte";
+
   import type { Comment, File, Message } from "$lib/interfaces";
   import type { Reference } from "$lib/types";
   import { buildTree } from "$lib/utils/tree";
+  import { tippy as tippyAction } from "$lib/actions";
 
   export let repoFullName: string;
   export let files: File[] = [];
@@ -439,6 +441,9 @@
           {repoFullName}
         </span>
         <button
+          use:tippyAction={{
+            content: `<div class="text-xs text-gray-700">cmd + p</div>`,
+          }}
           type="button"
           class="text-lg text-gray-400 hover:text-gray-800 pl-2"
           on:click={() => handleOpenFileSearch()}
