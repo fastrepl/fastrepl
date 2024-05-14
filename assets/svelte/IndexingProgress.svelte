@@ -1,6 +1,6 @@
 <script lang="ts">
-  export let indexingProgress: number;
-  export let indexingTotal: number;
+  export let indexingProgress = 1;
+  export let indexingTotal = 100;
 </script>
 
 <div

@@ -56,8 +56,8 @@ defmodule Fastrepl.Repository do
   end
 
   @spec add_file!(t(), Repository.File.t()) :: t()
-  def add_file!(repo, path) do
-    {:ok, repo} = add_file(repo, path)
+  def add_file!(repo, file) do
+    {:ok, repo} = add_file(repo, file)
     repo
   end
 
