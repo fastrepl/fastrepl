@@ -14,7 +14,7 @@
   export let indexingTotal: number;
   export let indexingProgress: number;
 
-  export let handleNextStep: () => void;
+  export let handleClickContinue: () => void;
   export let handleDone: () => void;
 
   let done = false;
@@ -39,9 +39,9 @@
       "text-sm font-semibold leading-6 text-white active:text-white/80",
       "disabled:opacity-50",
     ])}
-    on:click={handleNextStep}
+    on:click={handleClickContinue}
     disabled={!done}
   >
-    Next
+    Continue
   </button>
 </div>

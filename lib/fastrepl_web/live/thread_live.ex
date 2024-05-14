@@ -31,7 +31,6 @@ defmodule FastreplWeb.ThreadLive do
             end),
           steps: @steps,
           currentStep: @current_step,
-          threadId: @thread_id,
           searching: assigns |> get_in([Access.key(:searching, false)])
         }
       }

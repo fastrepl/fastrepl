@@ -2,14 +2,10 @@
   import type { Comment, Diff, File, Message } from "$lib/interfaces";
   import type { Reference } from "$lib/types";
 
-  import Stepper from "$components/Stepper.svelte";
   import Initialization from "$components/Initialization.svelte";
   import Planning from "$components/Planning.svelte";
-  import Execution from "$components/Execution.svelte";
 
   export let live: any;
-
-  export let threadId: string;
   export let steps: string[] = [];
   export let currentStep: (typeof steps)[number];
   export let searching: boolean;
@@ -27,14 +23,8 @@
   export let wipPaths: string[] = [];
   export let comments: Comment[];
   export let messages: Message[] = [];
-  export let diffs: Diff[];
 
-  const handleChangeStep = (step: string) => {
-    currentStep = step;
-    live.pushEvent("step:set", { step });
-  };
-
-  const handleNextStep = () => {
+  const handleClickContinue = () => {
     const currentIndex = steps.indexOf(currentStep);
     const nextIndex = currentIndex + 1;
 
@@ -48,7 +38,6 @@
 
   const handleClickExecute = () => {
     live.pushEvent("execute", {});
-    handleNextStep();
   };
 
   const handleSetComments = (comments: Comment[]) => {
@@ -65,10 +54,6 @@
 </script>
 
 <div class="flex flex-col gap-2 items-center">
-  <div class="w-[600px]">
-    <Stepper {steps} {currentStep} handleChange={handleChangeStep} />
-  </div>
-
   {#if currentStep === steps[0]}
     <Initialization
       {repoFullName}
@@ -78,7 +63,7 @@
       {issueNumber}
       {indexingTotal}
       {indexingProgress}
-      {handleNextStep}
+      {handleClickContinue}
       handleDone={handleDoneInitialization}
     />
   {:else if currentStep === steps[1]}
@@ -95,7 +80,5 @@
       {handleAddFile}
       {handleSubmitChat}
     />
-  {:else if currentStep === steps[2]}
-    <Execution {threadId} {diffs} />
   {/if}
 </div>

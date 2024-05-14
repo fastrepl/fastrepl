@@ -297,18 +297,14 @@
 
 <PaneGroup direction="horizontal">
   <Pane defaultSize={34} minSize={10} order={1}>
-    <div class="h-[calc(100vh-170px)] border border-gray-200 rounded-lg">
+    <div class="h-[calc(100vh-90px)] border border-gray-200 rounded-lg">
       <Tabs.Root
         value={currentTab}
         onValueChange={(value) => (currentTab = value)}
-        class="h-full"
+        class="h-[calc(100vh-115px)]"
       >
         <Tabs.List
-          class={clsx([
-            "border-t border-x border-gray-200 px-1 rounded-t-lg",
-            "flex flex-row gap-0.5",
-            "text-xs bg-gray-200",
-          ])}
+          class={clsx(["flex flex-row gap-0.5", "text-xs bg-gray-200"])}
         >
           <Tabs.Trigger
             value={TABS[0]}
@@ -331,10 +327,7 @@
             {TABS[1]}
           </Tabs.Trigger>
         </Tabs.List>
-        <Tabs.Content
-          value={TABS[0]}
-          class="bg-gray-50 border-b border-gray-200 rounded-b-lg p-4 h-full"
-        >
+        <Tabs.Content value={TABS[0]} class="bg-gray-50 p-4 h-full">
           <Comments
             {searching}
             items={comments}
@@ -344,13 +337,7 @@
             {handleClickExecute}
           />
         </Tabs.Content>
-        <Tabs.Content
-          value={TABS[1]}
-          class={clsx([
-            "bg-gray-50 h-full relative",
-            "border-b border-gray-200 rounded-b-lg p-4",
-          ])}
-        >
+        <Tabs.Content value={TABS[1]} class="bg-gray-50 h-full relative p-4">
           <Messages {messages} />
           <div
             class={clsx([
@@ -378,7 +365,7 @@
     <Pane defaultSize={50} minSize={10} order={2}>
       <div
         class={clsx([
-          "h-[calc(100vh-150px)]",
+          "h-[calc(100vh-90px)]",
           "flex items-center justify-center",
           "bg-gray-50 border border-gray-200 rounded-lg",
         ])}
@@ -398,7 +385,7 @@
         {#if currentDiff}
           <div
             class={clsx([
-              "h-[calc(100vh-170px)] bg-gray-50",
+              "h-[calc(100vh-90px)] bg-gray-50",
               "border-b border-x border-gray-200 rounded-b-lg",
             ])}
           >
@@ -411,7 +398,7 @@
             on:mouseup={handleMouseUp}
             on:contextmenu={handleContextMenu}
             class={clsx([
-              "h-[calc(100vh-170px)] overflow-y-auto scrollbar-hide",
+              "h-[calc(100vh-115px)] overflow-y-auto scrollbar-hide",
               "text-sm selection:bg-[#fef16033]",
               "border-b border-x border-gray-200 rounded-b-lg",
             ])}
@@ -448,7 +435,7 @@
       class={clsx([
         "flex flex-col",
         "overflow-x-hidden hover:overflow-x-auto",
-        "h-[calc(100vh-150px)] overflow-y-hidden hover:overflow-y-auto",
+        "h-[calc(100vh-90px)] overflow-y-hidden hover:overflow-y-auto",
         "bg-gray-50 rounded-lg",
         "border border-gray-200 px-2 py-1",
       ])}
