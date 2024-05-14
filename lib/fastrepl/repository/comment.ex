@@ -27,13 +27,12 @@ defmodule Fastrepl.Repository.Comment do
     field :line_start, :integer
     field :line_end, :integer
     field :content, :string
-    field :read_only, :boolean, default: false
   end
 
   @spec new(attrs :: map()) :: {:ok, t} | {:error, Ecto.Changeset.t()}
   def new(attrs \\ %{}) do
     %Comment{}
-    |> cast(attrs, [:file_path, :line_start, :line_end, :content, :read_only])
+    |> cast(attrs, [:file_path, :line_start, :line_end, :content])
     |> validate_required([:file_path, :line_start, :line_end, :content])
     |> validate_comment()
     |> apply_action(:insert)
@@ -84,8 +83,7 @@ defmodule Fastrepl.Repository.Comment do
               file_path: target_filepath,
               line_start: line_start,
               line_end: line_end,
-              content: comment_content,
-              read_only: false
+              content: comment_content
             }
           end)
 

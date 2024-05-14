@@ -13,8 +13,7 @@ defmodule Mix.Tasks.Modify do
             file_path: file.path,
             line_start: String.to_integer(line_start),
             line_end: String.to_integer(line_end),
-            content: instruction,
-            read_only: false
+            content: instruction
           }
         ]
 

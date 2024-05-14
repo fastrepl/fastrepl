@@ -4,7 +4,6 @@
 
   import { clsx } from "clsx";
   import { nanoid } from "nanoid";
-  import { Toggle } from "bits-ui";
 
   import type { Comment } from "$lib/interfaces";
 
@@ -52,20 +51,6 @@
     const newComments = Object.entries(map)
       .map(([_, comments]) =>
         comments.filter((comment) => comment.id !== commentId),
-      )
-      .flat();
-
-    handleUpdateComments(newComments);
-  };
-
-  const handlePressedChange = (commentId: string) => {
-    const newComments = Object.entries(map)
-      .map(([_, comments]) =>
-        comments.map((comment) =>
-          comment.id === commentId
-            ? { ...comment, read_only: !comment.read_only }
-            : comment,
-        ),
       )
       .flat();
 
@@ -128,20 +113,6 @@
             out:fly={{ duration: 300, x: -30 }}
             class="flex flex-row gap-2 items-center group"
           >
-            <Toggle.Root
-              onPressedChange={(_pressed) => handlePressedChange(comment.id)}
-            >
-              <div
-                class="w-[24px] border border-gray-100 rounded-md p-1 text-xs text-gray-600 hover:text-gray-900"
-              >
-                {#if comment.read_only}
-                  <span> R </span>
-                {:else}
-                  <span> RW </span>
-                {/if}
-              </div>
-            </Toggle.Root>
-
             <button
               type="button"
               class={clsx([

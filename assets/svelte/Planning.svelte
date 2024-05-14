@@ -122,7 +122,6 @@
       line_start: selectedLineStart,
       line_end: selectedLineEnd,
       content: content,
-      read_only: false,
     };
     setTimeout(() => {
       comments = [...comments, newComment];
@@ -337,7 +336,7 @@
           class="bg-gray-50 border-b border-gray-200 rounded-b-lg p-4 h-full"
         >
           <Comments
-            searching={searching}
+            {searching}
             items={comments}
             {wipPaths}
             {handleClickComment}
