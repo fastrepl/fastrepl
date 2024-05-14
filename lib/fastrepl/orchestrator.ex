@@ -337,6 +337,13 @@ defmodule Fastrepl.Orchestrator do
       Registry.unregister(registry_module(), state.thread_id)
     end
 
+    if state[:tasks] do
+      state.tasks
+      |> Enum.each(fn {_, %{task: task}} ->
+        Task.Supervisor.terminate_child(Fastrepl.TaskSupervisor, task.pid)
+      end)
+    end
+
     :ok
   end
 
