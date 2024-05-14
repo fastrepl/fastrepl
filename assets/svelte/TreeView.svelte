@@ -37,7 +37,10 @@
                 let:id={i}
               >
                 <slot {item} list={items} id={i}>
-                  <button on:click={() => handleClickFile(item.path)}>
+                  <button
+                    class="text-nowrap"
+                    on:click={() => handleClickFile(item.path)}
+                  >
                     {item.name}
                   </button>
                 </slot>
@@ -47,7 +50,10 @@
         </details>
       {:else}
         <slot {item} list={items} id={i}>
-          <button on:click={() => handleClickFile(item.path)}>
+          <button
+            class="text-nowrap"
+            on:click={() => handleClickFile(item.path)}
+          >
             {item.name}
           </button>
         </slot>
