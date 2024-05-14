@@ -1,5 +1,5 @@
-defmodule Fastrepl.Tool.KeywordSearch do
-  @behaviour Fastrepl.Tool
+defmodule Fastrepl.Retrieval.Tool.KeywordSearch do
+  @behaviour Fastrepl.Retrieval.Tool
 
   alias Fastrepl.FS
   alias Fastrepl.Retrieval.Grep

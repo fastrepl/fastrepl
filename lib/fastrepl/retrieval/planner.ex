@@ -5,31 +5,16 @@ defmodule Fastrepl.Retrieval.Planner do
   alias LangChain.ChatModels.ChatOpenAI, as: ChatModel
   alias LangChain.Message
 
-  alias Fastrepl.Tool.SemanticSearch
-  alias Fastrepl.Tool.PathSearch
-
   alias Fastrepl.Renderer
 
   @model_id "gpt-4-turbo-2024-04-09"
 
-  def from_query(chat) do
-    messages = [
-      Message.new_system!(
-        """
-        You are a helpful code retrieval planner.
-        Based on the user's query and context, use tools to retrieve relevant code snippets.
-        Use as many tools as needed.
-        """
-        |> String.trim()
-      ),
-      Message.new_user!(chat |> String.trim())
-    ]
-
-    request(messages)
-  end
-
-  @spec from_issue(GitHub.Issue.t(), [GitHub.Issue.Comment.t()]) :: {:ok, [{String.t(), map()}]}
-  def from_issue(issue, comments \\ []) do
+  @spec from_issue(
+          [module()],
+          GitHub.Issue.t(),
+          [GitHub.Issue.Comment.t()]
+        ) :: {[module()], [map()]}
+  def from_issue(tools, issue, comments \\ []) do
     messages = [
       Message.new_system!(
         """
@@ -50,14 +35,11 @@ defmodule Fastrepl.Retrieval.Planner do
       )
     ]
 
-    request(messages)
+    {tools, request(tools, messages)}
   end
 
-  defp request(messages) do
-    tools = [
-      SemanticSearch.as_function(),
-      PathSearch.as_function()
-    ]
+  defp request(tools, messages) do
+    tools = tools |> Enum.map(& &1.as_function())
 
     retry with:
             exponential_backoff()
@@ -74,7 +56,7 @@ defmodule Fastrepl.Retrieval.Planner do
           message.tool_calls
           |> Enum.map(fn %{name: name, arguments: arguments} -> {name, arguments} end)
 
-        {:ok, tool_calls}
+        tool_calls
     else
       error -> []
     end

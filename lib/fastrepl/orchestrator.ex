@@ -58,6 +58,8 @@ defmodule Fastrepl.Orchestrator do
 
   @impl true
   def handle_cast({:sync, map}, state) when is_map(map) do
+    send(self(), :search)
+
     state = map |> Enum.reduce(state, fn {k, v}, acc -> Map.put(acc, k, v) end)
     {:noreply, state}
   end
@@ -109,6 +111,48 @@ defmodule Fastrepl.Orchestrator do
       end)
 
     {:noreply, state}
+  end
+
+  @impl true
+  def handle_info(:search, state) do
+    task =
+      Task.Supervisor.async_nolink(Fastrepl.TaskSupervisor, fn ->
+        tools = [
+          Fastrepl.Retrieval.Tool.SemanticSearch,
+          Fastrepl.Retrieval.Tool.KeywordSearch
+        ]
+
+        context = %{
+          root_path: state.repo.root_path,
+          chunks: state.repo.chunks
+        }
+
+        chunks =
+          tools
+          |> Retrieval.Planner.from_issue(state.github_issue, state.github_issue_comments)
+          |> Retrieval.Executor.run(context)
+
+        existing_files_paths =
+          state.repo.original_files
+          |> Enum.map(& &1.path)
+          |> Enum.uniq()
+
+        chunks
+        |> Enum.map(& &1.file_path)
+        |> Enum.filter(&(&1 not in existing_files_paths))
+        |> Enum.uniq()
+        |> Enum.map(&Repository.File.from!(state.repo, &1))
+      end)
+
+    callback = fn state, files ->
+      repo = files |> Enum.reduce(state.repo, &Repository.add_file!(&2, &1))
+
+      state
+      |> Map.put(:repo, repo)
+      |> sync_with_views(:repo)
+    end
+
+    {:noreply, state |> update_in([:tasks, task.ref], fn _ -> %{callback: callback} end)}
   end
 
   @impl true

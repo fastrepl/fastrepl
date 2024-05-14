@@ -1,5 +1,5 @@
-defmodule Fastrepl.Tool.PathSearch do
-  @behaviour Fastrepl.Tool
+defmodule Fastrepl.Retrieval.Tool.PathSearch do
+  @behaviour Fastrepl.Retrieval.Tool
 
   alias Fastrepl.FS
   alias Fastrepl.Retrieval.Chunker.Chunk

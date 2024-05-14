@@ -1,11 +1,11 @@
-defmodule Fastrepl.Tool.SemanticSearch do
-  @behaviour Fastrepl.Tool
+defmodule Fastrepl.Retrieval.Tool.SemanticSearch do
+  @behaviour Fastrepl.Retrieval.Tool
 
   alias Fastrepl.Retrieval.Vectordb
   alias Fastrepl.Retrieval.Chunker.Chunk
 
-  def run(%{"query" => query}, %{vectordb_pid: vectordb_pid, root_path: root_path}) do
-    Vectordb.query(vectordb_pid, query, top_k: 5, threshold: 0.3)
+  def run(%{"query" => query}, %{root_path: root_path, chunks: chunks}) do
+    Vectordb.query(query, chunks, top_k: 5, threshold: 0.3)
     |> Enum.map(&%Chunk{&1 | file_path: Path.relative_to(&1.file_path, root_path)})
   end
 
