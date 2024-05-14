@@ -12,6 +12,7 @@
   export let threadId: string;
   export let steps: string[] = [];
   export let currentStep: (typeof steps)[number];
+  export let searching: boolean;
 
   export let repoFullName: string;
   export let repoDescription: string;
@@ -23,6 +24,7 @@
 
   export let files: File[] = [];
   export let paths: string[] = [];
+  export let wipPaths: string[] = [];
   export let comments: Comment[];
   export let messages: Message[] = [];
   export let diffs: Diff[];
@@ -81,9 +83,11 @@
     />
   {:else if currentStep === steps[1]}
     <Planning
+      {searching}
       {repoFullName}
       {files}
       {paths}
+      {wipPaths}
       {comments}
       {messages}
       {handleSetComments}

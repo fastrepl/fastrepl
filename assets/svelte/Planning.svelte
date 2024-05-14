@@ -24,8 +24,10 @@
   export let repoFullName: string;
   export let files: File[] = [];
   export let paths: string[] = [];
+  export let wipPaths: string[] = [];
   export let comments: Comment[] = [];
   export let messages: Message[] = [];
+  export let searching: boolean;
 
   export let handleSetComments: (comments: Comment[]) => void;
   export let handleClickExecute: () => void;
@@ -46,7 +48,7 @@
     ];
   };
 
-  const TABS = ["Comments", "Chat"];
+  const TABS = ["Overview", "Chat"];
   let currentTab: (typeof TABS)[number] = TABS[0];
 
   let currentFile: File | null = null;
@@ -335,7 +337,9 @@
           class="bg-gray-50 border-b border-gray-200 rounded-b-lg p-4 h-full"
         >
           <Comments
+            searching={searching}
             items={comments}
+            {wipPaths}
             {handleClickComment}
             {handleUpdateComments}
             {handleClickExecute}

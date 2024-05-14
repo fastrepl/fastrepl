@@ -1,5 +1,6 @@
 <script lang="ts">
   import { fly } from "svelte/transition";
+  import { Circle } from "svelte-loading-spinners";
 
   import { clsx } from "clsx";
   import { nanoid } from "nanoid";
@@ -7,7 +8,9 @@
 
   import type { Comment } from "$lib/interfaces";
 
+  export let searching = false;
   export let items: Comment[] = [];
+  export let wipPaths: string[] = [];
   export let handleClickComment: (comment: Comment) => void;
   export let handleUpdateComments: (comments: Comment[]) => void;
   export let handleClickExecute: () => void;
@@ -189,22 +192,68 @@
             </button>
           </div>
         {/each}
+
+        {#if wipPaths.includes(filePath)}
+          <div
+            class={clsx([
+              "flex flex-row gap-2 items-center",
+              "px-2 py-1 bg-gray-200 rounded-md",
+            ])}
+          >
+            <Circle size="14" color="#6b7280" unit="px" duration="2s" />
+            <span class="text-gray-500">{filePath}</span>
+          </div>
+        {/if}
       </div>
     </div>
   {/each}
 
-  {#if items.length !== 0}
-    <button
-      type="button"
-      in:fly={{ duration: 300, x: 30 }}
-      out:fly={{ duration: 300, x: -30 }}
-      on:click={handleClickExecute}
-      class={clsx([
-        "mt-auto px-4 py-2 rounded-md",
-        "bg-gray-800 hover:bg-gray-700 text-white",
-      ])}
-    >
-      Execute plan
-    </button>
-  {/if}
+  {#each wipPaths as filePath}
+    {#if items.findIndex((item) => item.file_path === filePath) === -1}
+      <div
+        class={clsx([
+          "flex flex-row gap-2 items-center",
+          "px-2 py-1 bg-gray-200 rounded-md",
+        ])}
+      >
+        <Circle size="14" color="#6b7280" unit="px" duration="2s" />
+        <span class="text-gray-500">{filePath}</span>
+      </div>
+    {/if}
+  {/each}
+
+  <div class="flex flex-col gap-2 mt-auto">
+    {#if searching}
+      <button
+        class={clsx([
+          "flex flex-col items-center justify-center",
+          "py-1.5 rounded-md",
+          "bg-gray-600 hover:bg-gray-800 text-white group",
+        ])}
+      >
+        <div class="flex flex-row gap-2 items-center">
+          <span class="group-hover:hidden">Searching new files</span>
+          <span class="group-hover:block hidden"> Stop </span>
+          <div class="group-hover:hidden">
+            <Circle size="14" color="white" unit="px" duration="2s" />
+          </div>
+        </div>
+      </button>
+    {/if}
+
+    {#if items.length !== 0}
+      <button
+        type="button"
+        in:fly={{ duration: 300, x: 30 }}
+        out:fly={{ duration: 300, x: -30 }}
+        on:click={handleClickExecute}
+        class={clsx([
+          "py-1.5 rounded-md",
+          "bg-gray-800 hover:bg-gray-900 text-white",
+        ])}
+      >
+        Make Changes
+      </button>
+    {/if}
+  </div>
 </div>

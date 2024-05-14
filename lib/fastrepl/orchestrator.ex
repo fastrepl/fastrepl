@@ -58,8 +58,6 @@ defmodule Fastrepl.Orchestrator do
 
   @impl true
   def handle_cast({:sync, map}, state) when is_map(map) do
-    send(self(), :search)
-
     state = map |> Enum.reduce(state, fn {k, v}, acc -> Map.put(acc, k, v) end)
     {:noreply, state}
   end
@@ -107,8 +105,42 @@ defmodule Fastrepl.Orchestrator do
     state =
       tasks
       |> Enum.reduce(state, fn task, acc ->
-        update_in(acc, [:tasks, task.ref], fn _ -> %{callback: callback} end)
+        update_in(acc, [:tasks, task.ref], fn _ -> %{task: task, callback: callback} end)
       end)
+
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_info({:make_comments, files}, state) do
+    goal = """
+    My goal is to resolve this issue:
+
+    #{Fastrepl.Renderer.Github.render_issue(state.github_issue)}
+    """
+
+    task =
+      Task.Supervisor.async_nolink(Fastrepl.TaskSupervisor, fn ->
+        case Repository.Comment.from(goal, files) do
+          {:ok, comments} ->
+            comments
+
+          other ->
+            IO.inspect(other)
+            []
+        end
+      end)
+
+    callback = fn state, comments ->
+      state
+      |> Map.put(:wip_paths, [])
+      |> update_in([:repo, Access.key!(:comments)], fn existing -> existing ++ comments end)
+      |> sync_with_views(:wip_paths)
+      |> sync_with_views(:repo)
+    end
+
+    state =
+      state |> update_in([:tasks, task.ref], fn _ -> %{task: task, callback: callback} end)
 
     {:noreply, state}
   end
@@ -132,27 +164,30 @@ defmodule Fastrepl.Orchestrator do
           |> Retrieval.Planner.from_issue(state.github_issue, state.github_issue_comments)
           |> Retrieval.Executor.run(context)
 
-        existing_files_paths =
-          state.repo.original_files
-          |> Enum.map(& &1.path)
-          |> Enum.uniq()
-
         chunks
         |> Enum.map(& &1.file_path)
-        |> Enum.filter(&(&1 not in existing_files_paths))
         |> Enum.uniq()
         |> Enum.map(&Repository.File.from!(state.repo, &1))
       end)
 
     callback = fn state, files ->
-      repo = files |> Enum.reduce(state.repo, &Repository.add_file!(&2, &1))
+      paths = files |> Enum.map(& &1.path)
+      send(state.orchestrator_pid, {:make_comments, files})
 
       state
-      |> Map.put(:repo, repo)
-      |> sync_with_views(:repo)
+      |> Map.put(:searching, false)
+      |> Map.put(:wip_paths, paths)
+      |> sync_with_views(:searching)
+      |> sync_with_views(:wip_paths)
     end
 
-    {:noreply, state |> update_in([:tasks, task.ref], fn _ -> %{callback: callback} end)}
+    state =
+      state
+      |> update_in([:tasks, task.ref], fn _ -> %{task: task, callback: callback} end)
+      |> Map.put(:searching, true)
+      |> sync_with_views(:searching)
+
+    {:noreply, state}
   end
 
   @impl true
@@ -245,6 +280,7 @@ defmodule Fastrepl.Orchestrator do
       end)
 
       send(state.orchestrator_pid, {:repo_indexing, {:done, length(chunks)}})
+      send(state.orchestrator_pid, :search)
     end)
 
     state =

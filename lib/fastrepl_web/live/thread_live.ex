@@ -20,6 +20,7 @@ defmodule FastreplWeb.ThreadLive do
           indexingProgress: assigns |> get_in([Access.key(:indexing), Access.key(:progress)]),
           files: assigns |> get_in([Access.key(:repo), Access.key(:original_files)]),
           paths: assigns |> get_in([Access.key(:repo), Access.key(:paths)]),
+          wipPaths: assigns |> get_in([Access.key(:wip_paths, [])]),
           comments: assigns |> get_in([Access.key(:repo), Access.key(:comments)]),
           messages: @messages,
           diffs:
@@ -30,7 +31,8 @@ defmodule FastreplWeb.ThreadLive do
             end),
           steps: @steps,
           currentStep: @current_step,
-          threadId: @thread_id
+          threadId: @thread_id,
+          searching: assigns |> get_in([Access.key(:searching, false)])
         }
       }
     />
