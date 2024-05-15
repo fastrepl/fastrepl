@@ -1,6 +1,8 @@
 <script lang="ts">
-  export let indexingProgress = 1;
-  export let indexingTotal = 100;
+  export let indexingProgress: number | null = null;
+  export let indexingTotal: number | null = null;
+
+  $: percentage =  Math.round(((indexingProgress || 1) / (indexingTotal || 100)) * 100)
 </script>
 
 <div
@@ -10,7 +12,7 @@
   <div class="w-[calc(100%-2rem)] bg-gray-200 rounded-full h-1">
     <div
       class="bg-gray-500 h-1 rounded-full"
-      style="width: {Math.round((indexingProgress / indexingTotal) * 100)}%"
+      style="width: {percentage}%"
     ></div>
   </div>
 </div>
