@@ -9,6 +9,7 @@
   export let steps: string[] = [];
   export let currentStep: (typeof steps)[number];
   export let searching: boolean;
+  export let executing: boolean;
 
   export let repoFullName: string;
   export let repoDescription: string;
@@ -69,6 +70,7 @@
   {:else if currentStep === steps[1]}
     <Planning
       {searching}
+      {executing}
       {repoFullName}
       {files}
       {paths}

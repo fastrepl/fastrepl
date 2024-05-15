@@ -25,8 +25,7 @@ defmodule Fastrepl.Retrieval.Executor do
         {:ok, result} ->
           result
 
-        {:exit, reason} ->
-          Logger.error("failed to execute a tool: #{inspect(reason)}")
+        _ ->
           []
       end
     end)

@@ -27,7 +27,9 @@
   export let wipPaths: string[] = [];
   export let comments: Comment[] = [];
   export let messages: Message[] = [];
+
   export let searching: boolean;
+  export let executing: boolean;
 
   export let handleSetComments: (comments: Comment[]) => void;
   export let handleClickExecute: () => void;
@@ -333,6 +335,7 @@
         </Tabs.List>
         <Tabs.Content value={TABS[0]} class="bg-gray-50 p-4 h-full">
           <Comments
+            {executing}
             {searching}
             items={comments}
             {wipPaths}

@@ -8,6 +8,8 @@
   import type { Comment } from "$lib/interfaces";
 
   export let searching = false;
+  export let executing = false;
+
   export let items: Comment[] = [];
   export let wipPaths: string[] = [];
   export let handleClickComment: (comment: Comment) => void;
@@ -94,7 +96,7 @@
         out:fly={{ duration: 300, x: -30 }}
         class="flex flex-row gap-2 items-center text-md group"
       >
-        <div class="underline">{filePath}</div>
+        <div class="underline truncate">{filePath}</div>
         <button
           on:click={() => handleDeleteFile(filePath)}
           class="hidden group-hover:block text-gray-400 hover:text-gray-700"
@@ -213,15 +215,23 @@
     {#if items.length !== 0}
       <button
         type="button"
+        disabled={executing}
         in:fly={{ duration: 300, x: 30 }}
         out:fly={{ duration: 300, x: -30 }}
         on:click={handleClickExecute}
         class={clsx([
+          "flex flex-row items-center justify-center gap-2",
           "py-1.5 rounded-md",
           "bg-gray-800 hover:bg-gray-900 text-white",
+          "disabled:opacity-70",
         ])}
       >
-        Make Changes
+        <span>
+          {executing ? "Making changes" : "Make changes"}
+        </span>
+        {#if executing}
+          <Circle size="14" color="white" unit="px" duration="2s" />
+        {/if}
       </button>
     {/if}
   </div>

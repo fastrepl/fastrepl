@@ -100,6 +100,8 @@ defmodule Fastrepl.Orchestrator do
       state
       |> update_in([:repo, Access.key!(:diffs)], fn existing -> existing ++ result end)
       |> sync_with_views(:repo)
+      |> Map.put(:executing, false)
+      |> sync_with_views(:executing)
     end
 
     state =
@@ -107,6 +109,8 @@ defmodule Fastrepl.Orchestrator do
       |> Enum.reduce(state, fn task, acc ->
         update_in(acc, [:tasks, task.ref], fn _ -> %{task: task, callback: callback} end)
       end)
+      |> Map.put(:executing, true)
+      |> sync_with_views(:executing)
 
     {:noreply, state}
   end
@@ -125,8 +129,7 @@ defmodule Fastrepl.Orchestrator do
           {:ok, comments} ->
             comments
 
-          other ->
-            IO.inspect(other)
+          _ ->
             []
         end
       end)
