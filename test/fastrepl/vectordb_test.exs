@@ -17,7 +17,7 @@ defmodule Fastrepl.VectordbTest do
 
       docs = ["hello", "hi", "fastrepl"]
 
-      assert = "hey" |> Vectordb.query(docs, top_k: 2, threshold: 0.1) == ["hello", "hi"]
+      assert "hey" |> Vectordb.query(docs, top_k: 2, threshold: 0.1) == ["hello", "hi"]
     end
 
     test "with chunk" do
