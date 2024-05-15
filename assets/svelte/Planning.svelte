@@ -238,6 +238,10 @@
         return;
       }
 
+      if (e.target["contentEditable"] && e.target["tagName"] === "TEXTAREA") {
+        return;
+      }
+
       if (e.target["tagName"] === "INPUT") {
         return;
       }

@@ -111,14 +111,14 @@
           <div
             in:fly={{ duration: 300, x: 30 }}
             out:fly={{ duration: 300, x: -30 }}
-            class="flex flex-row gap-2 items-center group"
+            class="flex flex-row gap-2 group"
           >
             <button
               type="button"
               class={clsx([
                 "px-1 py-0.5 rounded-md",
                 "bg-gray-200 hover:bg-yellow-100",
-                "text-sm w-fit text-nowrap",
+                "text-sm w-fit h-[24px] text-nowrap",
               ])}
               on:click={() => handleClickComment(comment)}
             >
@@ -127,14 +127,13 @@
 
             {#if editingComment && editingComment.id === comment.id}
               <!-- svelte-ignore a11y-autofocus -->
-              <input
-                type="text"
+              <textarea
                 autofocus={true}
                 value={comment.content}
                 class={clsx([
-                  "py-0.5 px-1 border rounded-md",
+                  "py-0.5 px-1 border rounded-md w-full",
                   "border-gray-300 focus:border-gray-300 focus:ring-0",
-                  "truncate text-sm",
+                  "text-sm resize-y",
                 ])}
                 on:blur={(e) =>
                   handleEditComment(comment.id, e.target["value"])}
@@ -153,14 +152,13 @@
               >
                 {comment.content}
               </button>
+              <button
+                on:click={() => handleDeleteComment(comment.id)}
+                class="hidden group-hover:flex text-gray-400 hover:text-gray-700 mt-1"
+              >
+                <span class="hero-backspace h-4 w-4" />
+              </button>
             {/if}
-
-            <button
-              on:click={() => handleDeleteComment(comment.id)}
-              class="hidden group-hover:flex text-gray-400 hover:text-gray-700"
-            >
-              <span class="hero-backspace h-4 w-4" />
-            </button>
           </div>
         {/each}
 
