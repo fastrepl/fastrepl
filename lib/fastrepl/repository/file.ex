@@ -12,8 +12,9 @@ defmodule Fastrepl.Repository.File do
   @derive Jason.Encoder
   @primary_key false
   embedded_schema do
-    field :content, :string
+    # relative path
     field :path, :string
+    field :content, :string
   end
 
   @spec new(attrs :: map()) :: {:ok, t} | {:error, Ecto.Changeset.t()}

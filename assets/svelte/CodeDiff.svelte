@@ -27,7 +27,12 @@
     href="https://cdn.jsdelivr.net/npm/diff2html/bundles/css/diff2html.min.css"
   />
   <style>
-    .d2h-file-header,
+    .d2h-file-name {
+      font-family: "Lucida Console", monospace;
+      /* text-xs */
+      font-size: 0.75rem;
+      line-height: 1rem;
+    }
     .d2h-info {
       display: none;
     }

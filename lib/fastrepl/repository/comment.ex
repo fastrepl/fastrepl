@@ -60,7 +60,7 @@ defmodule Fastrepl.Repository.Comment do
 
   @spec from(String.t(), [Repository.File.t()]) ::
           {:ok, [Repository.Comment.t()]} | {:error, any()}
-  def from(goal, files) when is_binary(goal) do
+  def from(goal, files) when is_binary(goal) and files != [] do
     case llm(messages(goal, files)) do
       {:ok, comments} ->
         comments =

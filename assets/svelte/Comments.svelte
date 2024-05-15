@@ -7,6 +7,10 @@
 
   import type { Comment } from "$lib/interfaces";
 
+  export let diffsSize: number;
+  export let showDiffs: boolean;
+  export let handleToggleShowDiffs: () => void;
+
   export let searching = false;
   export let executing = false;
 
@@ -79,16 +83,6 @@
 </script>
 
 <div class="flex flex-col gap-4 h-full text-sm relative">
-  {#if items.length === 0}
-    <span
-      in:fly={{ duration: 300, x: 30 }}
-      out:fly={{ duration: 300, x: -30 }}
-      class="text-sm text-gray-500 font-semibold absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2"
-    >
-      No comments yet.
-    </span>
-  {/if}
-
   {#each Object.entries(map) as [filePath, comments] (filePath)}
     <div class="flex flex-col gap-1">
       <div
@@ -209,6 +203,24 @@
             <Circle size="14" color="white" unit="px" duration="2s" />
           </div>
         </div>
+      </button>
+    {/if}
+
+    {#if diffsSize > 0}
+      <button
+        type="button"
+        in:fly={{ duration: 300, x: 30 }}
+        out:fly={{ duration: 300, x: -30 }}
+        on:click={() => handleToggleShowDiffs()}
+        class={clsx([
+          "flex flex-row items-center justify-center gap-2",
+          "py-1.5 rounded-md",
+          "bg-gray-800 hover:bg-gray-900 text-white",
+        ])}
+      >
+        <span>
+          {showDiffs ? "Hide changes" : `Show ${diffsSize} changes`}
+        </span>
       </button>
     {/if}
 

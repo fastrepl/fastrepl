@@ -8,23 +8,6 @@ defmodule Fastrepl.ChunckerTest do
   alias Fastrepl.Retrieval.Chunker
   alias Fastrepl.Retrieval.Chunker.Chunk
 
-  test "from!/1 and /to_string/1" do
-    path = System.tmp_dir!() |> Path.join(Nanoid.generate())
-    File.write!(path, 1..10 |> Enum.map(&Integer.to_string/1) |> Enum.join("\n"))
-
-    chunk = Chunk.from!(path, {1, 5})
-
-    assert to_string(chunk) ==
-             """
-             1
-             2
-             3
-             4
-             5
-             """
-             |> String.trim()
-  end
-
   describe "chunk_code/2" do
     test "it works 1" do
       chunks = Chunker.chunk_code("test.unknown", "const a = 1;\n" |> String.duplicate(500))

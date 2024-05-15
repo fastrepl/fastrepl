@@ -5,6 +5,7 @@ defmodule Fastrepl.Retrieval.Result do
   alias Fastrepl.Retrieval.Chunker.Chunk
 
   @type t :: %Result{
+          # absolute path
           file_path: String.t(),
           file_content: String.t(),
           spans: [{pos_integer(), pos_integer()}]
@@ -18,7 +19,7 @@ defmodule Fastrepl.Retrieval.Result do
     }
   end
 
-  def from!(path) when is_binary(path) do
+  def from!(path) do
     %Result{
       file_path: path,
       file_content: File.read!(path),
@@ -26,7 +27,7 @@ defmodule Fastrepl.Retrieval.Result do
     }
   end
 
-  def from!(path, lines) when is_list(lines) do
+  def from!(path, lines) do
     %Result{
       file_path: path,
       file_content: File.read!(path),

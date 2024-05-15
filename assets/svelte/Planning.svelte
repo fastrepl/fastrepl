@@ -21,6 +21,9 @@
   import { buildTree } from "$lib/utils/tree";
   import { tippy as tippyAction } from "$lib/actions";
 
+  export let diffs: Diff[] = [];
+  let showDiffs = false;
+
   export let repoFullName: string;
   export let files: File[] = [];
   export let paths: string[] = [];
@@ -335,6 +338,9 @@
         </Tabs.List>
         <Tabs.Content value={TABS[0]} class="bg-gray-50 p-4 h-full">
           <Comments
+            diffsSize={diffs.length}
+            {showDiffs}
+            handleToggleShowDiffs={() => (showDiffs = !showDiffs)}
             {executing}
             {searching}
             items={comments}
@@ -385,20 +391,24 @@
   {:else}
     <Pane defaultSize={50} order={2} minSize={10} class="relative">
       <div class="flex flex-col">
-        <span class="text-xs rounded-t-lg bg-gray-200 py-1 px-2">
-          {currentFile.path}
-        </span>
+        {#if showDiffs}
+          <span class="text-xs rounded-t-lg bg-gray-200 py-1 px-2">
+            changes
+          </span>
 
-        {#if currentDiff}
           <div
             class={clsx([
-              "h-[calc(100vh-90px)] bg-gray-50",
+              "h-[calc(100vh-90px)] overflow-y-auto scrollbar-hide bg-gray-50 relative",
               "border-b border-x border-gray-200 rounded-b-lg",
             ])}
           >
-            <CodeDiff content={currentDiff.content} />
+            <CodeDiff content={diffs.map((diff) => diff.content).join("\n")} />
           </div>
         {:else}
+          <span class="text-xs rounded-t-lg bg-gray-200 py-1 px-2">
+            {currentFile.path}
+          </span>
+
           <!-- svelte-ignore a11y-no-static-element-interactions -->
           <div
             bind:this={codeSnippetContainer}

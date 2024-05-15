@@ -111,6 +111,8 @@ defmodule Fastrepl.Orchestrator do
       end)
       |> Map.put(:executing, true)
       |> sync_with_views(:executing)
+      |> update_in([:repo, Access.key!(:diffs)], fn _ -> [] end)
+      |> sync_with_views(:repo)
 
     {:noreply, state}
   end
@@ -162,14 +164,17 @@ defmodule Fastrepl.Orchestrator do
           chunks: state.repo.chunks
         }
 
-        chunks =
+        results =
           tools
           |> Retrieval.Planner.from_issue(state.github_issue, state.github_issue_comments)
           |> Retrieval.Executor.run(context)
+          |> Retrieval.Reranker.run()
+          |> Retrieval.Result.fuse(min_distance: 10)
+          |> Enum.take(3)
 
-        chunks
+        results
         |> Enum.map(& &1.file_path)
-        |> Enum.uniq()
+        |> Enum.map(&Path.relative_to(&1, state.repo.root_path))
         |> Enum.map(&Repository.File.from!(state.repo, &1))
       end)
 

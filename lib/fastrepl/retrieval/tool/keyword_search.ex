@@ -9,7 +9,7 @@ defmodule Fastrepl.Retrieval.Tool.KeywordSearch do
     root_path
     |> FS.list_informative_files()
     |> Enum.map(fn path ->
-      lines = path |> Grep.grep_file(query)
+      lines = Grep.grep_file(path, query)
 
       if Enum.empty?(lines),
         do: nil,

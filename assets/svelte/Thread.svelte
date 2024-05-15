@@ -20,6 +20,7 @@
   export let indexingProgress: number;
 
   export let files: File[] = [];
+  export let diffs: Diff[] = [];
   export let paths: string[] = [];
   export let wipPaths: string[] = [];
   export let comments: Comment[];
@@ -74,6 +75,7 @@
       {repoFullName}
       {files}
       {paths}
+      {diffs}
       {wipPaths}
       {comments}
       {messages}

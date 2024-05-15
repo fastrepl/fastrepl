@@ -2,7 +2,9 @@
   export let indexingProgress: number | null = null;
   export let indexingTotal: number | null = null;
 
-  $: percentage =  Math.round(((indexingProgress || 1) / (indexingTotal || 100)) * 100)
+  $: percentage = Math.round(
+    ((indexingProgress || 1) / (indexingTotal || 100)) * 100,
+  );
 </script>
 
 <div

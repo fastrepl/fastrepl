@@ -23,20 +23,23 @@ defmodule FastreplWeb.ThreadLive do
           wipPaths: assigns |> get_in([Access.key(:wip_paths, [])]),
           comments: assigns |> get_in([Access.key(:repo), Access.key(:comments)]),
           messages: @messages,
-          diffs:
-            assigns
-            |> get_in([Access.key(:repo, %{}), Access.key(:diffs, [])])
-            |> Enum.map(fn diff ->
-              %{path: Repository.Diff.display_path(diff), content: Repository.Diff.to_patch(diff)}
-            end),
           steps: @steps,
           currentStep: @current_step,
           searching: assigns |> get_in([Access.key(:searching, false)]),
-          executing: assigns |> get_in([Access.key(:executing, false)])
+          executing: assigns |> get_in([Access.key(:executing, false)]),
+          diffs: assigns |> get_diffs()
         }
       }
     />
     """
+  end
+
+  defp get_diffs(assigns) do
+    assigns
+    |> get_in([Access.key(:repo, %{}), Access.key(:diffs, [])])
+    |> Enum.map(fn diff ->
+      %{path: Repository.Diff.display_path(diff), content: Repository.Diff.to_patch(diff)}
+    end)
   end
 
   def mount(%{"id" => thread_id}, _session, socket) do
@@ -97,8 +100,10 @@ defmodule FastreplWeb.ThreadLive do
   end
 
   def handle_event("file:add", %{"path" => path}, socket) do
-    file = Repository.File.from!(socket.assigns.repo, path)
-    repo = socket.assigns.repo |> Repository.add_file!(file)
+    repo =
+      path
+      |> then(&Repository.File.from!(socket.assigns.repo, &1))
+      |> then(&Repository.add_file!(socket.assigns.repo, &1))
 
     socket =
       socket
