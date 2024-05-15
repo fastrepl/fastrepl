@@ -12,28 +12,33 @@ defmodule Fastrepl.Retrieval.Embedding.Cache do
           |> Enum.with_index()
           |> Enum.split_with(fn {result, _index} -> result |> elem(0) == :ok end)
 
-        cached_map =
-          cached
-          |> Enum.map(fn {data, index} -> {index, data |> elem(1)} end)
-          |> Map.new()
-
         indices = not_cached |> Enum.map(&elem(&1, 1))
         texts_to_generate = indices |> Enum.map(&Enum.at(texts, &1))
-        {:ok, embeddings} = __MODULE__.generate_without_cache(texts_to_generate)
 
-        fetched_map = Enum.zip(indices, embeddings) |> Map.new()
+        case __MODULE__.generate_without_cache(texts_to_generate) do
+          {:ok, embeddings} ->
+            fetched_map = Enum.zip(indices, embeddings) |> Map.new()
 
-        fetched_map
-        |> Enum.each(fn {index, embedding} ->
-          set_cache(Enum.at(texts, index), embedding)
-        end)
+            fetched_map
+            |> Enum.each(fn {index, embedding} ->
+              set_cache(Enum.at(texts, index), embedding)
+            end)
 
-        ret =
-          Map.merge(cached_map, fetched_map)
-          |> Enum.sort_by(fn {index, _} -> index end)
-          |> Enum.map(fn {_, embedding} -> embedding end)
+            cached_map =
+              cached
+              |> Enum.map(fn {data, index} -> {index, data |> elem(1)} end)
+              |> Map.new()
 
-        {:ok, ret}
+            ret =
+              Map.merge(cached_map, fetched_map)
+              |> Enum.sort_by(fn {index, _} -> index end)
+              |> Enum.map(fn {_, embedding} -> embedding end)
+
+            {:ok, ret}
+
+          {:error, error} ->
+            {:error, error}
+        end
       end
 
       defp get_key(text) do
