@@ -9,7 +9,7 @@ fn debug() {
             .map(|n| n.to_string())
             .collect::<Vec<_>>()
             .join("\n"),
-        spans: vec![(3, 5)],
+        span: (3, 5),
     };
 
     assert_debug_snapshot!(chunk, @r###"

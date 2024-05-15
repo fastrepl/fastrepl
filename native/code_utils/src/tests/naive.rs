@@ -12,7 +12,7 @@ fn markdown() {
 
     assert_eq!(result.len(), 1);
     assert_eq!(result[0].file_path, "test.md");
-    assert_eq!(result[0].spans, vec![(1, 137)]);
+    assert_eq!(result[0].span, (1, 137));
 
     assert_debug_snapshot!(result);
 }

@@ -24,7 +24,7 @@ fn patches() {
     let mut file = std::fs::File::create(dest_path.clone() + "/random.txt").unwrap();
     file.write(b"hello").unwrap();
 
-    let mut file = std::fs::File::create(dest_path.clone() + "/README.md").unwrap();
+    let mut file = std::fs::File::create(dest_path.clone() + "/debug.sh").unwrap();
     file.write(b"hello").unwrap();
 
     std::fs::remove_file(dest_path.clone() + "/.iex.exs").unwrap();
@@ -44,18 +44,17 @@ fn patches() {
     \ No newline at end of file
     "###);
 
-    assert_snapshot!(result.get("README.md").unwrap(), @r###"
-    diff --git a/README.md b/README.md
-    index f6d2639..b6fc4c6 100644
-    --- a/README.md
-    +++ b/README.md
-    @@ -1,6 +1 @@
-    -<h1 align="center">Fastrepl</h1>
-    -<h4 align="center">
-    -    <a href="https://discord.gg/Y8bJkzuQZU" target="_blank">
-    -        <img src="https://dcbadge.vercel.app/api/server/nMQ8ZqAegc?style=flat">
-    -    </a>
-    -</h4>
+    assert_snapshot!(result.get("debug.sh").unwrap(), @r###"
+    diff --git a/debug.sh b/debug.sh
+    index 418602b..b6fc4c6 100644
+    --- a/debug.sh
+    +++ b/debug.sh
+    @@ -1,5 +1 @@
+    -#!/bin/bash
+    -
+    -set -e
+    -
+    -fly ssh console --pty --select -C "/app/bin/fastrepl remote"
     +hello
     \ No newline at end of file
     "###);
@@ -80,5 +79,5 @@ fn commits() {
     git::clone(repo_url, &dest_path, 5).unwrap();
 
     let result = git::commits(&dest_path).unwrap();
-    assert_eq!(result.len(), 5);
+    assert_eq!(result.len(), 4);
 }

@@ -3,7 +3,7 @@ defmodule Fastrepl.Retrieval.Tool.KeywordSearch do
 
   alias Fastrepl.FS
   alias Fastrepl.Retrieval.Grep
-  alias Fastrepl.Retrieval.Chunker.Chunk
+  alias Fastrepl.Retrieval.Result
 
   def run(%{"query" => query}, %{root_path: root_path}) do
     root_path
@@ -13,7 +13,7 @@ defmodule Fastrepl.Retrieval.Tool.KeywordSearch do
 
       if Enum.empty?(lines),
         do: nil,
-        else: Chunk.from(root_path, path, lines)
+        else: Result.from!(path, lines)
     end)
     |> Enum.reject(&is_nil/1)
   end

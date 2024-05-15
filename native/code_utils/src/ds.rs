@@ -3,26 +3,25 @@
 pub struct Chunk<'a> {
     pub file_path: &'a str,
     pub content: &'a str,
-    pub spans: Vec<(usize, usize)>,
+    pub span: (usize, usize),
 }
 
 impl<'a> std::fmt::Debug for Chunk<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for (line_start, line_end) in self.spans.iter() {
-            let content = self
-                .content
-                .lines()
-                .skip(*line_start - 1)
-                .take(*line_end - *line_start + 1)
-                .collect::<Vec<_>>()
-                .join("\n");
+        let (line_start, line_end) = self.span;
+        let content = self
+            .content
+            .lines()
+            .skip(line_start - 1)
+            .take(line_end - line_start + 1)
+            .collect::<Vec<_>>()
+            .join("\n");
 
-            writeln!(
-                f,
-                "```{}#L{}-L{}\n{}\n```",
-                self.file_path, line_start, line_end, content
-            )?;
-        }
+        writeln!(
+            f,
+            "```{}#L{}-L{}\n{}\n```",
+            self.file_path, line_start, line_end, content
+        )?;
         writeln!(f, "---")
     }
 }

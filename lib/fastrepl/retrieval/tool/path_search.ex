@@ -2,12 +2,12 @@ defmodule Fastrepl.Retrieval.Tool.PathSearch do
   @behaviour Fastrepl.Retrieval.Tool
 
   alias Fastrepl.FS
-  alias Fastrepl.Retrieval.Chunker.Chunk
+  alias Fastrepl.Retrieval.Result
 
   def run(%{"query" => query}, %{root_path: root_path}) do
     root_path
     |> FS.search_paths(query)
-    |> Enum.map(&Chunk.from(root_path, &1))
+    |> Enum.map(&Result.from!(&1))
   end
 
   def as_function() do
