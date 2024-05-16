@@ -3,9 +3,12 @@ defmodule Fastrepl.FS do
 
   alias Fastrepl.Native.CodeUtils
 
-  def new_repo(repos_root, repo_url, repo_full_name, repo_sha) do
+  def new_repo(repo_url, repo_full_name, repo_sha) do
     repo_id = String.replace(repo_full_name, "/", "-")
-    dir = Path.join(repos_root, "#{repo_id}-#{repo_sha}")
+
+    dir =
+      Application.fetch_env!(:fastrepl, :clone_dir)
+      |> Path.join("#{repo_id}-#{repo_sha}")
 
     cond do
       File.exists?(dir) -> {:ok, dir}

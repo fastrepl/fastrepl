@@ -248,14 +248,7 @@ defmodule Fastrepl.Orchestrator do
 
     Task.Supervisor.start_child(Fastrepl.TaskSupervisor, fn ->
       repo_url = Github.URL.clone_without_token(state.repo.full_name)
-
-      {:ok, root_path} =
-        FS.new_repo(
-          Application.fetch_env!(:fastrepl, :clone_dir),
-          repo_url,
-          state.repo.full_name,
-          repo_sha
-        )
+      {:ok, root_path} = FS.new_repo(repo_url, state.repo.full_name, repo_sha)
 
       send(state.orchestrator_pid, {:post_clone_repo, root_path})
     end)

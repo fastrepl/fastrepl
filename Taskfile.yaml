@@ -10,7 +10,7 @@ tasks:
       - task: redis:up
       - sleep 1
       - mix ecto.migrate --quiet
-      - MIX_ENV=dev mix phx.server
+      - MIX_ENV=dev iex --sname fastrepl --cookie fastrepl -S mix phx.server
       - task: db:dev:down
       - task: redis:down
 
