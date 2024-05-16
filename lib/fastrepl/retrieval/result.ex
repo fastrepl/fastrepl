@@ -11,27 +11,38 @@ defmodule Fastrepl.Retrieval.Result do
           spans: [{pos_integer(), pos_integer()}]
         }
 
-  def from!(%Chunk{} = chunk) do
+  @buffer_size 10
+
+  def from!(%Chunk{file_path: file_path, span: {line_start, line_end}}) do
+    file_content = File.read!(file_path)
+    max_line = file_content |> String.split("\n") |> length
+
     %Result{
-      file_path: chunk.file_path,
-      file_content: File.read!(chunk.file_path),
-      spans: [chunk.span]
+      file_path: file_path,
+      file_content: file_content,
+      spans: [{max(1, line_start - @buffer_size), min(line_end + @buffer_size, max_line)}]
     }
   end
 
   def from!(path) do
+    file_content = File.read!(path)
+    max_line = file_content |> String.split("\n") |> length
+
     %Result{
       file_path: path,
-      file_content: File.read!(path),
-      spans: []
+      file_content: file_content,
+      spans: [{1, max_line}]
     }
   end
 
   def from!(path, lines) do
+    file_content = File.read!(path)
+    max_line = file_content |> String.split("\n") |> length
+
     %Result{
       file_path: path,
-      file_content: File.read!(path),
-      spans: lines |> Enum.map(fn num -> {num, num + 1} end)
+      file_content: file_content,
+      spans: lines |> Enum.map(&{max(1, &1 - @buffer_size), min(&1 + @buffer_size, max_line)})
     }
   end
 
