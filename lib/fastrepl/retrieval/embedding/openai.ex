@@ -5,7 +5,6 @@ defmodule Fastrepl.Retrieval.Embedding.OpenAI do
   require Logger
   alias Fastrepl.Tokenizer
 
-  @url "https://api.openai.com/v1/embeddings"
   @model "text-embedding-3-small"
   @dimensions 512
   @max_input_tokens 8191
@@ -40,10 +39,10 @@ defmodule Fastrepl.Retrieval.Embedding.OpenAI do
   end
 
   defp request(texts) do
-    api_key = Application.get_env(:langchain, :openai_key)
+    url = "#{Application.fetch_env!(:fastrepl, :proxy_api_base)}/v1/embeddings"
 
     headers = [
-      {"Authorization", "Bearer #{api_key}"},
+      {"Authorization", "Bearer #{Application.get_env(:fastrepl, :proxy_api_key)}"},
       {"Content-Type", "application/json"}
     ]
 
@@ -54,7 +53,7 @@ defmodule Fastrepl.Retrieval.Embedding.OpenAI do
       dimensions: @dimensions
     }
 
-    case Req.post(url: @url, headers: headers, json: body) do
+    case Req.post(url: url, headers: headers, json: body) do
       {:ok, %{status: 200, body: %{"data" => data}}} ->
         {:ok, data}
 

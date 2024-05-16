@@ -1,10 +1,7 @@
 defmodule Fastrepl.Writer do
   alias LangChain.Chains.LLMChain
-  alias LangChain.ChatModels.ChatOpenAI, as: ChatModel
   alias LangChain.Message
   alias LangChain.Function
-
-  @model_id "gpt-3.5-turbo-0125"
 
   @spec thread_summary(info :: String.Chars.t()) :: String.t()
   def thread_summary(info) do
@@ -39,7 +36,7 @@ defmodule Fastrepl.Writer do
     """
 
     {:ok, _, %Message{} = message} =
-      LLMChain.new!(%{llm: ChatModel.new!(%{model: @model_id, stream: false})})
+      LLMChain.new!(%{llm: Fastrepl.chat_model(%{model: "gpt-3.5-turbo", stream: false})})
       |> LLMChain.add_tools(func)
       |> LLMChain.add_message(Message.new_user!(instruction))
       |> LLMChain.run()

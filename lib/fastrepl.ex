@@ -1,9 +1,12 @@
 defmodule Fastrepl do
-  @moduledoc """
-  Fastrepl keeps the contexts that define your domain
-  and business logic.
+  def chat_model(attrs) do
+    proxy = %{
+      api_key: Application.fetch_env!(:fastrepl, :proxy_api_key),
+      endpoint: "#{Application.fetch_env!(:fastrepl, :proxy_api_base)}/v1/chat/completions"
+    }
 
-  Contexts are also responsible for managing your data, regardless
-  if it comes from the database, an external API or others.
-  """
+    attrs
+    |> Map.merge(proxy)
+    |> LangChain.ChatModels.ChatOpenAI.new!()
+  end
 end

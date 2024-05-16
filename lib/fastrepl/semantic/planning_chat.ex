@@ -2,10 +2,7 @@ defmodule Fastrepl.SemanticFunction.PlanningChat do
   use Retry
 
   alias LangChain.Chains.LLMChain
-  alias LangChain.ChatModels.ChatOpenAI, as: ChatModel
   alias LangChain.Message
-
-  @model_id "gpt-4-turbo-2024-04-09"
 
   def run(
         %{messages: msgs, references: _refs},
@@ -48,7 +45,7 @@ defmodule Fastrepl.SemanticFunction.PlanningChat do
         end
     end
 
-    LLMChain.new!(%{llm: ChatModel.new!(%{model: @model_id, stream: true, temperature: 0})})
+    LLMChain.new!(%{llm: Fastrepl.chat_model(%{model: "gpt-4o", stream: false, temperature: 0})})
     |> LLMChain.add_messages(messages)
     |> LLMChain.run(callback_fn: wrapped_callback_fn)
   end

@@ -12,10 +12,7 @@ defmodule Fastrepl.Repository.Comment do
 
   use Retry
 
-  @model_id "gpt-4-turbo-2024-04-09"
-
   alias LangChain.Chains.LLMChain
-  alias LangChain.ChatModels.ChatOpenAI, as: ChatModel
   alias LangChain.Message
 
   @type t :: %Comment{}
@@ -96,7 +93,9 @@ defmodule Fastrepl.Repository.Comment do
 
   defp llm(messages) do
     retry with: exponential_backoff() |> randomize |> cap(2_000) |> expiry(6_000) do
-      LLMChain.new!(%{llm: ChatModel.new!(%{model: @model_id, stream: false, temperature: 0})})
+      LLMChain.new!(%{
+        llm: Fastrepl.chat_model(%{model: "gpt-4o", stream: false, temperature: 0})
+      })
       |> LLMChain.add_messages(messages)
       |> LLMChain.run()
     after

@@ -2,12 +2,9 @@ defmodule Fastrepl.Retrieval.Planner do
   use Retry
 
   alias LangChain.Chains.LLMChain
-  alias LangChain.ChatModels.ChatOpenAI, as: ChatModel
   alias LangChain.Message
 
   alias Fastrepl.Renderer
-
-  @model_id "gpt-4-turbo-2024-04-09"
 
   @spec from_issue(
           [module()],
@@ -46,7 +43,9 @@ defmodule Fastrepl.Retrieval.Planner do
             |> randomize
             |> cap(1_000)
             |> expiry(4_000) do
-      LLMChain.new!(%{llm: ChatModel.new!(%{model: @model_id, stream: false, temperature: 0})})
+      LLMChain.new!(%{
+        llm: Fastrepl.chat_model(%{model: "gpt-4o", stream: false, temperature: 0})
+      })
       |> LLMChain.add_tools(tools)
       |> LLMChain.add_messages(messages)
       |> LLMChain.run()

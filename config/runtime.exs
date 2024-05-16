@@ -127,8 +127,8 @@ if config_env() != :test do
   config :fastrepl, :github_app_id, System.get_env("GITHUB_APP_ID")
   config :fastrepl, :github_app_secret, System.get_env("GITHUB_APP_SECRET")
 
-  config :langchain, openai_key: System.get_env("OPENAI_API_KEY")
-  config :langchain, anthropic_key: System.get_env("ANTHROPIC_API_KEY")
+  config :fastrepl, :proxy_api_base, System.get_env("PROXY_API_BASE")
+  config :fastrepl, :proxy_api_key, System.get_env("PROXY_API_KEY")
 
   config :assent,
     github: [
