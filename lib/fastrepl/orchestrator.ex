@@ -137,6 +137,15 @@ defmodule Fastrepl.Orchestrator do
       end)
 
     callback = fn state, comments ->
+      files =
+        comments
+        |> Enum.map(&Repository.File.from(state.repo, &1))
+        |> Enum.filter(&(elem(&1, 0) == :ok))
+        |> Enum.map(&elem(&1, 1))
+
+      repo = files |> Enum.reduce(state.repo, &Repository.add_file!(&2, &1))
+      state = Map.put(state, :repo, repo)
+
       state
       |> Map.put(:wip_paths, [])
       |> update_in([:repo, Access.key!(:comments)], fn existing -> existing ++ comments end)
