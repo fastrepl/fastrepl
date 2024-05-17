@@ -20,6 +20,7 @@ defmodule Fastrepl.Repository.Comment do
   @derive Jason.Encoder
   @primary_key false
   embedded_schema do
+    # relative path
     field :file_path, :string
     field :line_start, :integer
     field :line_end, :integer
@@ -38,7 +39,6 @@ defmodule Fastrepl.Repository.Comment do
   defp validate_comment(changeset) do
     line_start = changeset |> get_field(:line_start)
     line_end = changeset |> get_field(:line_end)
-    lines = changeset |> get_field(:content) |> String.split("\n")
 
     cond do
       line_start < 1 ->
@@ -46,9 +46,6 @@ defmodule Fastrepl.Repository.Comment do
 
       line_start >= line_end ->
         add_error(changeset, :line_end, "should be greater than line start")
-
-      length(lines) < line_end ->
-        add_error(changeset, :line_end, "should be less than the number of total lines")
 
       true ->
         changeset

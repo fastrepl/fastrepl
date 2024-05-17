@@ -3,6 +3,18 @@ defmodule Fastrepl.RepositoryTest do
 
   alias Fastrepl.Repository
 
+  describe "add_file/2" do
+    test "it works" do
+      repo = Repository.new!(%{original_files: [], current_files: []})
+      file = Repository.File.new!(%{path: "a.py", content: "a"})
+
+      {:ok, repo} = Repository.add_file(repo, file)
+      assert length(repo.current_files) == 1
+
+      {:error, _} = Repository.add_file(repo, file)
+    end
+  end
+
   describe "single mutation" do
     test "edit" do
       files = [Repository.File.new!(%{path: "a.py", content: "a"})]

@@ -32,18 +32,37 @@ defmodule Fastrepl.Repository.File do
   end
 
   @spec from(Repository.t(), String.t()) :: {:ok, t} | {:error, Ecto.Changeset.t()}
-  def from(repo, path) do
+  def from(repo, path) when is_binary(path) do
     absoulte_path = Path.join(repo.root_path, path)
 
     case File.read(absoulte_path) do
-      {:ok, content} -> new(%{path: path, content: content})
-      _ -> new(%{path: path})
+      {:ok, content} ->
+        new(%{path: path, content: content})
+
+      _ ->
+        changeset =
+          %Repository.File{}
+          |> change(%{path: path})
+          |> add_error(:path, "not exist")
+
+        {:error, changeset}
     end
   end
 
+  @spec from(Repository.t(), Repository.Comment.t()) :: {:ok, t} | {:error, Ecto.Changeset.t()}
+  def from(repo, %Repository.Comment{file_path: file_path}) do
+    from(repo, file_path)
+  end
+
   @spec from!(Repository.t(), String.t()) :: t
-  def from!(repo, path) do
+  def from!(repo, path) when is_binary(path) do
     {:ok, file} = from(repo, path)
+    file
+  end
+
+  @spec from!(Repository.t(), Repository.Comment.t()) :: t
+  def from!(repo, %Repository.Comment{file_path: file_path}) do
+    {:ok, file} = from(repo, file_path)
     file
   end
 
