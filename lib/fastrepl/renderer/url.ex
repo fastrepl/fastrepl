@@ -41,13 +41,14 @@ defmodule Fastrepl.Renderer.URL do
           [_, repo_full_name] ->
             article = html |> Floki.parse_document!() |> Floki.find("article")
 
-            """
-            [#{repo_full_name}]
+            "\n" <>
+              """
+              [#{repo_full_name}]
 
-            ```README
-            #{Floki.text(article)}
-            ```
-            """
+              ```README
+              #{Floki.text(article)}
+              ```
+              """
 
           _ ->
             ""
@@ -63,7 +64,7 @@ defmodule Fastrepl.Renderer.URL do
               |> Enum.map(&"```#{&1.filename}\n#{&1.patch}\n```")
               |> Enum.join("\n\n")
 
-            "#{commit.commit.message}\n\n#{diff}"
+            "\n" <> "#{commit.commit.message}\n\n#{diff}"
 
           _ ->
             ""
@@ -82,11 +83,12 @@ defmodule Fastrepl.Renderer.URL do
               |> Enum.map(&Renderer.Github.render_comment/1)
               |> Enum.join("\n\n")
 
-            """
-            #{issue}
+            "\n" <>
+              """
+              #{issue}
 
-            #{comments}
-            """
+              #{comments}
+              """
 
           _ ->
             ""
@@ -105,11 +107,12 @@ defmodule Fastrepl.Renderer.URL do
               |> Enum.map(&Renderer.Github.render_comment/1)
               |> Enum.join("\n\n")
 
-            """
-            #{pr}
+            "\n" <>
+              """
+              #{pr}
 
-            #{comments}
-            """
+              #{comments}
+              """
 
           _ ->
             ""
@@ -123,11 +126,12 @@ defmodule Fastrepl.Renderer.URL do
           [_, repo, ref, file_path] ->
             content = get_content(repo, file_path, ref)
 
-            """
-            ```#{file_path}
-            #{content}
-            ```
-            """
+            "\n" <>
+              """
+              ```#{file_path}
+              #{content}
+              ```
+              """
 
           [_, repo, ref, file_path, line_start] ->
             content = get_content(repo, file_path, ref)
@@ -138,11 +142,12 @@ defmodule Fastrepl.Renderer.URL do
               |> Enum.slice(String.to_integer(line_start) - 1, 1)
               |> Enum.join("\n")
 
-            """
-            ```#{file_path}#L#{line_start}
-            #{selected}
-            ```
-            """
+            "\n" <>
+              """
+              ```#{file_path}#L#{line_start}
+              #{selected}
+              ```
+              """
 
           [_, repo, ref, file_path, line_start, line_end] ->
             content = get_content(repo, file_path, ref)
@@ -156,11 +161,12 @@ defmodule Fastrepl.Renderer.URL do
               )
               |> Enum.join("\n")
 
-            """
-            ```#{file_path}#L#{line_start}-#{line_end}
-            #{selected}
-            ```
-            """
+            "\n" <>
+              """
+              ```#{file_path}#L#{line_start}-#{line_end}
+              #{selected}
+              ```
+              """
 
           _ ->
             ""
@@ -168,11 +174,12 @@ defmodule Fastrepl.Renderer.URL do
 
       true ->
         try do
-          html
-          |> Readability.article()
-          |> Readability.readable_text()
+          case html |> Readability.article() |> Readability.readable_text() do
+            "" -> "(#{url})"
+            text -> text
+          end
         rescue
-          _ -> ""
+          _ -> "(#{url})"
         end
     end
   end

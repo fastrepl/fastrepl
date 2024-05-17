@@ -1,0 +1,30 @@
+# issue_understanding
+
+```elixir
+Application.fetch_env!(:fastrepl, :proxy_api_key)
+Application.fetch_env!(:fastrepl, :proxy_api_base)
+```
+
+## Section
+
+```elixir
+defmodule Notebook do
+  def render(repo_full_name, issue_number) do
+    Fastrepl.Github.get_issue!(repo_full_name, issue_number)
+    |> Fastrepl.Renderer.Github.render_issue()
+    |> IO.puts()
+
+    Fastrepl.Github.list_issue_comments!(repo_full_name, issue_number)
+    |> Enum.map(&Fastrepl.Renderer.Github.render_comment/1)
+    |> Enum.each(&IO.puts/1)
+  end
+end
+```
+
+```elixir
+Notebook.render("BerriAI/litellm", "3673")
+```
+
+```elixir
+Notebook.render("BerriAI/litellm", "3646")
+```

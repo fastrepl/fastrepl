@@ -1,22 +1,21 @@
-# eval
-
-## Section
+# repo_indexing
 
 ```elixir
 Application.fetch_env!(:fastrepl, :proxy_api_key)
 Application.fetch_env!(:fastrepl, :proxy_api_base)
 ```
 
+## Section
+
 ```elixir
 repo_full_name = "BerriAI/litellm"
+```
+
+```elixir
 repo_url = Fastrepl.Github.URL.clone_without_token(repo_full_name)
 
 repo_sha =
   repo_full_name
   |> Fastrepl.Github.get_repo!()
   |> Fastrepl.Github.get_latest_commit!()
-```
-
-```elixir
-{:ok, dir} = Fastrepl.FS.new_repo(repo_url, repo_full_name, repo_sha)
 ```

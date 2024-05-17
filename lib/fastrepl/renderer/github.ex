@@ -49,10 +49,7 @@ defmodule Fastrepl.Renderer.Github do
     body
     |> URL.from()
     |> Enum.reject(&String.contains?(&1, issue_url))
-    |> Enum.reduce(text, fn url, acc ->
-      content = Renderer.URL.render(url)
-      String.replace(acc, url, "```#{url}\n#{content}\n```")
-    end)
+    |> Enum.reduce(text, fn url, acc -> String.replace(acc, url, Renderer.URL.render(url)) end)
     |> String.trim()
   end
 
@@ -71,10 +68,7 @@ defmodule Fastrepl.Renderer.Github do
     body
     |> URL.from()
     |> Enum.reject(&String.contains?(&1, issue_url))
-    |> Enum.reduce(text, fn url, acc ->
-      content = Renderer.URL.render(url)
-      String.replace(acc, url, "```#{url}\n#{content}\n```")
-    end)
+    |> Enum.reduce(text, fn url, acc -> String.replace(acc, url, Renderer.URL.render(url)) end)
     |> String.trim()
   end
 end
