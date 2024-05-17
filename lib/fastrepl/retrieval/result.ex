@@ -80,3 +80,24 @@ defmodule Fastrepl.Retrieval.Result do
     end
   end
 end
+
+defimpl String.Chars, for: Fastrepl.Retrieval.Result do
+  def to_string(%Fastrepl.Retrieval.Result{} = result) do
+    lines = result.file_content |> String.split("\n")
+
+    snippets =
+      result.spans
+      |> Enum.map(fn {line_start, line_end} ->
+        lines
+        |> Enum.slice(line_start - 1, line_end - line_start + 1)
+        |> Enum.join("\n")
+      end)
+
+    """
+    ```#{result.file_path}
+    #{snippets |> Enum.join("\n...\n")}
+    ```
+    """
+    |> String.trim()
+  end
+end

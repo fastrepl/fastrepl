@@ -32,6 +32,32 @@ defmodule Fastrepl.RetrievalTest do
     end
   end
 
+  describe "Result.to_string/1" do
+    test "1" do
+      actual = %Retrieval.Result{
+        file_path: "a.py",
+        file_content: 1..20 |> Enum.map(&Integer.to_string/1) |> Enum.join("\n"),
+        spans: [{1, 2}, {6, 7}, {18, 20}]
+      }
+
+      assert actual |> to_string() ==
+               """
+               ```a.py
+               1
+               2
+               ...
+               6
+               7
+               ...
+               18
+               19
+               20
+               ```
+               """
+               |> String.trim()
+    end
+  end
+
   describe "Reranker.run/1" do
     test "it works with fuse" do
       actual =
