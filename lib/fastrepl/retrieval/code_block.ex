@@ -1,23 +1,32 @@
 defmodule Fastrepl.Retrieval.CodeBlock do
-  @spec find(String.t(), String.t()) :: {pos_integer(), pos_integer()}
+  @spec find(String.t(), String.t()) :: {pos_integer(), pos_integer()} | nil
   def find(query, code) do
     spans =
       query
       |> String.split(~r/\s*\n\s*\.\.\.\s*\n/)
       |> Enum.map(&find_best_overlap(&1, code))
+      |> Enum.reject(&is_nil/1)
 
-    line_start = Enum.min_by(spans, fn {line, _} -> line end) |> elem(0)
-    line_end = Enum.max_by(spans, fn {_, line} -> line end) |> elem(1)
-
-    {line_start, line_end}
+    if Enum.empty?(spans) do
+      nil
+    else
+      {
+        Enum.min_by(spans, fn {line, _} -> line end) |> elem(0),
+        Enum.max_by(spans, fn {_, line} -> line end) |> elem(1)
+      }
+    end
   end
 
   defp find_best_overlap(query, code) when is_binary(query) and is_binary(code) do
     find_best_overlap(String.split(query, "\n"), String.split(code, "\n"), 0, 0, -1)
   end
 
-  defp find_best_overlap(query_lines, [], _, best_index, _) do
-    {best_index + 1, best_index + 1 + length(query_lines)}
+  defp find_best_overlap(query_lines, [], _, best_index, score) do
+    if score > 0.2 do
+      {best_index + 1, best_index + 1 + length(query_lines)}
+    else
+      nil
+    end
   end
 
   defp find_best_overlap(

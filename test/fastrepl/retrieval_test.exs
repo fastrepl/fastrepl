@@ -164,5 +164,19 @@ defmodule Fastrepl.RetrievalTest do
       match = Retrieval.CodeBlock.find(String.trim(query), String.trim(code))
       assert match == {8, 15}
     end
+
+    test "wrong query" do
+      query = """
+      123
+      """
+
+      code = """
+      444
+      555
+      """
+
+      match = Retrieval.CodeBlock.find(String.trim(query), String.trim(code))
+      assert match == nil
+    end
   end
 end

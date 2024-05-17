@@ -9,7 +9,7 @@ defmodule Fastrepl.Repository.Comment do
 
   alias __MODULE__
   alias Fastrepl.Repository
-  alias Fastrepl.Retrieval
+  alias Fastrepl.Retrieval.CodeBlock
 
   use Retry
 
@@ -59,34 +59,26 @@ defmodule Fastrepl.Repository.Comment do
     case llm(messages(goal, files)) do
       {:ok, comments} ->
         comments =
-          comments
-          |> Enum.map(fn comment ->
-            %{
-              type: "modify",
-              target_filepath: target_filepath,
-              target_section: target_section,
-              comment_content: comment_content
-            } = comment
-
-            target_file = files |> Enum.find(&(&1.path == target_filepath))
-
-            case target_file do
-              nil ->
-                nil
-
-              file ->
-                {line_start, line_end} =
-                  Retrieval.CodeBlock.find(target_section, file.content)
-
-                %Repository.Comment{
-                  file_path: target_filepath,
-                  line_start: line_start,
-                  line_end: line_end,
-                  content: comment_content
-                }
+          for comment <- comments,
+              %{
+                type: "modify",
+                target_filepath: target_filepath,
+                target_section: target_section,
+                comment_content: comment_content
+              } = comment do
+            with file when not is_nil(file) <- Enum.find(files, &(&1.path == target_filepath)),
+                 span when not is_nil(span) <- CodeBlock.find(target_section, file.content) do
+              %Repository.Comment{
+                file_path: target_filepath,
+                line_start: elem(span, 0),
+                line_end: elem(span, 1),
+                content: comment_content
+              }
+            else
+              _ -> nil
             end
-          end)
-          |> Enum.filter(&(&1 != nil))
+          end
+          |> Enum.reject(&is_nil/1)
 
         {:ok, comments}
 
