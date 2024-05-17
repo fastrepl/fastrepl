@@ -143,7 +143,17 @@ defmodule Fastrepl.Orchestrator do
         |> Enum.filter(&(elem(&1, 0) == :ok))
         |> Enum.map(&elem(&1, 1))
 
-      repo = files |> Enum.reduce(state.repo, &Repository.add_file!(&2, &1))
+      repo =
+        files
+        |> Enum.reduce(state.repo, fn file, acc ->
+          result = Repository.add_file(acc, file)
+
+          case result do
+            {:ok, repo} -> repo
+            {:error, _} -> acc
+          end
+        end)
+
       state = Map.put(state, :repo, repo)
 
       state
@@ -357,14 +367,6 @@ defmodule Fastrepl.Orchestrator do
     :ok
   end
 
-  defp via_registry(id, is_demo) do
-    {:via, Registry, {registry_module(), id, %{type: if(is_demo, do: :demo, else: :live)}}}
-  end
-
-  defp registry_module() do
-    Application.fetch_env!(:fastrepl, :orchestrator_registry)
-  end
-
   defp precompute_embeddings(docs, cb) do
     docs
     |> Stream.map(&to_string/1)
@@ -374,6 +376,14 @@ defmodule Fastrepl.Orchestrator do
       cb.(length(chunks))
     end)
     |> Stream.run()
+  end
+
+  defp via_registry(id, is_demo) do
+    {:via, Registry, {registry_module(), id, %{type: if(is_demo, do: :demo, else: :live)}}}
+  end
+
+  defp registry_module() do
+    Application.fetch_env!(:fastrepl, :orchestrator_registry)
   end
 
   defp sync_with_views(state, key) when is_atom(key) do

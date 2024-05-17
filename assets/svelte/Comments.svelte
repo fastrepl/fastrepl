@@ -103,7 +103,7 @@
         out:fly={{ duration: 300, x: -30 }}
         class="pl-4 mt-1 flex flex-col gap-2 text-sm text-gray-700"
       >
-        {#each comments as comment (`${comment.file_path}-${comment.line_start}`)}
+        {#each comments as comment (`${comment.file_path}-${comment.content}`)}
           <div
             in:fly={{ duration: 300, x: 30 }}
             out:fly={{ duration: 300, x: -30 }}

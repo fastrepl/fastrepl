@@ -67,19 +67,25 @@ defmodule Fastrepl.Repository.Comment do
               comment_content: comment_content
             } = comment
 
-            {line_start, line_end} =
-              Fastrepl.String.find_code_block(
-                target_section,
-                Enum.find(files, fn file -> file.path == target_filepath end).content
-              )
+            target_file = files |> Enum.find(&(&1.path == target_filepath))
 
-            %Repository.Comment{
-              file_path: target_filepath,
-              line_start: line_start,
-              line_end: line_end,
-              content: comment_content
-            }
+            case target_file do
+              nil ->
+                nil
+
+              file ->
+                {line_start, line_end} =
+                  Fastrepl.String.find_code_block(target_section, file.content)
+
+                %Repository.Comment{
+                  file_path: target_filepath,
+                  line_start: line_start,
+                  line_end: line_end,
+                  content: comment_content
+                }
+            end
           end)
+          |> Enum.filter(&(&1 != nil))
 
         {:ok, comments}
 
@@ -91,7 +97,7 @@ defmodule Fastrepl.Repository.Comment do
   defp llm(messages) do
     retry with: exponential_backoff() |> randomize |> cap(2_000) |> expiry(6_000) do
       LLMChain.new!(%{
-        llm: Fastrepl.chat_model(%{model: "gpt-4-turbo", stream: false, temperature: 0})
+        llm: Fastrepl.chat_model(%{model: "gpt-4o", stream: false, temperature: 0})
       })
       |> LLMChain.add_messages(messages)
       |> LLMChain.run()

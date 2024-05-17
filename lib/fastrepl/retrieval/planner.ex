@@ -44,7 +44,7 @@ defmodule Fastrepl.Retrieval.Planner do
             |> cap(1_000)
             |> expiry(4_000) do
       LLMChain.new!(%{
-        llm: Fastrepl.chat_model(%{model: "gpt-4-turbo", stream: false, temperature: 0})
+        llm: Fastrepl.chat_model(%{model: "gpt-4o", stream: false, temperature: 0})
       })
       |> LLMChain.add_tools(tools)
       |> LLMChain.add_messages(messages)
