@@ -4,7 +4,10 @@ defmodule Fastrepl.Retrieval.Vectordb do
   @default_tok_k 5
   @default_threshold 0.5
 
-  def query(query, docs, opts \\ []) do
+  def query(_, _, _ \\ [])
+  def query(_, [], _), do: []
+
+  def query(query, docs, opts) do
     top_k = Keyword.get(opts, :top_k, @default_tok_k)
     threshold = Keyword.get(opts, :threshold, @default_threshold)
 

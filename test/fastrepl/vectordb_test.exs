@@ -8,6 +8,10 @@ defmodule Fastrepl.VectordbTest do
   alias Fastrepl.Retrieval.Chunker.Chunk
 
   describe "query/3" do
+    test "empty" do
+      assert "" |> Vectordb.query([]) == []
+    end
+
     test "with string" do
       Fastrepl.Retrieval.Embedding.Mock
       |> Mox.expect(:generate, 1, fn texts ->
