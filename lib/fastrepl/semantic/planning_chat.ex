@@ -45,7 +45,9 @@ defmodule Fastrepl.SemanticFunction.PlanningChat do
         end
     end
 
-    LLMChain.new!(%{llm: Fastrepl.chat_model(%{model: "gpt-4o", stream: false, temperature: 0})})
+    LLMChain.new!(%{
+      llm: Fastrepl.chat_model(%{model: "gpt-4-turbo", stream: false, temperature: 0})
+    })
     |> LLMChain.add_messages(messages)
     |> LLMChain.run(callback_fn: wrapped_callback_fn)
   end

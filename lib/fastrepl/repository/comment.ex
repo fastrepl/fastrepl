@@ -94,7 +94,7 @@ defmodule Fastrepl.Repository.Comment do
   defp llm(messages) do
     retry with: exponential_backoff() |> randomize |> cap(2_000) |> expiry(6_000) do
       LLMChain.new!(%{
-        llm: Fastrepl.chat_model(%{model: "gpt-4o", stream: false, temperature: 0})
+        llm: Fastrepl.chat_model(%{model: "gpt-4-turbo", stream: false, temperature: 0})
       })
       |> LLMChain.add_messages(messages)
       |> LLMChain.run()
