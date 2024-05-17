@@ -9,6 +9,7 @@ defmodule Fastrepl.Repository.Comment do
 
   alias __MODULE__
   alias Fastrepl.Repository
+  alias Fastrepl.Retrieval
 
   use Retry
 
@@ -75,7 +76,7 @@ defmodule Fastrepl.Repository.Comment do
 
               file ->
                 {line_start, line_end} =
-                  Fastrepl.String.find_code_block(target_section, file.content)
+                  Retrieval.CodeBlock.find(target_section, file.content)
 
                 %Repository.Comment{
                   file_path: target_filepath,

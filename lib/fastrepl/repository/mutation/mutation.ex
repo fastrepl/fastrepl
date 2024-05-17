@@ -8,6 +8,7 @@ defmodule Fastrepl.Repository.Mutation do
 
   alias __MODULE__
   alias Fastrepl.Repository
+  alias Fastrepl.Retrieval
 
   @type t :: %Mutation{}
 
@@ -72,7 +73,7 @@ defmodule Fastrepl.Repository.Mutation do
       |> add_error(:file_path, "not exist")
     else
       old_file = repo.current_files |> Enum.at(file_index)
-      {line_start, line_end} = Fastrepl.String.find_code_block(op.target, old_file.content)
+      {line_start, line_end} = Retrieval.CodeBlock.find(op.target, old_file.content)
 
       case Repository.File.replace(old_file, line_start, line_end, String.split(op.content, "\n")) do
         {:ok, new_file} ->

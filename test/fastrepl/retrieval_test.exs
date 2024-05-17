@@ -55,4 +55,88 @@ defmodule Fastrepl.RetrievalTest do
       assert actual == expected
     end
   end
+
+  describe "CodeBlock.find/2" do
+    test "full code match" do
+      query = """
+      function hello() {
+        console.log("hello");
+      }
+      """
+
+      code = """
+      const a = 1;
+
+      function hello() {
+        console.log("!");
+      }
+
+      function world() {
+        console.log("!");
+      }
+
+      const b = 2;
+      """
+
+      match = Retrieval.CodeBlock.find(String.trim(query), String.trim(code))
+      assert match == {3, 6}
+    end
+
+    test "full code almost match" do
+      query = """
+      const hello = () => {
+            console.log(" !");
+      }
+      """
+
+      code = """
+      const a = 1;
+
+      function hello() {
+        console.log("!");
+      }
+
+      function world() {
+        console.log("!");
+      }
+
+      const b = 2;
+      """
+
+      match = Retrieval.CodeBlock.find(String.trim(query), String.trim(code))
+      assert match == {3, 6}
+    end
+
+    test "handle ellipsis" do
+      query = """
+      const hello = () => {
+        console.log("!");
+        ...
+        console.log("*");
+      }
+      """
+
+      code = """
+      const a = 1;
+      const c = 2;
+
+      function world() {
+        console.log("world");
+      }
+
+      function hello() {
+        console.log("!");
+        console.log("%");
+        console.log("?");
+        console.log("#");
+        console.log("*");
+      }
+
+      const b = 2;
+      """
+
+      match = Retrieval.CodeBlock.find(String.trim(query), String.trim(code))
+      assert match == {8, 15}
+    end
+  end
 end
