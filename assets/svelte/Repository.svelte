@@ -19,7 +19,7 @@
       href="https://github.com/{repoFullName}/tree/{repoSha}"
       class="text-xs hover:underline ml-1 border border-gray-300 rounded-md px-1 py-0.5 text-gray-700"
     >
-      {repoSha.slice(0, 7)}
+      {repoSha?.slice(0, 7)}
     </a>
   </div>
 
