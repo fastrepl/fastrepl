@@ -74,10 +74,8 @@ defmodule Fastrepl.Github do
     result
   end
 
-  def get_latest_commit!(repository) do
-    [owner, repo] = String.split(repository.full_name, "/")
-    branch_name = repository.default_branch
-
+  def get_latest_commit!(repo_full_name, branch_name) do
+    [owner, repo] = String.split(repo_full_name, "/")
     {:ok, branch} = GitHub.Repos.get_branch(owner, repo, branch_name)
     branch.commit.sha
   end

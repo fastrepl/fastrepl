@@ -1,6 +1,6 @@
 defmodule Fastrepl.Orchestrator do
   use GenServer
-  require Logger
+  use Tracing
 
   alias Fastrepl.FS
   alias Fastrepl.Github
@@ -30,10 +30,8 @@ defmodule Fastrepl.Orchestrator do
 
     send(
       state.orchestrator_pid,
-      {:fetch_issue, %{repo_full_name: args.repo_full_name, issue_number: args.issue_number}}
+      {:init_repo, %{repo_full_name: args.repo_full_name, issue_number: args.issue_number}}
     )
-
-    send(state.orchestrator_pid, :clone_repo)
 
     {:ok, state}
   end
@@ -42,11 +40,11 @@ defmodule Fastrepl.Orchestrator do
   def handle_call(:state, _from, state) do
     {:reply,
      %{
-       repo: state.repo,
-       github_issue: state.github_issue,
-       current_step: state.current_step,
-       messages: state.messages,
-       indexing: state.indexing
+       repo: state[:repo],
+       github_issue: state[:github_issue],
+       current_step: state[:current_step],
+       messages: state[:messages],
+       indexing: state[:indexing]
      }, state}
   end
 
@@ -171,25 +169,47 @@ defmodule Fastrepl.Orchestrator do
 
   @impl true
   def handle_info(:search, state) do
+    span_ctx = Tracing.start_span("search", %{})
+    ctx = Tracing.current_ctx()
+
     task =
       Task.Supervisor.async_nolink(Fastrepl.TaskSupervisor, fn ->
-        tools = [
-          Fastrepl.Retrieval.Tool.SemanticSearch,
-          Fastrepl.Retrieval.Tool.KeywordSearch
-        ]
+        Tracing.attach_ctx(ctx)
+        Tracing.set_current_span(span_ctx)
+        Tracing.set_attribute("thread_id", state.thread_id)
 
-        context = %{
-          root_path: state.repo.root_path,
-          chunks: state.repo.chunks
-        }
+        %{tools: tools, context: context} =
+          Tracing.span %{}, "setup" do
+            tools = [
+              Fastrepl.Retrieval.Tool.SemanticSearch,
+              Fastrepl.Retrieval.Tool.KeywordSearch
+            ]
+
+            context = %{
+              root_path: state.repo.root_path,
+              chunks: state.repo.chunks
+            }
+
+            %{tools: tools, context: context}
+          end
+
+        planner_result =
+          Tracing.span %{}, "planner" do
+            tools |> Retrieval.Planner.from_issue(state.github_issue, state.github_issue_comments)
+          end
+
+        executor_result =
+          Tracing.span %{}, "executor" do
+            Retrieval.Executor.run(planner_result, context)
+          end
 
         results =
-          tools
-          |> Retrieval.Planner.from_issue(state.github_issue, state.github_issue_comments)
-          |> Retrieval.Executor.run(context)
+          executor_result
           |> Retrieval.Reranker.run()
           |> Retrieval.Result.fuse(min_distance: 10)
           |> Enum.take(3)
+
+        Tracing.end_span()
 
         results
         |> Enum.map(& &1.file_path)
@@ -247,85 +267,126 @@ defmodule Fastrepl.Orchestrator do
   end
 
   @impl true
-  def handle_info({:fetch_issue, data}, state) do
-    github_issue = Github.get_issue!(data.repo_full_name, data.issue_number)
-    github_issue_comments = Github.list_issue_comments!(data.repo_full_name, data.issue_number)
-
-    state =
-      state
-      |> Map.put(:github_issue, github_issue)
-      |> Map.put(:github_issue_comments, github_issue_comments)
-      |> sync_with_views(:github_issue)
-
-    {:noreply, state}
-  end
-
-  @impl true
-  def handle_info(:clone_repo, state) do
-    repo = state.repo.full_name |> Github.get_repo!()
-    repo_sha = repo |> Github.get_latest_commit!()
+  def handle_info({:init_repo, data}, state) do
+    span_ctx = Tracing.start_span("init_repo", %{})
+    ctx = Tracing.current_ctx()
 
     Task.Supervisor.start_child(Fastrepl.TaskSupervisor, fn ->
-      repo_url = Github.URL.clone_without_token(state.repo.full_name)
-      {:ok, root_path} = FS.new_repo(repo_url, state.repo.full_name, repo_sha)
+      Tracing.attach_ctx(ctx)
+      Tracing.set_current_span(span_ctx)
+      Tracing.set_attribute("thread_id", state.thread_id)
 
-      send(state.orchestrator_pid, {:post_clone_repo, root_path})
-    end)
+      %{repo_sha: repo_sha} =
+        Tracing.span %{}, "fetching" do
+          repo = Github.get_repo!(data.repo_full_name)
+          send(state.orchestrator_pid, {:update, :repo_description, repo.description})
 
-    state =
-      state
-      |> Map.put(:repo, %{state.repo | sha: repo_sha, description: repo.description})
-      |> sync_with_views(:repo)
+          repo_sha = Github.get_latest_commit!(data.repo_full_name, repo.default_branch)
+          send(state.orchestrator_pid, {:update, :repo_sha, repo_sha})
 
-    {:noreply, state}
-  end
+          github_issue = Github.get_issue!(data.repo_full_name, data.issue_number)
+          send(state.orchestrator_pid, {:update, :github_issue, github_issue})
 
-  @impl true
-  def handle_info({:post_clone_repo, root_path}, state) do
-    paths =
-      root_path
-      |> FS.list_informative_files()
-      |> Enum.map(&Path.relative_to(&1, root_path))
+          github_issue_comments =
+            Github.list_issue_comments!(data.repo_full_name, data.issue_number)
 
-    chunks =
-      root_path
-      |> FS.list_informative_files()
-      |> Enum.flat_map(&Retrieval.Chunker.chunk_file/1)
+          send(state.orchestrator_pid, {:update, :github_issue_comments, github_issue_comments})
+          %{repo_sha: repo_sha}
+        end
 
-    Task.Supervisor.start_child(Fastrepl.TaskSupervisor, fn ->
-      send(state.orchestrator_pid, {:repo_indexing, {:start, length(chunks)}})
+      %{root_path: root_path} =
+        Tracing.span %{}, "cloning" do
+          repo_url = Github.URL.clone_without_token(data.repo_full_name)
+          {:ok, root_path} = FS.new_repo(repo_url, data.repo_full_name, repo_sha)
+          %{root_path: root_path}
+        end
 
-      precompute_embeddings(chunks, fn n ->
-        send(state.orchestrator_pid, {:repo_indexing, {:progress, n}})
-      end)
+      Tracing.span %{}, "indexing" do
+        paths =
+          root_path
+          |> FS.list_informative_files()
+          |> Enum.map(&Path.relative_to(&1, root_path))
 
-      send(state.orchestrator_pid, {:repo_indexing, {:done, length(chunks)}})
-      send(state.orchestrator_pid, :search)
-    end)
+        send(state.orchestrator_pid, {:update, :repo_root_path, root_path})
+        send(state.orchestrator_pid, {:update, :repo_paths, paths})
 
-    state =
-      state
-      |> Map.put(:repo, %{state.repo | root_path: root_path, paths: paths, chunks: chunks})
-      |> sync_with_views(:repo)
+        chunks =
+          root_path
+          |> FS.list_informative_files()
+          |> Enum.flat_map(&Retrieval.Chunker.chunk_file/1)
 
-    {:noreply, state}
-  end
+        send(state.orchestrator_pid, {:update, :repo_chunks, chunks})
 
-  @impl true
-  def handle_info({:repo_indexing, {type, value}}, state) do
-    state =
-      case type do
-        :start ->
-          state |> Map.put(:indexing, %{state.indexing | progress: 0, total: value})
+        send(state.orchestrator_pid, {:update, :indexing_start, length(chunks)})
 
-        :progress ->
-          state |> update_in([:indexing, :progress], fn existing -> (existing || 0) + value end)
+        precompute_embeddings(chunks, fn n ->
+          send(state.orchestrator_pid, {:update, :indexing_progress, n})
+        end)
 
-        :done ->
-          state |> update_in([:indexing, :progress], fn _ -> value end)
+        send(state.orchestrator_pid, {:update, :indexing_done, length(chunks)})
       end
 
-    {:noreply, state |> sync_with_views(:indexing)}
+      send(state.orchestrator_pid, :search)
+
+      Tracing.end_span()
+    end)
+
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_info({:update, type, data}, state) do
+    state =
+      case type do
+        :indexing_start ->
+          state
+          |> Map.put(:indexing, %{state.indexing | progress: 0, total: data})
+          |> sync_with_views(:indexing)
+
+        :indexing_progress ->
+          state
+          |> update_in([:indexing, :progress], fn existing -> (existing || 0) + data end)
+          |> sync_with_views(:indexing)
+
+        :indexing_done ->
+          state
+          |> update_in([:indexing, :progress], fn _ -> data end)
+          |> sync_with_views(:indexing)
+
+        :repo_sha ->
+          state
+          |> Map.put(:repo, %{state.repo | sha: data})
+          |> sync_with_views(:repo)
+
+        :repo_description ->
+          state
+          |> Map.put(:repo, %{state.repo | description: data})
+          |> sync_with_views(:repo)
+
+        :repo_root_path ->
+          state
+          |> Map.put(:repo, %{state.repo | root_path: data})
+          |> sync_with_views(:repo)
+
+        :repo_paths ->
+          state
+          |> Map.put(:repo, %{state.repo | paths: data})
+          |> sync_with_views(:repo)
+
+        :repo_chunks ->
+          state
+          |> Map.put(:repo, %{state.repo | chunks: data})
+
+        :github_issue ->
+          state
+          |> Map.put(:github_issue, data)
+          |> sync_with_views(:github_issue)
+
+        :github_issue_comments ->
+          state |> Map.put(:github_issue_comments, data)
+      end
+
+    {:noreply, state}
   end
 
   def handle_info({ref, result}, state) when is_reference(ref) do

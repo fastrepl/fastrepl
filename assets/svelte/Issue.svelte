@@ -11,9 +11,9 @@
     href="https://github.com/{repoFullName}/issues/{issueNumber}"
     class="text-sm font-semibold hover:underline w-fit px-1"
   >
-    #{issueNumber}
+    #{issueNumber ?? ""}
   </a>
   <span class="text-sm truncate max-w-72">
-    {issueTitle}
+    {issueTitle ?? ""}
   </span>
 </div>

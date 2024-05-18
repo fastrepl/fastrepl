@@ -1,6 +1,5 @@
 defmodule FastreplWeb.ThreadLive do
   use FastreplWeb, :live_view
-  use Tracing
 
   alias Fastrepl.Repository
 
@@ -44,38 +43,34 @@ defmodule FastreplWeb.ThreadLive do
   end
 
   def mount(%{"id" => thread_id}, _session, socket) do
-    Tracing.span do
-      Tracing.set_attribute("thread_id", thread_id)
+    if connected?(socket) do
+      Phoenix.PubSub.subscribe(Fastrepl.PubSub, "thread:#{thread_id}")
+    end
 
-      if connected?(socket) do
-        Phoenix.PubSub.subscribe(Fastrepl.PubSub, "thread:#{thread_id}")
-      end
+    socket =
+      socket
+      |> assign(:thread_id, thread_id)
+      |> assign(:steps, ["Initialization", "Planning", "Execution"])
+      |> assign(:current_step, nil)
+      |> assign(:messages, [])
 
-      socket =
-        socket
-        |> assign(:thread_id, thread_id)
-        |> assign(:steps, ["Initialization", "Planning", "Execution"])
-        |> assign(:current_step, nil)
-        |> assign(:messages, [])
+    if socket.assigns[:live_action] != :demo and socket.assigns[:current_user] == nil do
+      {:ok, socket |> redirect(to: "/auth/github")}
+    else
+      case find_existing_orchestrator(thread_id) do
+        pid when is_pid(pid) ->
+          if socket.assigns[:live_action] == :demo do
+            send(self(), :demo)
+          end
 
-      if socket.assigns[:live_action] != :demo and socket.assigns[:current_user] == nil do
-        {:ok, socket |> redirect(to: "/auth/github")}
-      else
-        case find_existing_orchestrator(thread_id) do
-          pid when is_pid(pid) ->
-            if socket.assigns[:live_action] == :demo do
-              send(self(), :demo)
-            end
+          state = GenServer.call(pid, :state)
+          send(self(), {:sync, state})
 
-            state = GenServer.call(pid, :state)
-            send(self(), {:sync, state})
+          {:ok, socket |> assign(orchestrator_pid: pid)}
 
-            {:ok, socket |> assign(orchestrator_pid: pid)}
-
-          nil ->
-            dest = if socket.assigns[:live_action] == :demo, do: "/demo", else: "/"
-            {:ok, socket |> redirect(to: dest)}
-        end
+        nil ->
+          dest = if socket.assigns[:live_action] == :demo, do: "/demo", else: "/"
+          {:ok, socket |> redirect(to: dest)}
       end
     end
   end

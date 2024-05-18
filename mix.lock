@@ -1,6 +1,5 @@
 %{
   "abacus": {:hex, :abacus, "2.0.0", "bfc3a382e9d557198a82f3949e440ff297cae41dd22c1d3939272f5b7ef46ae1", [:mix], [], "hexpm", "5ce1a085c1182341a7924ce436f493b464688469024c4fad716da8744b458ecd"},
-  "abstracing": {:git, "https://github.com/msramos/abstracing.git", "d3fd435fa275c16f247e17d99a79fcc3fce7ef31", [branch: "main"]},
   "acceptor_pool": {:hex, :acceptor_pool, "1.0.0", "43c20d2acae35f0c2bcd64f9d2bde267e459f0f3fd23dab26485bf518c281b21", [:rebar3], [], "hexpm", "0cbcd83fdc8b9ad2eee2067ef8b91a14858a5883cb7cd800e6fcd5803e158788"},
   "assent": {:hex, :assent, "0.2.10", "27e544c3428996c8ad744d473b3ceae86e4eb7db6bc7432676420e67e9148dd7", [:mix], [{:certifi, ">= 0.0.0", [hex: :certifi, repo: "hexpm", optional: true]}, {:finch, "~> 0.15", [hex: :finch, repo: "hexpm", optional: true]}, {:jason, "~> 1.0", [hex: :jason, repo: "hexpm", optional: true]}, {:jose, "~> 1.8", [hex: :jose, repo: "hexpm", optional: true]}, {:mint, "~> 1.0", [hex: :mint, repo: "hexpm", optional: true]}, {:req, "~> 0.4", [hex: :req, repo: "hexpm", optional: true]}, {:ssl_verify_fun, ">= 0.0.0", [hex: :ssl_verify_fun, repo: "hexpm", optional: true]}], "hexpm", "8483bf9621e994795a70a4ad8fda725abfb6a9675d63a9bfd4217c76d4a2d82a"},
   "axon": {:git, "https://github.com/elixir-nx/axon.git", "ddc49cc3ce847d8eb033a8a0729f11ed70875f15", []},
