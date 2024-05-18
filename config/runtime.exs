@@ -146,7 +146,9 @@ if config_env() != :test do
     app_name: "app.fastrepl.com",
     apps: [{:fastrepl, System.get_env("GITHUB_APP_ID"), System.get_env("GITHUB_APP_SECRET")}],
     default_auth: {System.get_env("GITHUB_CLIENT_ID"), System.get_env("GITHUB_CLIENT_SECRET")}
+end
 
+if config_env() == :prod do
   config :opentelemetry_exporter,
     otlp_protocol: :http_protobuf,
     otlp_endpoint: "https://api.honeycomb.io:443",

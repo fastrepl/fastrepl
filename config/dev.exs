@@ -92,10 +92,9 @@ if System.get_env("DEBUG_OTEL") == "1" do
     traces_exporter: {:otel_exporter_stdout, []}
 else
   config :opentelemetry,
-    span_processor: :simple,
     traces_exporter: :otlp,
-    resource: [
-      service: [name: "core", namespace: "fastrepl"],
-      deployment: [environment: "dev"]
-    ]
+    span_processor: :simple,
+    otlp_protocol: :http_protobuf,
+    otlp_endpoint: "http://localhost:4318",
+    resource: [service: [name: "core", namespace: "fastrepl"]]
 end
