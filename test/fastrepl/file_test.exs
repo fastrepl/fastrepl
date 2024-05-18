@@ -23,7 +23,7 @@ defmodule Fastrepl.FileTest do
       assert file.content == @content
     end
 
-    test "invalid", %{root_path: root_path, relative_path: relative_path} do
+    test "invalid", %{root_path: root_path} do
       {:error, changeset} = Repository.File.from(%Repository{root_path: root_path}, "invalid.py")
       assert changeset.errors == [path: {"not exist", []}]
     end
@@ -31,7 +31,7 @@ defmodule Fastrepl.FileTest do
 
   describe "from/2 (comment)" do
     test "valid", %{root_path: root_path, relative_path: relative_path} do
-      {:ok, commenet} =
+      {:ok, comment} =
         Repository.Comment.new(%{
           file_path: relative_path,
           content: "hi",
@@ -39,14 +39,22 @@ defmodule Fastrepl.FileTest do
           line_end: 4
         })
 
-      assert commenet.content == "hi"
-
-      {:ok, file} = Repository.File.from(%Repository{root_path: root_path}, relative_path)
+      {:ok, file} = Repository.File.from(%Repository{root_path: root_path}, comment)
       assert file.path == relative_path
       assert file.content == @content
     end
 
-    test "invalid", %{root_path: root_path, relative_path: relative_path} do
+    test "invalid", %{root_path: root_path} do
+      {:ok, comment} =
+        Repository.Comment.new(%{
+          file_path: "invalid.py",
+          content: "hi",
+          line_start: 2,
+          line_end: 4
+        })
+
+      {:error, changeset} = Repository.File.from(%Repository{root_path: root_path}, comment)
+      assert changeset.errors == [path: {"not exist", []}]
     end
   end
 

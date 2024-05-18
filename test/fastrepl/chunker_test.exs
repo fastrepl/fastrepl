@@ -6,7 +6,6 @@ defmodule Fastrepl.ChunckerTest do
   use ExUnit.Case, async: true
 
   alias Fastrepl.Retrieval.Chunker
-  alias Fastrepl.Retrieval.Chunker.Chunk
 
   describe "chunk_code/2" do
     test "it works 1" do

@@ -4,7 +4,6 @@ defmodule FastreplWeb.ThreadsDemoLive do
   import FastreplWeb.GithubComponents, only: [selectable_repo: 1, selectable_issue: 1]
 
   alias Phoenix.LiveView.AsyncResult
-  alias Fastrepl.Orchestrator
   alias Fastrepl.Github
 
   @repos [
