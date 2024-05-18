@@ -21,5 +21,14 @@ config :fastrepl, Fastrepl.Native.CodeUtils,
   skip_compilation?: true,
   load_from: {:fastrepl, "priv/native/libcode_utils"}
 
+config :opentelemetry,
+  traces_exporter: :otlp,
+  span_processor: :batch,
+  resource: [
+    service: [name: "core", namespace: "fastrepl"],
+    deployment: [environment: "prod"]
+  ],
+  sampler: {:parent_based, %{root: {:trace_id_ratio_based, 1.0}}}
+
 # Runtime production configuration, including reading
 # of environment variables, is done on config/runtime.exs.

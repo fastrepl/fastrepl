@@ -59,6 +59,11 @@ defmodule Fastrepl.MixProject do
       {:dns_cluster, "~> 0.1.1"},
       {:bandit, "~> 1.2"},
       #
+      {:opentelemetry_exporter, "~> 1.2"},
+      {:opentelemetry, "~> 1.2"},
+      {:opentelemetry_api, "~> 1.2"},
+      {:abstracing, git: "https://github.com/msramos/abstracing.git", branch: "main"},
+      #
       {:kino, "~> 0.12.0", only: [:dev]},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:mox, "~> 1.0", only: :test},

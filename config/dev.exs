@@ -85,3 +85,17 @@ config :swoosh, :api_client, false
 config :fastrepl, :redis_url, "redis://default:password@localhost:6379"
 
 config :fastrepl, :clone_dir, "./tmp/repos"
+
+if System.get_env("DEBUG_OTEL") == "1" do
+  config :opentelemetry,
+    span_processor: :simple,
+    traces_exporter: {:otel_exporter_stdout, []}
+else
+  config :opentelemetry,
+    span_processor: :simple,
+    traces_exporter: :otlp,
+    resource: [
+      service: [name: "core", namespace: "fastrepl"],
+      deployment: [environment: "dev"]
+    ]
+end
