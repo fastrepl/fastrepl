@@ -10,8 +10,8 @@ defmodule Fastrepl.Orchestrator do
 
   @precompute_batch_size 50
 
-  def start(%{thread_id: thread_id, repo_full_name: _, issue_number: _} = args) do
-    GenServer.start(__MODULE__, args, name: via_registry(thread_id, args[:is_demo]))
+  def start_link(%{thread_id: thread_id, repo_full_name: _, issue_number: _} = args) do
+    GenServer.start_link(__MODULE__, args, name: via_registry(thread_id, args[:is_demo]))
   end
 
   @impl true

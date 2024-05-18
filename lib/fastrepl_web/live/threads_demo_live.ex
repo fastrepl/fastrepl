@@ -117,13 +117,18 @@ defmodule FastreplWeb.ThreadsDemoLive do
   def handle_event("submit", _params, socket) do
     thread_id = Nanoid.generate()
 
+    args = %{
+      thread_id: thread_id,
+      repo_full_name: socket.assigns.selected_repo,
+      issue_number: socket.assigns.selected_issue,
+      is_demo: true
+    }
+
     {:ok, _} =
-      Orchestrator.start(%{
-        thread_id: thread_id,
-        repo_full_name: socket.assigns.selected_repo,
-        issue_number: socket.assigns.selected_issue,
-        is_demo: true
-      })
+      DynamicSupervisor.start_child(
+        Fastrepl.OrchestratorSupervisor,
+        {Fastrepl.Orchestrator, args}
+      )
 
     {:noreply, socket |> redirect(to: "/demo/thread/#{thread_id}")}
   end
