@@ -4,6 +4,7 @@ mod chunk;
 mod diff;
 mod ds;
 mod git;
+mod lexical;
 mod query;
 
 #[cfg(test)]
@@ -19,6 +20,8 @@ rustler::init!(
         chunker_version,
         chunk_code,
         grep_file,
+        lexical_index,
+        lexical_search,
     ]
 );
 
@@ -94,4 +97,26 @@ fn unified_diff<'a>(
     new_content: &'a str,
 ) -> String {
     diff::unified(old_path, new_path, old_content, new_content)
+}
+
+#[rustler::nif(schedule = "DirtyCpu")]
+fn lexical_index(path: &str) -> String {
+    match lexical::index(path) {
+        Ok(index_path) => index_path,
+        Err(e) => {
+            println!("failed to index: {}", e);
+            "".to_string()
+        }
+    }
+}
+
+#[rustler::nif(schedule = "DirtyCpu")]
+fn lexical_search(index_path: &str, query: &str) -> Vec<ds::File> {
+    match lexical::search(index_path, query) {
+        Ok(files) => files,
+        Err(e) => {
+            println!("failed to search: {}", e);
+            vec![]
+        }
+    }
 }

@@ -37,3 +37,16 @@ pub struct GrepResult {
 pub struct GrepResultData {
     pub line_number: Option<usize>,
 }
+
+#[derive(rustler::NifStruct, serde::Deserialize)]
+#[module = "Fastrepl.Repository.File"]
+pub struct File {
+    pub path: String,
+    pub content: String
+}
+
+#[derive(serde::Deserialize)]
+pub struct RetrievedDocument {
+    pub path: Vec<String>,
+    pub content: Vec<String>,
+}

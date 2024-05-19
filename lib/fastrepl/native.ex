@@ -23,5 +23,11 @@ defmodule Fastrepl.Native.CodeUtils do
   @spec unified_diffs(String.t()) :: map()
   def unified_diffs(_repo_root_path), do: error()
 
+  @spec lexical_index(String.t()) :: String.t()
+  def lexical_index(_path), do: error()
+
+  @spec lexical_search(String.t(), String.t()) :: [Fastrepl.Repository.File.t()]
+  def lexical_search(_index_path, _query), do: error()
+
   defp error(), do: :erlang.nif_error(:nif_not_loaded)
 end
