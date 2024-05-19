@@ -23,3 +23,9 @@ fn big() {
     let result = _grep(code.as_bytes(), "langchain");
     assert_eq!(result.len(), 60);
 }
+
+#[test]
+fn literal() {
+    let result = _grep("fn write(&mut self, b: &[u8]) -> io::Result<usize> {".as_bytes(), "fn write(");
+    assert_eq!(result.len(), 1);
+}

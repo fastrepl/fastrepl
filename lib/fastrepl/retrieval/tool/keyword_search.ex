@@ -23,6 +23,15 @@ defmodule Fastrepl.Retrieval.Tool.KeywordSearch do
       type: "function",
       function: %{
         name: "keyword_search",
+        description:
+          """
+          Use this function if:
+          1. you have some keywords in mind, or it is directly mentioned in the context.
+          2. you want to find specific variables, functions, or classes in the codebase.
+
+          Note that this is doing line-oriented literal matching, not multi-line or full-text search.
+          """
+          |> String.trim(),
         parameters: %{
           type: "object",
           properties: %{
@@ -30,7 +39,27 @@ defmodule Fastrepl.Retrieval.Tool.KeywordSearch do
               type: "string",
               description:
                 """
-                This is not filename or path, but keyword or valid ripgrep regex that might be included in the code snippets.
+                This is not filename or path, but keyword that might be included in the file content.
+                You can use some tricks to make it more specific, such as:
+
+                1. Use language specific keyword to find the function. For example, rather than searching for hello, you can search for `def hello(`.
+                2. Similar to the above, you can search for `hello(` to find all invocations of the function.
+                3. If you think some specific structure is repeated in the codebase, you can search for common parts of the structure.
+
+                For example, if you find:
+
+                ```
+                %{
+                  type: "function",
+                  function: %{
+                    name: "keyword_search",
+                    description: "something"
+                    ...
+                  }
+                }
+                ```
+
+                And you want something similar in other files, you might want to search `type: "function",` or `function: %{`.
                 """
                 |> String.trim()
             }

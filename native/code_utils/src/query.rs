@@ -9,6 +9,7 @@ use crate::ds::GrepResult;
 pub fn grep<R: std::io::Read>(reader: R, pattern: &str) -> anyhow::Result<Vec<usize>> {
     let matcher = RegexMatcherBuilder::new()
         .case_smart(true)
+        .fixed_strings(true)
         .line_terminator(Some(b'\n'))
         .build(pattern)?;
 
