@@ -1,6 +1,4 @@
 defmodule Fastrepl.Retrieval.Planner do
-  use Retry
-
   alias Fastrepl.Renderer
 
   @spec from_issue(
@@ -41,16 +39,10 @@ defmodule Fastrepl.Retrieval.Planner do
   end
 
   defp request(tools, messages) do
-    retry with:
-            exponential_backoff()
-            |> randomize
-            |> cap(1_000)
-            |> expiry(4_000) do
-      Fastrepl.AI.chat(%{
-        model: "gpt-4-turbo",
-        messages: messages,
-        tools: Enum.map(tools, & &1.schema())
-      })
-    end
+    Fastrepl.AI.chat(%{
+      model: "gpt-4-turbo",
+      messages: messages,
+      tools: Enum.map(tools, & &1.schema())
+    })
   end
 end

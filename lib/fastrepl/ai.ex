@@ -1,4 +1,6 @@
 defmodule Fastrepl.AI do
+  use Retry
+
   defp client() do
     proxy_url = Application.fetch_env!(:fastrepl, :proxy_api_base)
     proxy_key = Application.fetch_env!(:fastrepl, :proxy_api_key)
@@ -12,11 +14,10 @@ defmodule Fastrepl.AI do
 
   def embedding(request) do
     resp =
-      client()
-      |> Req.post(
-        url: "/v1/embeddings",
-        json: request
-      )
+      retry with: exponential_backoff() |> randomize |> cap(1_000) |> expiry(4_000) do
+        client()
+        |> Req.post(url: "/v1/embeddings", json: request)
+      end
 
     case resp do
       {:ok, %{status: 200, body: %{"data" => data}}} ->
@@ -34,12 +35,10 @@ defmodule Fastrepl.AI do
     into = if request[:stream], do: get_handler(callback), else: nil
 
     resp =
-      client()
-      |> Req.post(
-        url: "/v1/chat/completions",
-        json: request,
-        into: into
-      )
+      retry with: exponential_backoff() |> randomize |> cap(1_000) |> expiry(4_000) do
+        client()
+        |> Req.post(url: "/v1/chat/completions", json: request, into: into)
+      end
 
     case resp do
       {:ok, %{body: %{"choices" => [%{"finish_reason" => "tool_calls", "message" => message}]}}} ->
