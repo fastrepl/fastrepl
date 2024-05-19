@@ -3,11 +3,10 @@ defmodule Fastrepl.Retrieval.Embedding.OpenAI do
 
   use Retry
   require Logger
-  alias Fastrepl.Tokenizer
 
   @model "text-embedding-3-small"
   @dimensions 512
-  @max_input_tokens 8191
+  # @max_input_tokens 8191
   # @max_batch_size 2048
 
   def generate([]) do
@@ -22,54 +21,18 @@ defmodule Fastrepl.Retrieval.Embedding.OpenAI do
             |> cap(3_000)
             |> expiry(12_000) do
       request(texts)
-    after
-      {:ok, result} ->
-        embedding = result |> Enum.sort_by(& &1["index"]) |> Enum.map(& &1["embedding"])
-        {:ok, embedding}
-
-      :context_length_exceeded ->
-        tok = Tokenizer.load!(:gpt_3_5)
-
-        texts
-        |> Enum.map(&Tokenizer.truncate(&1, tok, @max_input_tokens - 200))
-        |> generate
-    else
-      error -> error
     end
   end
 
   defp request(texts) do
-    url = "#{Application.fetch_env!(:fastrepl, :proxy_api_base)}/v1/embeddings"
-
-    headers = [
-      {"Authorization", "Bearer #{Application.get_env(:fastrepl, :proxy_api_key)}"},
-      {"Content-Type", "application/json"}
-    ]
-
-    body = %{
+    data = %{
       input: texts,
       model: @model,
       encoding_format: "float",
       dimensions: @dimensions
     }
 
-    case Req.post(url: url, headers: headers, json: body) do
-      {:ok, %{status: 200, body: %{"data" => data}}} ->
-        {:ok, data}
-
-      {:ok, %{body: %{"error" => %{"message" => message}}}} ->
-        if String.contains?(message, "maximum context length") do
-          :context_length_exceeded
-        else
-          {:error, message}
-        end
-
-      {:ok, %{status: 502} = res} ->
-        {:error, res}
-
-      {:error, exception} ->
-        {:error, exception}
-    end
+    Fastrepl.AI.embedding(data)
   end
 end
 

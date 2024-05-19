@@ -9,4 +9,12 @@ defmodule Fastrepl do
     |> Map.merge(proxy)
     |> LangChain.ChatModels.ChatOpenAI.new!()
   end
+
+  def req_client() do
+    Req.new()
+    |> OpentelemetryReq.attach(
+      propagate_trace_ctx: true,
+      no_path_params: true
+    )
+  end
 end

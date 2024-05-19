@@ -70,6 +70,7 @@ defmodule Fastrepl.MixProject do
       {:opentelemetry_exporter, "~> 1.2"},
       {:opentelemetry, "~> 1.2"},
       {:opentelemetry_api, "~> 1.2"},
+      {:opentelemetry_req, "~> 0.2.0"},
       #
       {:kino, "~> 0.12.0", only: [:dev]},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
