@@ -21,6 +21,24 @@ defmodule Fastrepl.ChunckerTest do
       assert chunks |> get_in([Access.at(0), Access.key!(:file_path)]) == "test.js"
       assert length(chunks) == 3
     end
+
+    test "enture max tokens" do
+      root_path = System.tmp_dir!() |> Path.join(Nanoid.generate())
+      Fastrepl.Native.CodeUtils.clone("https://github.com/brainlid/langchain", root_path, 1)
+
+      chunks =
+        root_path
+        |> Fastrepl.FS.list_informative_files()
+        |> Enum.flat_map(&Chunker.chunk_file/1)
+
+      tokenizer = Fastrepl.Tokenizer.load!(:gpt_3_5)
+
+      for chunk <- chunks do
+        content = Fastrepl.FS.read_lines!(chunk.file_path, chunk.span)
+        tokens = Fastrepl.Tokenizer.count_tokens(content, tokenizer)
+        assert tokens <= 3000
+      end
+    end
   end
 
   describe "version/0" do
