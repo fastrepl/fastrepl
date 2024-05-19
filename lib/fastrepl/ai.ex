@@ -42,8 +42,29 @@ defmodule Fastrepl.AI do
       )
 
     case resp do
-      {:ok, %{body: body}} -> {:ok, body}
-      {:error, error} -> {:error, error}
+      {:ok, %{body: %{"choices" => [%{"finish_reason" => "tool_calls", "message" => message}]}}} ->
+        tool_calls =
+          message["tool_calls"]
+          |> Enum.map(fn %{"function" => f} ->
+            %{
+              name: f["name"],
+              args: Jason.decode!(f["arguments"])
+            }
+          end)
+
+        {:ok, tool_calls}
+
+      {:ok, %{body: %{"choices" => [%{"delta" => delta}]}}} ->
+        {:ok, delta["content"]}
+
+      {:ok, %{body: %{"choices" => [%{"message" => message}]}}} ->
+        {:ok, message["content"]}
+
+      {:ok, %{body: body}} ->
+        {:ok, body}
+
+      {:error, error} ->
+        {:error, error}
     end
   end
 
@@ -64,5 +85,11 @@ defmodule Fastrepl.AI do
 
   defp decode(""), do: nil
   defp decode("[DONE]"), do: nil
-  defp decode(data), do: Jason.decode!(data)
+
+  defp decode(data) do
+    case Jason.decode(data) do
+      {:ok, r} -> r
+      _ -> nil
+    end
+  end
 end

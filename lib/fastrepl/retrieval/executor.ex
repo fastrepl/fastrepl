@@ -5,7 +5,7 @@ defmodule Fastrepl.Retrieval.Executor do
   def run({tools, calls}, context) do
     tasks =
       calls
-      |> Enum.map(fn {name, args} ->
+      |> Enum.map(fn %{name: name, args: args} ->
         tool = Enum.find(tools, fn tool -> tool.as_function().name == name end)
 
         if tool do

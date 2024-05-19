@@ -18,21 +18,26 @@ defmodule Fastrepl.Retrieval.Tool.KeywordSearch do
     |> Enum.reject(&is_nil/1)
   end
 
-  def as_function() do
-    LangChain.Function.new!(%{
-      name: "keyword_search",
-      function: fn _args, _context -> :noop end,
-      parameters_schema: %{
-        type: "object",
-        properties: %{
-          query: %{
-            type: "string",
-            description:
-              "This is not filename or path, but keyword or valid ripgrep regex that might be included in the code snippets."
-          }
-        },
-        required: ["query"]
+  def schema() do
+    %{
+      type: "function",
+      function: %{
+        name: "keyword_search",
+        parameters: %{
+          type: "object",
+          properties: %{
+            query: %{
+              type: "string",
+              description:
+                """
+                This is not filename or path, but keyword or valid ripgrep regex that might be included in the code snippets.
+                """
+                |> String.trim()
+            }
+          },
+          required: ["query"]
+        }
       }
-    })
+    }
   end
 end
