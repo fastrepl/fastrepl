@@ -63,17 +63,7 @@ defmodule Fastrepl.Orchestrator do
   @impl true
   def handle_cast({:chat, %{messages: messages, references: references}}, state) do
     callback = fn
-      {:update, content} ->
-        send(
-          state.orchestrator_pid,
-          {:response_update, %{content: content}}
-        )
-
-      {:complete, content} ->
-        send(
-          state.orchestrator_pid,
-          {:response_complete, %{content: content}}
-        )
+      {:delta, content} -> send(state.orchestrator_pid, {:update, :response, content})
     end
 
     PlanningChat.run(%{messages: messages, references: references}, callback)
@@ -231,8 +221,7 @@ defmodule Fastrepl.Orchestrator do
   end
 
   @impl true
-  def handle_info({action, %{content: content}}, state)
-      when action in [:response_update, :response_complete] do
+  def handle_info({action, %{content: content}}, state) when action in [:response_update] do
     messages =
       case action do
         :response_update ->
@@ -240,13 +229,6 @@ defmodule Fastrepl.Orchestrator do
           |> List.update_at(
             -1,
             fn message -> %{message | content: message.content <> content} end
-          )
-
-        :response_complete ->
-          state.messages
-          |> List.replace_at(
-            -1,
-            %{role: "assistant", content: content}
           )
       end
 
@@ -377,6 +359,16 @@ defmodule Fastrepl.Orchestrator do
 
         :github_issue_comments ->
           state |> Map.put(:github_issue_comments, data)
+
+        :response ->
+          messages =
+            state.messages
+            |> List.update_at(
+              -1,
+              fn message -> %{message | content: message.content <> data} end
+            )
+
+          state |> Map.put(:messages, messages)
       end
 
     {:noreply, state}

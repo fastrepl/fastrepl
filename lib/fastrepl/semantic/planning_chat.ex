@@ -1,54 +1,42 @@
 defmodule Fastrepl.SemanticFunction.PlanningChat do
-  use Retry
-
-  alias LangChain.Chains.LLMChain
-  alias LangChain.Message
-
-  def run(
-        %{messages: msgs, references: _refs},
-        callback \\ fn data -> IO.puts(inspect(data)) end
-      ) do
+  def run(%{messages: msgs, references: _refs}, callback \\ fn data -> IO.inspect(data) end) do
     messages = [
-      Message.new_system!("You are a helpful coding assistant."),
-      Message.new_user!("""
-      These are recent conversations:
-      #{msgs |> Enum.map(&"#{&1["role"]}: #{&1["content"]}") |> Enum.join("\n")}
+      %{
+        role: "system",
+        content: """
+        You are a helpful coding assistant.
+        """
+      },
+      %{
+        role: "user",
+        content: """
+        These are recent conversations:
+        #{msgs |> Enum.map(&"#{&1["role"]}: #{&1["content"]}") |> Enum.join("\n")}
 
-      Now, respond to the user.
-      """)
+        Now, respond to the user.
+        """
+      }
     ]
 
-    retry with:
-            exponential_backoff()
-            |> randomize
-            |> cap(1_000)
-            |> expiry(4_000) do
-      request(messages, callback)
-    after
-      {:ok, _, %Message{} = message} ->
-        {:ok, message}
-    else
-      error -> error
-    end
+    request(messages, callback)
   end
 
-  defp request(messages, original_callback_fn) do
-    wrapped_callback_fn = fn
-      %LangChain.MessageDelta{} = message ->
-        if message.content do
-          original_callback_fn.({:update, message.content})
-        end
-
-      %LangChain.Message{} = message ->
-        if message.content do
-          original_callback_fn.({:complete, message.content})
-        end
+  defp request(messages, original_callback) do
+    calllback = fn %{"choices" => [%{"delta" => delta}]} ->
+      if delta["content"] do
+        original_callback.({:delta, delta["content"]})
+      end
     end
 
-    LLMChain.new!(%{
-      llm: Fastrepl.chat_model(%{model: "gpt-4-turbo", stream: false, temperature: 0})
-    })
-    |> LLMChain.add_messages(messages)
-    |> LLMChain.run(callback_fn: wrapped_callback_fn)
+    Fastrepl.AI.chat(
+      %{
+        model: "gpt-4-turbo",
+        stream: true,
+        temperature: 0,
+        messages: messages
+      },
+      callback: calllback,
+      otel_attrs: %{module: __MODULE__}
+    )
   end
 end
