@@ -1,0 +1,64 @@
+# retrieval
+
+```elixir
+Application.fetch_env!(:fastrepl, :proxy_api_key)
+Application.fetch_env!(:fastrepl, :proxy_api_base)
+```
+
+## Section
+
+```elixir
+repo_full_name = "BerriAI/litellm"
+issue_number = "3673"
+
+comments = Fastrepl.Github.list_issue_comments!(repo_full_name, issue_number)
+issue = Fastrepl.Github.get_issue!(repo_full_name, issue_number)
+```
+
+```elixir
+root_path = ""
+
+tools = [
+  Fastrepl.Retrieval.Tool.SemanticSearch,
+  Fastrepl.Retrieval.Tool.KeywordSearch
+]
+
+ctx =
+  root_path
+  |> Fastrepl.Retrieval.Context.from()
+  |> Fastrepl.Retrieval.Context.add_tools(tools)
+
+ctx =
+  1..3
+  |> Enum.reduce(ctx, fn _, ctx ->
+    ctx
+    |> Fastrepl.Retrieval.Planner.run(issue, comments)
+    |> then(fn {ctx, plans} -> Fastrepl.Retrieval.Executor.run(ctx, plans) end)
+    |> then(fn {ctx, _result} -> ctx end)
+  end)
+
+ctx
+```
+
+```elixir
+result
+```
+
+```elixir
+planner_result = Fastrepl.Retrieval.Planner.from_issue(tools, issue, comments)
+
+chunks =
+  root_path
+  |> Fastrepl.FS.list_informative_files()
+  |> Enum.flat_map(&Fastrepl.Retrieval.Chunker.chunk_file/1)
+
+context = %{root_path: root_path, chunks: chunks}
+```
+
+```elixir
+Fastrepl.Retrieval.Tool.KeywordSearch.run(%{"query" => "x-litellm-version"}, context)
+```
+
+```elixir
+Fastrepl.Retrieval.Executor.run(planner_result, context)
+```

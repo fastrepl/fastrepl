@@ -3,18 +3,24 @@ defmodule Fastrepl.Retrieval.Tool.PathSearch do
 
   alias Fastrepl.FS
   alias Fastrepl.Retrieval.Result
+  alias Fastrepl.Retrieval.Context
 
-  def run(%{"query" => query}, %{root_path: root_path}) do
-    root_path
+  @spec run(Context.t(), map()) :: [Result.t()]
+  def run(%Context{} = ctx, %{"query" => query}) do
+    ctx.repo_root_path
     |> FS.search_paths(query)
     |> Enum.map(&Result.from!(&1))
+  end
+
+  def name() do
+    "path_search"
   end
 
   def schema() do
     %{
       type: "function",
       function: %{
-        name: "path_search",
+        name: name(),
         description:
           """
           Use this function if you have file path in mind, or it is mentioned in the context.

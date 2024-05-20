@@ -1,33 +1,33 @@
 defmodule Fastrepl.Retrieval.Executor do
-  require Logger
+  alias Fastrepl.Retrieval.Context
+  alias Fastrepl.Retrieval.Result
 
-  @spec run({[module()], [map()]}, map()) :: [map()]
-  def run({tools, calls}, context) do
+  @spec run(Context.t(), map()) :: {Context.t(), [Result.t()]}
+  def run(%Context{} = ctx, plans) do
     tasks =
-      calls
+      plans
       |> Enum.map(fn %{name: name, args: args} ->
-        tool = Enum.find(tools, fn tool -> tool.as_function().name == name end)
+        tool = Enum.find(ctx.tools, fn tool -> tool.name() == name end)
 
         if tool do
           Task.Supervisor.async_nolink(Fastrepl.TaskSupervisor, fn ->
-            tool.run(args, context)
+            tool.run(ctx, args)
           end)
         else
-          Logger.error("tool not found: #{name}")
           nil
         end
       end)
       |> Enum.reject(&is_nil/1)
 
-    tasks
-    |> Enum.flat_map(fn task ->
-      case Task.yield(task, 10 * 1000) || Task.shutdown(task) do
-        {:ok, result} ->
-          result
+    results =
+      tasks
+      |> Enum.flat_map(fn task ->
+        case Task.yield(task, 10 * 1000) || Task.shutdown(task) do
+          {:ok, result} -> result
+          _ -> []
+        end
+      end)
 
-        _ ->
-          []
-      end
-    end)
+    {ctx, results}
   end
 end

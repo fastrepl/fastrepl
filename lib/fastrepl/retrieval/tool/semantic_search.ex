@@ -3,17 +3,23 @@ defmodule Fastrepl.Retrieval.Tool.SemanticSearch do
 
   alias Fastrepl.Retrieval.Vectordb
   alias Fastrepl.Retrieval.Result
+  alias Fastrepl.Retrieval.Context
 
-  def run(%{"query" => query}, %{chunks: chunks}) do
-    Vectordb.query(query, chunks, top_k: 5, threshold: 0.3)
+  @spec run(Context.t(), map()) :: [Result.t()]
+  def run(%Context{} = ctx, %{"query" => query}) do
+    Vectordb.query(query, ctx.chunks, top_k: 5, threshold: 0.3)
     |> Enum.map(&Result.from!(&1))
+  end
+
+  def name() do
+    "semantic_search"
   end
 
   def schema() do
     %{
       type: "function",
       function: %{
-        name: "semantic_search",
+        name: name(),
         description:
           """
           use this function if you have description or similar code in mind that you want to retrieve.

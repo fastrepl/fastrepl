@@ -1,12 +1,9 @@
 defmodule Fastrepl.Retrieval.Planner do
   alias Fastrepl.Renderer
+  alias Fastrepl.Retrieval.Context
 
-  @spec from_issue(
-          [module()],
-          GitHub.Issue.t(),
-          [GitHub.Issue.Comment.t()]
-        ) :: {[module()], [map()]}
-  def from_issue(tools, issue, comments \\ []) do
+  @spec run(Context.t(), GitHub.Issue.t(), [GitHub.Issue.Comment.t()]) :: {Context.t(), [map()]}
+  def run(%Context{} = ctx, issue, comments) do
     messages = [
       %{
         role: "system",
@@ -29,20 +26,21 @@ defmodule Fastrepl.Retrieval.Planner do
       }
     ]
 
-    case request(tools, messages) do
-      {:ok, tool_calls} ->
-        {tools, tool_calls}
-
-      {:error, _} ->
-        {tools, []}
-    end
+    result = request(ctx.tools, messages)
+    {ctx, result}
   end
 
   defp request(tools, messages) do
-    Fastrepl.AI.chat(%{
-      model: "gpt-4-turbo",
-      messages: messages,
-      tools: Enum.map(tools, & &1.schema())
-    })
+    res =
+      Fastrepl.AI.chat(%{
+        model: "gpt-4-turbo",
+        messages: messages,
+        tools: Enum.map(tools, & &1.schema())
+      })
+
+    case res do
+      {:ok, tool_calls} -> tool_calls
+      {:error, _} -> []
+    end
   end
 end

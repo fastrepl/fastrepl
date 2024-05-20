@@ -2,10 +2,12 @@ defmodule Fastrepl.Retrieval.Tool.KeywordSearch do
   @behaviour Fastrepl.Retrieval.Tool
 
   alias Fastrepl.FS
+  alias Fastrepl.Retrieval.Context
   alias Fastrepl.Native.CodeUtils
   alias Fastrepl.Retrieval.Result
 
-  def run(%{"query" => query}, %{root_path: root_path}) do
+  @spec run(Context.t(), map()) :: [Result.t()]
+  def run(%Context{repo_root_path: root_path}, %{"query" => query}) do
     root_path
     |> FS.list_informative_files()
     |> Enum.map(fn path ->
@@ -18,11 +20,15 @@ defmodule Fastrepl.Retrieval.Tool.KeywordSearch do
     |> Enum.reject(&is_nil/1)
   end
 
+  def name() do
+    "keyword_search"
+  end
+
   def schema() do
     %{
       type: "function",
       function: %{
-        name: "keyword_search",
+        name: name(),
         description:
           """
           Use this function if:

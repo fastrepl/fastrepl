@@ -178,29 +178,22 @@ defmodule Fastrepl.Orchestrator do
         Tracing.set_current_span(span_ctx)
         Tracing.set_attribute("thread_id", state.thread_id)
 
-        %{tools: tools, context: context} =
-          Tracing.span %{}, "setup" do
-            tools = [
-              Fastrepl.Retrieval.Tool.SemanticSearch,
-              Fastrepl.Retrieval.Tool.KeywordSearch
-            ]
+        ctx =
+          state.repo.root_path
+          |> Retrieval.Context.from()
+          |> Retrieval.Context.add_tools([
+            Retrieval.Tool.SemanticSearch,
+            Retrieval.Tool.KeywordSearch
+          ])
 
-            context = %{
-              root_path: state.repo.root_path,
-              chunks: state.repo.chunks
-            }
-
-            %{tools: tools, context: context}
-          end
-
-        planner_result =
+        {ctx, plans} =
           Tracing.span %{}, "planner" do
-            tools |> Retrieval.Planner.from_issue(state.github_issue, state.github_issue_comments)
+            ctx |> Retrieval.Planner.run(state.github_issue, state.github_issue_comments)
           end
 
-        executor_result =
+        {_, executor_result} =
           Tracing.span %{}, "executor" do
-            Retrieval.Executor.run(planner_result, context)
+            Retrieval.Executor.run(ctx, plans)
           end
 
         results =
