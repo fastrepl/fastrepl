@@ -26,6 +26,9 @@ fn big() {
 
 #[test]
 fn literal() {
-    let result = _grep("fn write(&mut self, b: &[u8]) -> io::Result<usize> {".as_bytes(), "fn write(");
+    let result = _grep(
+        "fn write(&mut self, b: &[u8]) -> io::Result<usize> {".as_bytes(),
+        "fn write(",
+    );
     assert_eq!(result.len(), 1);
 }

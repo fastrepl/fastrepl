@@ -2,25 +2,18 @@
 #[module = "Fastrepl.Retrieval.Chunker.Chunk"]
 pub struct Chunk<'a> {
     pub file_path: &'a str,
-    pub content: &'a str,
+    pub content: String,
     pub span: (usize, usize),
 }
 
 impl<'a> std::fmt::Debug for Chunk<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let (line_start, line_end) = self.span;
-        let content = self
-            .content
-            .lines()
-            .skip(line_start - 1)
-            .take(line_end - line_start + 1)
-            .collect::<Vec<_>>()
-            .join("\n");
 
         writeln!(
             f,
             "```{}#L{}-L{}\n{}\n```",
-            self.file_path, line_start, line_end, content
+            self.file_path, line_start, line_end, self.content
         )?;
         writeln!(f, "---")
     }

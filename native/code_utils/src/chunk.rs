@@ -16,7 +16,7 @@ pub fn naive<'a>(path: &'a str, code: &'a str) -> Vec<ds::Chunk<'a>> {
         let chunk = ds::Chunk {
             file_path: path,
             span: (start + 1, end),
-            content: code,
+            content: code_lines[start..end].join("\n").clone(),
         };
 
         chunks.push(chunk);

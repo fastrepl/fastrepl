@@ -3466,6 +3466,7 @@ expression: result
             litellm.failure_callback = []
             litellm._async_failure_callback = []
             self.flush_cache()
+    
     ```
     ---
     ,
@@ -3478,6 +3479,7 @@ expression: result
             litellm.failure_callback = []
             litellm._async_failure_callback = []
             self.flush_cache()
+    
     ```
     ---
     ,
