@@ -1,7 +1,7 @@
 defmodule Fastrepl.GrepTest do
   use ExUnit.Case, async: true
 
-  alias Fastrepl.Retrieval.Grep
+  alias Fastrepl.Native.CodeUtils
 
   setup do
     path =
@@ -21,9 +21,9 @@ defmodule Fastrepl.GrepTest do
     %{path: path}
   end
 
-  describe "grep/2" do
+  describe "grep_file/2" do
     test "simple", %{path: path} do
-      result = Grep.grep_file(path, "b")
+      result = CodeUtils.grep_file(path, "b")
       assert result == [2, 5]
     end
   end
