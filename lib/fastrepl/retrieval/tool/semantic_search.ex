@@ -1,5 +1,6 @@
 defmodule Fastrepl.Retrieval.Tool.SemanticSearch do
   @behaviour Fastrepl.Retrieval.Tool
+  use Tracing
 
   alias Fastrepl.Retrieval.Vectordb
   alias Fastrepl.Retrieval.Result
@@ -7,8 +8,15 @@ defmodule Fastrepl.Retrieval.Tool.SemanticSearch do
 
   @spec run(Context.t(), map()) :: [Result.t()]
   def run(%Context{} = ctx, %{"query" => query}) do
-    Vectordb.query(query, ctx.chunks, top_k: 5, threshold: 0.3)
-    |> Enum.map(&Result.from!(&1))
+    Tracing.span %{}, "semantic_search" do
+      results =
+        Vectordb.query(query, ctx.chunks, top_k: 5, threshold: 0.3)
+        |> Enum.map(&Result.from!(&1))
+
+      Tracing.set_attribute("query", query)
+      Tracing.set_attribute("results_size", length(results))
+      results
+    end
   end
 
   def name() do

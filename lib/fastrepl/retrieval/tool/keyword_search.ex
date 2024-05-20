@@ -1,5 +1,6 @@
 defmodule Fastrepl.Retrieval.Tool.KeywordSearch do
   @behaviour Fastrepl.Retrieval.Tool
+  use Tracing
 
   alias Fastrepl.FS
   alias Fastrepl.Retrieval.Context
@@ -8,16 +9,23 @@ defmodule Fastrepl.Retrieval.Tool.KeywordSearch do
 
   @spec run(Context.t(), map()) :: [Result.t()]
   def run(%Context{repo_root_path: root_path}, %{"query" => query}) do
-    root_path
-    |> FS.list_informative_files()
-    |> Enum.map(fn path ->
-      lines = CodeUtils.grep_file(path, query)
+    Tracing.span %{}, "keyword_search" do
+      results =
+        root_path
+        |> FS.list_informative_files()
+        |> Enum.map(fn path ->
+          lines = CodeUtils.grep_file(path, query)
 
-      if Enum.empty?(lines),
-        do: nil,
-        else: Result.from!(path, lines)
-    end)
-    |> Enum.reject(&is_nil/1)
+          if Enum.empty?(lines),
+            do: nil,
+            else: Result.from!(path, lines)
+        end)
+        |> Enum.reject(&is_nil/1)
+
+      Tracing.set_attribute("query", query)
+      Tracing.set_attribute("results_size", length(results))
+      results
+    end
   end
 
   def name() do

@@ -1,5 +1,6 @@
 defmodule Fastrepl.Retrieval.Tool.PathSearch do
   @behaviour Fastrepl.Retrieval.Tool
+  use Tracing
 
   alias Fastrepl.FS
   alias Fastrepl.Retrieval.Result
@@ -7,9 +8,16 @@ defmodule Fastrepl.Retrieval.Tool.PathSearch do
 
   @spec run(Context.t(), map()) :: [Result.t()]
   def run(%Context{} = ctx, %{"query" => query}) do
-    ctx.repo_root_path
-    |> FS.search_paths(query)
-    |> Enum.map(&Result.from!(&1))
+    Tracing.span %{}, "path_search" do
+      results =
+        ctx.repo_root_path
+        |> FS.search_paths(query)
+        |> Enum.map(&Result.from!(&1))
+
+      Tracing.set_attribute("query", query)
+      Tracing.set_attribute("results_size", length(results))
+      results
+    end
   end
 
   def name() do
