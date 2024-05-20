@@ -1,6 +1,13 @@
 defmodule Fastrepl.Retrieval.Planner do
+  use Tracing
+
   alias Fastrepl.Renderer
   alias Fastrepl.Retrieval.Context
+
+  @models [
+    "gpt-4-turbo",
+    "claude-3-haiku"
+  ]
 
   @spec run(Context.t(), GitHub.Issue.t(), [GitHub.Issue.Comment.t()]) :: {Context.t(), [map()]}
   def run(%Context{} = ctx, issue, comments) do
@@ -29,14 +36,39 @@ defmodule Fastrepl.Retrieval.Planner do
   end
 
   defp request(tools, messages) do
-    res =
-      Fastrepl.AI.chat(%{
-        model: "gpt-4-turbo",
-        messages: messages,
-        tools: Enum.map(tools, & &1.schema())
-      })
+    Tracing.span %{}, "planner" do
+      ctx = Tracing.current_ctx()
 
-    case res do
+      tasks =
+        @models
+        |> Enum.map(fn model ->
+          Task.Supervisor.async_nolink(Fastrepl.TaskSupervisor, fn ->
+            Tracing.attach_ctx(ctx)
+
+            llm(
+              %{
+                model: model,
+                messages: messages,
+                tools: Enum.map(tools, & &1.schema()),
+                temperature: 0.5
+              },
+              otel_attrs: %{model: model}
+            )
+          end)
+        end)
+
+      tasks
+      |> Enum.flat_map(fn task ->
+        case Task.yield(task, 6 * 1000) || Task.shutdown(task) do
+          {:ok, result} -> result
+          _ -> []
+        end
+      end)
+    end
+  end
+
+  def llm(request, opts \\ []) do
+    case Fastrepl.AI.chat(request, opts) do
       {:ok, tool_calls} -> tool_calls
       {:error, _} -> []
     end
