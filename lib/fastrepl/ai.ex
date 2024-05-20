@@ -2,6 +2,8 @@ defmodule Fastrepl.AI do
   use Retry
   use Tracing
 
+  import Fastrepl, only: [trim: 1]
+
   defp client() do
     proxy_url = Application.fetch_env!(:fastrepl, :proxy_api_base)
     proxy_key = Application.fetch_env!(:fastrepl, :proxy_api_key)
@@ -41,6 +43,12 @@ defmodule Fastrepl.AI do
   def chat(request, opts \\ []) do
     opts = Keyword.merge([otel_attrs: %{}, callback: fn data -> IO.inspect(data) end], opts)
     into = if request[:stream], do: get_handler(opts[:callback]), else: nil
+
+    request =
+      request
+      |> Map.update!(:messages, &trim/1)
+      |> Map.update(:tools, nil, &trim/1)
+      |> Map.reject(fn {_k, v} -> is_nil(v) end)
 
     resp =
       retry with: exponential_backoff() |> randomize |> cap(1_000) |> expiry(4_000) do

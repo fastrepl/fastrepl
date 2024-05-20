@@ -25,4 +25,13 @@ defmodule Fastrepl do
       end
     )
   end
+
+  def trim(data) when is_list(data), do: Enum.map(data, &trim/1)
+
+  def trim(data) when is_map(data) do
+    data |> Map.new(fn {k, v} -> {k, trim(v)} end)
+  end
+
+  def trim(data) when is_binary(data), do: String.trim(data)
+  def trim(data), do: data
 end

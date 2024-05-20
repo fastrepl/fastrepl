@@ -7,11 +7,9 @@ defmodule Fastrepl.Retrieval.Planner do
     messages = [
       %{
         role: "system",
-        content:
-          """
-          You are a helpful code retrieval planner.
-          """
-          |> String.trim()
+        content: """
+        You are a helpful code retrieval planner.
+        """
       },
       %{
         role: "user",

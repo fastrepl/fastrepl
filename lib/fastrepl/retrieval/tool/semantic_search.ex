@@ -28,11 +28,9 @@ defmodule Fastrepl.Retrieval.Tool.SemanticSearch do
       type: "function",
       function: %{
         name: name(),
-        description:
-          """
-          use this function if you have description or similar code in mind that you want to retrieve.
-          """
-          |> String.trim(),
+        description: """
+        use this function if you have description or similar code in mind that you want to retrieve.
+        """,
         parameters: %{
           type: "object",
           properties: %{

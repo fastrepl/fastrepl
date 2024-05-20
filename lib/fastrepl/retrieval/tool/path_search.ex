@@ -29,21 +29,17 @@ defmodule Fastrepl.Retrieval.Tool.PathSearch do
       type: "function",
       function: %{
         name: name(),
-        description:
-          """
-          Use this function if you have file path in mind, or it is mentioned in the context.
-          """
-          |> String.trim(),
+        description: """
+        Use this function if you have file path in mind, or it is mentioned in the context.
+        """,
         parameters: %{
           type: "object",
           properties: %{
             query: %{
               type: "string",
-              description:
-                """
-                Exact filename, path, or partial keyword that might be included in the file path.
-                """
-                |> String.trim()
+              description: """
+              Exact filename, path, or partial keyword that might be included in the file path.
+              """
             }
           },
           required: ["query"]
