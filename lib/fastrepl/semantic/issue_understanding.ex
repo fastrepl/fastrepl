@@ -1,60 +1,77 @@
 defmodule Fastrepl.SemanticFunction.IssueUnderstanding do
-  use Retry
-
-  alias LangChain.Chains.LLMChain
-  alias LangChain.Message
-
-  @spec run(String.t()) :: String.t()
+  @spec run(String.t()) :: {:ok, map()} | {:error, any()}
   def run(rendered) do
     messages = [
-      Message.new_system!(
-        """
+      %{
+        role: "system",
+        content: """
         You are a senior software engineer with extensive experience in resolving issues in open source projects.
-        Your resonse should be wrapped in <issue_understanding> tags, in markdown format.
-
-        Like this:
-
-        <issue_understanding>
-        <YOUR_RESPONSE>
-        </issue_understanding>
         """
-        |> String.trim()
-      ),
-      Message.new_user!(
-        """
-        Please provide a concise summary of the Github issue and comments.
-        The summary should be straightforward, so that anyone can start working on the issue.
-
+      },
+      %{
+        role: "user",
+        content: """
         Here's the Github issue and comments. (This is scraped and parsed from the webpage.)
         #{rendered}
+
+        Please help me handle this.
         """
-        |> String.trim()
-      )
+      }
     ]
 
     llm(messages)
   end
 
   defp llm(messages) do
-    retry with: exponential_backoff() |> randomize |> cap(2_000) |> expiry(6_000) do
-      LLMChain.new!(%{
-        llm: Fastrepl.chat_model(%{model: "gpt-4-turbo", stream: false, temperature: 0})
-      })
-      |> LLMChain.add_messages(messages)
-      |> LLMChain.run()
-    after
-      {:ok, _, %Message{} = message} -> parse_section(message.content)
-    else
-      error -> error
+    result =
+      Fastrepl.AI.chat(
+        %{
+          model: "gpt-3.5-turbo",
+          messages: messages,
+          tools: [summarize_tool_schema()],
+          tool_choice: "required"
+        },
+        otel_attrs: %{module: __MODULE__}
+      )
+
+    case result do
+      {:ok, [%{args: %{"summary" => summary, "files" => files}}]} ->
+        {:ok, %{summary: summary, files: files}}
+
+      other ->
+        other
     end
   end
 
-  defp parse_section(content) do
-    pattern = ~r/<issue_understanding>\n(.*?)\n<\/issue_understanding>/s
-
-    case Regex.run(pattern, content) do
-      [_, code] -> {:ok, code}
-      _ -> {:error, content}
-    end
+  defp summarize_tool_schema() do
+    %{
+      type: "function",
+      function: %{
+        name: "summarize_issue",
+        description: """
+        Summarize the Github issue and comments in markdown format.
+        The summary should be straightforward, so that anyone can start working on the issue.
+        """,
+        parameters: %{
+          type: "object",
+          properties: %{
+            summary: %{
+              type: "string",
+              description: """
+              A concise summary of the Github issue and comments.
+              """
+            },
+            files: %{
+              type: "array",
+              description: """
+              Every single file mentioned in the issue. This can be complete or partial parth.
+              """,
+              items: %{type: "string"}
+            }
+          },
+          required: ["summary", "files"]
+        }
+      }
+    }
   end
 end

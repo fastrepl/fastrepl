@@ -63,22 +63,19 @@ defmodule Fastrepl.AI do
 
     case resp do
       {:ok, %{body: %{"choices" => [%{"finish_reason" => "tool_calls", "message" => message}]}}} ->
-        tool_calls =
-          message["tool_calls"]
-          |> Enum.map(fn %{"function" => f} ->
-            %{
-              name: f["name"],
-              args: Jason.decode!(f["arguments"])
-            }
-          end)
-
-        {:ok, tool_calls}
+        {:ok, parse_tool_calls(message)}
 
       {:ok, %{body: %{"choices" => [%{"delta" => delta}]}}} ->
         {:ok, delta["content"]}
 
       {:ok, %{body: %{"choices" => [%{"message" => message}]}}} ->
-        {:ok, message["content"]}
+        tool_calls = parse_tool_calls(message)
+
+        if tool_calls != [] do
+          {:ok, tool_calls}
+        else
+          {:ok, message["content"]}
+        end
 
       {:ok, %{body: body}} ->
         {:ok, body}
@@ -86,6 +83,17 @@ defmodule Fastrepl.AI do
       {:error, error} ->
         {:error, error}
     end
+  end
+
+  defp parse_tool_calls(message) do
+    message
+    |> get_in([Access.key("tool_calls", [])])
+    |> Enum.map(fn %{"function" => f} ->
+      %{
+        name: f["name"],
+        args: Jason.decode!(f["arguments"])
+      }
+    end)
   end
 
   defp get_handler(callback) do
