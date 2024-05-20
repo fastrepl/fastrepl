@@ -1,5 +1,6 @@
 defmodule Fastrepl.AI do
   use Retry
+  use Tracing
 
   defp client() do
     proxy_url = Application.fetch_env!(:fastrepl, :proxy_api_base)
@@ -12,11 +13,17 @@ defmodule Fastrepl.AI do
     )
   end
 
-  def embedding(request) do
+  def embedding(request, opts \\ []) do
+    opts = Keyword.merge([otel_attrs: %{}], opts)
+
     resp =
       retry with: exponential_backoff() |> randomize |> cap(1_000) |> expiry(4_000) do
         client()
-        |> Req.post(url: "/v1/embeddings", json: request)
+        |> Req.post(
+          url: "/v1/embeddings",
+          json: request,
+          otel_attrs: opts[:otel_attrs]
+        )
       end
 
     case resp do
@@ -31,13 +38,19 @@ defmodule Fastrepl.AI do
     end
   end
 
-  def chat(request, callback \\ fn data -> IO.inspect(data) end) do
-    into = if request[:stream], do: get_handler(callback), else: nil
+  def chat(request, opts \\ []) do
+    opts = Keyword.merge([otel_attrs: %{}, callback: fn data -> IO.inspect(data) end], opts)
+    into = if request[:stream], do: get_handler(opts[:callback]), else: nil
 
     resp =
       retry with: exponential_backoff() |> randomize |> cap(1_000) |> expiry(4_000) do
         client()
-        |> Req.post(url: "/v1/chat/completions", json: request, into: into)
+        |> Req.post(
+          url: "/v1/chat/completions",
+          json: request,
+          into: into,
+          otel_attrs: opts[:otel_attrs]
+        )
       end
 
     case resp do
