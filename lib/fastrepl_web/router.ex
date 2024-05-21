@@ -25,6 +25,10 @@ defmodule FastreplWeb.Router do
     plug :accepts, ["json"]
   end
 
+  pipeline :webhook do
+    plug :accepts, ["json"]
+  end
+
   scope "/", FastreplWeb do
     pipe_through [:browser]
 
@@ -53,5 +57,10 @@ defmodule FastreplWeb.Router do
     get "/", GithubAuthController, :sign_in
     get "/out", GithubAuthController, :sign_out
     get "/callback", GithubAuthController, :callback
+  end
+
+  scope "/webhook", FastreplWeb do
+    pipe_through :webhook
+    post "/github", GithubWebhookController, :index
   end
 end
