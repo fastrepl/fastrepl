@@ -51,9 +51,21 @@ defmodule Fastrepl.FS do
 
   def list_informative_files(root) do
     is_hidden = &String.starts_with?(Path.basename(&1), ".")
-    is_banned_dir = &(Path.basename(&1) in ["node_modules", "dist", "venv"])
-    is_banned_extension = &(Path.extname(&1) in ["", ".lock", ".pyc", ".ipynb"])
+    is_banned_dir = &(Path.basename(&1) in ["node_modules", "dist", "venv", "_next"])
     is_banned_filename = &(Path.basename(&1) in ["package-lock.json"])
+
+    is_banned_extension =
+      &(Path.extname(&1) in [
+          "",
+          ".lock",
+          ".pyc",
+          ".ipynb",
+          ".log",
+          ".json",
+          ".css",
+          ".txt",
+          ".html"
+        ])
 
     is_media_extension =
       &(Path.extname(&1) in [
