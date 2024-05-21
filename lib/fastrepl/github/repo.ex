@@ -66,4 +66,13 @@ defmodule Fastrepl.Github.Repo do
     |> Enum.map(&Base.decode64!/1)
     |> Enum.join("")
   end
+
+  def list_labels(repo_full_name) do
+    [owner, repo] = String.split(repo_full_name, "/")
+
+    case GitHub.Issues.list_labels_for_repo(owner, repo, per_page: 100, page: 1) do
+      {:ok, labels} -> labels |> Enum.map(& &1.name)
+      _ -> []
+    end
+  end
 end

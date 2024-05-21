@@ -45,6 +45,49 @@ defmodule Fastrepl.Github.Issue do
       comments: []
     }
   end
+
+  def list_open(repo_full_name) do
+    [owner, repo] = String.split(repo_full_name, "/")
+
+    GitHub.Issues.list_for_repo(
+      owner,
+      repo,
+      page: 1,
+      per_page: 20,
+      state: "open",
+      since: DateTime.utc_now() |> DateTime.add(-365, :day) |> DateTime.to_iso8601()
+    )
+  end
+
+  def list_open!(repo_full_name) do
+    {:ok, result} = list_open(repo_full_name)
+    result
+  end
+
+  def list_examples_per_label(repo_full_name, labels) do
+    [owner, repo] = String.split(repo_full_name, "/")
+
+    tasks =
+      labels
+      |> Enum.map(fn label ->
+        Task.Supervisor.async_nolink(Fastrepl.TaskSupervisor, fn ->
+          {:ok, issues} =
+            GitHub.Issues.list_for_repo(
+              owner,
+              repo,
+              page: 1,
+              per_page: 3,
+              labels: label
+            )
+
+          {label, issues}
+        end)
+      end)
+
+    tasks
+    |> Task.await_many(10_000)
+    |> Enum.reject(fn {_, issues} -> Enum.empty?(issues) end)
+  end
 end
 
 defmodule Fastrepl.Github.Issue.Comment do
