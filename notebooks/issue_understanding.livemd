@@ -13,24 +13,18 @@ defmodule Notebook do
     IO.puts("-- render --")
 
     issue =
-      Fastrepl.Github.get_issue!(repo_full_name, issue_number)
+      Fastrepl.Github.Issue.from!(repo_full_name, issue_number)
       |> Fastrepl.Renderer.Github.render_issue()
 
-    comments =
-      Fastrepl.Github.list_issue_comments!(repo_full_name, issue_number)
-      |> Enum.map(&Fastrepl.Renderer.Github.render_comment/1)
-      |> Enum.join("\n\n")
-
-    ret = issue <> comments
-    ret |> Kino.Text.new() |> Kino.render()
-    ret
+    issue |> Kino.Text.new() |> Kino.render()
+    issue
   end
 
   def understand(rendered) do
     IO.puts("-- understand --")
     {:ok, ret} = Fastrepl.SemanticFunction.IssueUnderstanding.run(rendered)
-    ret |> Kino.Text.new() |> Kino.render()
-    ret
+    IO.inspect(ret)
+    ret.summary |> Kino.Text.new() |> Kino.render()
   end
 end
 ```
@@ -44,3 +38,5 @@ Notebook.render("BerriAI/litellm", "3673") |> Notebook.understand()
 Notebook.render("BerriAI/litellm", "3646") |> Notebook.understand()
 :ok
 ```
+
+idd

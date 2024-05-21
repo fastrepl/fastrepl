@@ -178,7 +178,7 @@ defmodule Fastrepl.Orchestrator do
 
         {ctx, plans} =
           Tracing.span %{}, "planner" do
-            ctx |> Retrieval.Planner.run(state.github_issue, state.github_issue_comments)
+            ctx |> Retrieval.Planner.run(state.github_issue)
           end
 
         {_, executor_result} =
@@ -253,20 +253,13 @@ defmodule Fastrepl.Orchestrator do
 
       %{repo_sha: repo_sha} =
         Tracing.span %{}, "fetching" do
-          repo = Github.get_repo!(data.repo_full_name)
-          send(state.orchestrator_pid, {:update, :repo_description, repo.description})
+          repo = Github.Repo.from!(data.repo_full_name)
+          send(state.orchestrator_pid, {:update, :github_repo, repo})
 
-          repo_sha = Github.get_latest_commit!(data.repo_full_name, repo.default_branch)
-          send(state.orchestrator_pid, {:update, :repo_sha, repo_sha})
-
-          github_issue = Github.get_issue!(data.repo_full_name, data.issue_number)
+          github_issue = Github.Issue.from!(data.repo_full_name, data.issue_number)
           send(state.orchestrator_pid, {:update, :github_issue, github_issue})
 
-          github_issue_comments =
-            Github.list_issue_comments!(data.repo_full_name, data.issue_number)
-
-          send(state.orchestrator_pid, {:update, :github_issue_comments, github_issue_comments})
-          %{repo_sha: repo_sha}
+          %{repo_sha: repo.default_branch_head}
         end
 
       %{root_path: root_path} =
@@ -328,16 +321,6 @@ defmodule Fastrepl.Orchestrator do
           |> update_in([:indexing, :progress], fn _ -> data end)
           |> sync_with_views(:indexing)
 
-        :repo_sha ->
-          state
-          |> Map.put(:repo, %{state.repo | sha: data})
-          |> sync_with_views(:repo)
-
-        :repo_description ->
-          state
-          |> Map.put(:repo, %{state.repo | description: data})
-          |> sync_with_views(:repo)
-
         :repo_root_path ->
           state
           |> Map.put(:repo, %{state.repo | root_path: data})
@@ -352,13 +335,19 @@ defmodule Fastrepl.Orchestrator do
           state
           |> Map.put(:repo, %{state.repo | chunks: data})
 
+        :github_repo ->
+          state
+          |> Map.put(:repo, %{
+            state.repo
+            | sha: data.default_branch_head,
+              description: data.description
+          })
+          |> sync_with_views(:repo)
+
         :github_issue ->
           state
           |> Map.put(:github_issue, data)
           |> sync_with_views(:github_issue)
-
-        :github_issue_comments ->
-          state |> Map.put(:github_issue_comments, data)
 
         :response ->
           messages =

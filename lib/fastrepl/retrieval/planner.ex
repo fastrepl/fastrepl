@@ -1,6 +1,7 @@
 defmodule Fastrepl.Retrieval.Planner do
   use Tracing
 
+  alias Fastrepl.Github
   alias Fastrepl.Renderer
   alias Fastrepl.Retrieval.Context
 
@@ -9,8 +10,8 @@ defmodule Fastrepl.Retrieval.Planner do
     "claude-3-haiku"
   ]
 
-  @spec run(Context.t(), GitHub.Issue.t(), [GitHub.Issue.Comment.t()]) :: {Context.t(), [map()]}
-  def run(%Context{} = ctx, issue, comments) do
+  @spec run(Context.t(), Github.Issue.t()) :: {Context.t(), [map()]}
+  def run(%Context{} = ctx, issue) do
     messages = [
       %{
         role: "system",
@@ -22,7 +23,6 @@ defmodule Fastrepl.Retrieval.Planner do
         role: "user",
         content: """
         #{Renderer.Github.render_issue(issue)}
-        #{comments |> Enum.map(&Renderer.Github.render_comment/1) |> Enum.join("\n")}
         ---
 
         Based on the issue above, use tools to retrieve code snippets that are useful to understand or solve the issue.
