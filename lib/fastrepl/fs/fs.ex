@@ -17,38 +17,6 @@ defmodule Fastrepl.FS do
     end
   end
 
-  def build_tree(paths) do
-    paths
-    |> Enum.map(&Path.split/1)
-    |> Enum.reduce([], &build_tree(&1, &2, ""))
-  end
-
-  defp build_tree([filename], acc, current_path) do
-    case Enum.find_index(acc, &(&1.name == filename)) do
-      nil -> acc ++ [%{name: filename, path: Path.join(current_path, filename)}]
-      _ -> acc
-    end
-  end
-
-  defp build_tree([dirname | path], acc, current_path) do
-    case Enum.find_index(acc, &(&1.name == dirname)) do
-      nil ->
-        acc ++
-          [
-            %{
-              name: dirname,
-              children: build_tree(path, [], Path.join(current_path, dirname)),
-              path: Path.join(current_path, dirname)
-            }
-          ]
-
-      index ->
-        {node, acc} = List.pop_at(acc, index)
-        updated_children = build_tree(path, node.children, Path.join(current_path, dirname))
-        List.insert_at(acc, index, %{node | children: updated_children})
-    end
-  end
-
   def list_informative_files(root) do
     is_hidden = &String.starts_with?(Path.basename(&1), ".")
     is_banned_dir = &(Path.basename(&1) in ["node_modules", "dist", "venv", "_next"])

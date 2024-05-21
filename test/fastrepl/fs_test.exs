@@ -16,32 +16,32 @@ defmodule Fastrepl.FSTest do
     end
   end
 
-  describe "build_tree/1" do
+  describe "Tree.build/1" do
     test "flat" do
       paths = ["a.py", "b.py", "c.py"]
 
-      assert FS.build_tree(paths) == [
-               %{name: "a.py", path: "a.py"},
-               %{name: "b.py", path: "b.py"},
-               %{name: "c.py", path: "c.py"}
+      assert FS.Tree.build(paths) == [
+               %FS.Tree{name: "a.py", path: "a.py"},
+               %FS.Tree{name: "b.py", path: "b.py"},
+               %FS.Tree{name: "c.py", path: "c.py"}
              ]
     end
 
     test "recursive" do
       paths = ["src/a.py", "src/b.py", "src/c/d.py"]
 
-      assert FS.build_tree(paths) == [
-               %{
+      assert FS.Tree.build(paths) == [
+               %FS.Tree{
                  name: "src",
                  path: "src",
                  children: [
-                   %{name: "a.py", path: "src/a.py"},
-                   %{name: "b.py", path: "src/b.py"},
-                   %{
+                   %FS.Tree{name: "a.py", path: "src/a.py"},
+                   %FS.Tree{name: "b.py", path: "src/b.py"},
+                   %FS.Tree{
                      name: "c",
                      path: "src/c",
                      children: [
-                       %{name: "d.py", path: "src/c/d.py"}
+                       %FS.Tree{name: "d.py", path: "src/c/d.py"}
                      ]
                    }
                  ]
@@ -52,23 +52,23 @@ defmodule Fastrepl.FSTest do
     test "multiple files in a folder" do
       paths = ["src/folder/a.py", "src/folder/b.py", "src/folder/c/d.py", "src/folder/c/e.py"]
 
-      assert FS.build_tree(paths) == [
-               %{
+      assert FS.Tree.build(paths) == [
+               %FS.Tree{
                  name: "src",
                  path: "src",
                  children: [
-                   %{
+                   %FS.Tree{
                      name: "folder",
                      path: "src/folder",
                      children: [
-                       %{name: "a.py", path: "src/folder/a.py"},
-                       %{name: "b.py", path: "src/folder/b.py"},
-                       %{
+                       %FS.Tree{name: "a.py", path: "src/folder/a.py"},
+                       %FS.Tree{name: "b.py", path: "src/folder/b.py"},
+                       %FS.Tree{
                          name: "c",
                          path: "src/folder/c",
                          children: [
-                           %{name: "d.py", path: "src/folder/c/d.py"},
-                           %{name: "e.py", path: "src/folder/c/e.py"}
+                           %FS.Tree{name: "d.py", path: "src/folder/c/d.py"},
+                           %FS.Tree{name: "e.py", path: "src/folder/c/e.py"}
                          ]
                        }
                      ]
@@ -77,6 +77,23 @@ defmodule Fastrepl.FSTest do
                }
              ]
     end
+  end
+
+  describe "Tree.render/1" do
+    paths = ["src/folder/a.py", "src/folder/b.py", "src/folder/c/d.py", "src/folder/c/e.py"]
+    actual = paths |> FS.Tree.build() |> FS.Tree.render()
+
+    expected = """
+    src
+      folder
+        a.py
+        b.py
+        c
+          d.py
+          e.py
+    """
+
+    assert actual == expected
   end
 
   describe "read_lines!/2" do
