@@ -1,0 +1,19 @@
+# comment_writter
+
+```elixir
+Application.fetch_env!(:fastrepl, :proxy_api_key)
+Application.fetch_env!(:fastrepl, :proxy_api_base)
+```
+
+## Section
+
+```elixir
+results = [
+  Fastrepl.Retrieval.Result.from!("lib/fastrepl/retrieval/vectordb.ex"),
+  Fastrepl.Retrieval.Result.from!("test/fastrepl/vectordb_test.exs")
+]
+
+issue = Fastrepl.Github.Issue.mock("enhance vector db", "change default_tok_k to 2 and test it.")
+
+Fastrepl.Repository.Comment.Writer.run(results, issue)
+```

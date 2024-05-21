@@ -106,22 +106,10 @@ defmodule Fastrepl.Orchestrator do
   end
 
   @impl true
-  def handle_info({:make_comments, files}, state) do
-    goal = """
-    My goal is to resolve this issue:
-
-    #{Fastrepl.Renderer.Github.render_issue(state.github_issue)}
-    """
-
+  def handle_info({:make_comments, results}, state) do
     task =
       Task.Supervisor.async_nolink(Fastrepl.TaskSupervisor, fn ->
-        case Repository.Comment.from(goal, files) do
-          {:ok, comments} ->
-            comments
-
-          _ ->
-            []
-        end
+        Repository.Comment.Writer.run(results, state.github_issue)
       end)
 
     callback = fn state, comments ->
@@ -193,16 +181,16 @@ defmodule Fastrepl.Orchestrator do
           |> Enum.take(3)
 
         Tracing.end_span()
+        results
+      end)
 
+    callback = fn state, results ->
+      paths =
         results
         |> Enum.map(& &1.file_path)
         |> Enum.map(&Path.relative_to(&1, state.repo.root_path))
-        |> Enum.map(&Repository.File.from!(state.repo, &1))
-      end)
 
-    callback = fn state, files ->
-      paths = files |> Enum.map(& &1.path)
-      send(state.orchestrator_pid, {:make_comments, files})
+      send(state.orchestrator_pid, {:make_comments, results})
 
       state
       |> Map.put(:searching, false)
