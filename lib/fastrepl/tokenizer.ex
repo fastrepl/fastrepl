@@ -35,6 +35,8 @@ defmodule Fastrepl.Tokenizer do
     |> String.trim()
   end
 
+  def count_tokens("", _), do: 0
+
   def count_tokens(text, tokenizer) do
     tokenizer
     |> Bumblebee.apply_tokenizer(text)

@@ -3,6 +3,13 @@ defmodule Fastrepl.TokenizerTest do
   alias Fastrepl.Tokenizer
 
   describe "count_tokens/2" do
+    test "empty" do
+      tok = Tokenizer.load!(:gpt_4)
+
+      num = "" |> Tokenizer.count_tokens(tok)
+      assert num == 0
+    end
+
     test "llama_2" do
       tok = Tokenizer.load!(:llama_2)
 
