@@ -15,7 +15,12 @@ defimpl String.Chars, for: Fastrepl.Retrieval.Chunker.Chunk do
   alias Fastrepl.Retrieval.Chunker.Chunk
 
   def to_string(%Chunk{} = chunk) do
-    chunk.content
+    """
+    ```#{chunk.file_path}
+    #{chunk.content}
+    ```
+    """
+    |> String.trim()
   end
 end
 
