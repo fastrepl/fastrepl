@@ -23,7 +23,7 @@ defmodule Fastrepl.Renderer.Github do
     #{issue.body}
     </#{body_tag}>
     #{comments}
-    <#{toplevel_tag}>
+    </#{toplevel_tag}>
     """
 
     issue.body
@@ -132,12 +132,12 @@ defmodule Fastrepl.Renderer.Github do
               )
               |> Enum.join("\n")
 
-            "\n" <>
-              """
-              ```#{file_path}#L#{line_start}-#{line_end}
-              #{selected}
-              ```
-              """
+            """
+            [#{url}]
+            ```#{file_path}#L#{line_start}-#{line_end}
+            #{selected}
+            ```
+            """
 
           _ ->
             ""
