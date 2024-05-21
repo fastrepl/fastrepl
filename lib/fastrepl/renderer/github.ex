@@ -6,7 +6,9 @@ defmodule Fastrepl.Renderer.Github do
   alias Fastrepl.Github.Issue
   alias Fastrepl.Github.Repo
 
-  def render_issue(%Issue{} = issue) do
+  def render_issue(%Issue{} = issue, opts \\ []) do
+    opts = Keyword.merge([render_urls: true], opts)
+
     toplevel_tag = if issue.is_pr, do: "pr", else: "issue"
     title_prefix = if issue.is_pr, do: "PR ", else: "Issue "
     title_tag = if issue.is_pr, do: "pr_title", else: "issue_title"
@@ -26,11 +28,18 @@ defmodule Fastrepl.Renderer.Github do
     </#{toplevel_tag}>
     """
 
-    issue.body
-    |> URL.from()
-    |> Enum.reject(&String.contains?(&1, issue.url))
-    |> Enum.reduce(text, &String.replace(&2, &1, Renderer.Github.render_url(&1)))
-    |> String.trim()
+    rendered =
+      if !opts[:render_urls] do
+        text
+      else
+        issue.body
+        |> URL.from()
+        |> Enum.reject(&String.contains?(&1, issue.url))
+        |> Enum.reduce(text, &String.replace(&2, &1, Renderer.Github.render_url(&1)))
+        |> String.trim()
+      end
+
+    String.trim(rendered)
   end
 
   defp render_issue_comment(%Issue.Comment{} = comment) do
