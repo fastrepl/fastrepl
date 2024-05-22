@@ -44,9 +44,14 @@ defmodule FastreplWeb.Router do
       live "/dev/url", DevUrlLive, :none
     end
 
-    live_session :only, on_mount: [{Identity.LiveView, {:redirect_if_unauthenticated, to: "/"}}] do
+    live_session :only,
+      on_mount: [
+        {Identity.LiveView, {:redirect_if_unauthenticated, to: "/"}},
+        {FastreplWeb.Auth, :fetch_account}
+      ] do
       live "/thread/:id", ThreadLive, :none
       live "/setting", SettingLive, :none
+      live "/github/setup", GithubLive, :none
     end
   end
 
