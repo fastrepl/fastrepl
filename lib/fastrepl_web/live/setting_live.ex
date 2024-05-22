@@ -1,6 +1,7 @@
 defmodule FastreplWeb.SettingLive do
   use FastreplWeb, :live_view
 
+  alias Fastrepl.Github
   alias Fastrepl.Accounts
 
   def render(assigns) do
@@ -41,6 +42,12 @@ defmodule FastreplWeb.SettingLive do
           install
         </.link>
         our Github app to get access to your repositories.
+        <ul :if={!@github_repos.loading}>
+          <li :for={repo <- @github_repos.result}>
+            <span><%= repo %></span>
+          </li>
+        </ul>
+
         <h4 class="text-md font-semibold mt-4">Linear</h4>
         <p>Coming soon...</p>
       </div>
@@ -50,11 +57,16 @@ defmodule FastreplWeb.SettingLive do
 
   def mount(_params, _session, socket) do
     current_user = socket.assigns.current_user
+    current_account = socket.assigns.current_account
 
     socket =
       socket
       |> assign(:account_form, to_form(%{"name" => ""}))
       |> assign(:github_app_url, Application.fetch_env!(:fastrepl, :github_app_url))
+      |> assign_async(:github_repos, fn ->
+        repos = if(current_account, do: Github.list_installed_repos(current_account), else: [])
+        {:ok, %{github_repos: repos}}
+      end)
       |> assign_async(:accounts, fn ->
         {:ok, %{accounts: Accounts.list_accounts(current_user)}}
       end)

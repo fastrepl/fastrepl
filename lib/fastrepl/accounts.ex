@@ -10,6 +10,10 @@ defmodule Fastrepl.Accounts do
     Repo.all(from a in Account, where: a.user_id == ^user.id)
   end
 
+  def get_account_by_name(%User{} = user, name) do
+    Repo.one(from a in Account, where: a.user_id == ^user.id and a.name == ^name)
+  end
+
   def create_account(%User{} = user, attrs \\ %{}) do
     transaction =
       Ecto.Multi.new()

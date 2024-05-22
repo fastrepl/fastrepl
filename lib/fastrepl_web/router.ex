@@ -51,7 +51,7 @@ defmodule FastreplWeb.Router do
       ] do
       live "/thread/:id", ThreadLive, :none
       live "/setting", SettingLive, :none
-      live "/github/setup", GithubLive, :none
+      live "/github/setup", GithubSetupLive, :none
     end
   end
 

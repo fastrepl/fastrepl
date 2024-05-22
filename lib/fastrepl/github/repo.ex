@@ -1,6 +1,7 @@
 defmodule Fastrepl.Github.Repo do
   defstruct [:full_name, :description, :default_branch, :default_branch_head]
 
+  alias Fastrepl.Github
   alias GitHub.Repos, as: Repo
 
   def from(repo_full_name) do
@@ -65,6 +66,18 @@ defmodule Fastrepl.Github.Repo do
     |> String.split("\n")
     |> Enum.map(&Base.decode64!/1)
     |> Enum.join("")
+  end
+
+  def create_label(repo_full_name, installation_id) do
+    [owner, repo] = String.split(repo_full_name, "/")
+    token = Github.get_installation_token!(installation_id)
+
+    body = %{
+      name: "fastrepl",
+      color: "C5DEF5"
+    }
+
+    GitHub.Issues.create_label(owner, repo, body, auth: token)
   end
 
   def list_labels(repo_full_name) do

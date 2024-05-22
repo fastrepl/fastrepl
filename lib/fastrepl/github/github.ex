@@ -12,8 +12,9 @@ defmodule Fastrepl.Github do
     |> Repo.insert()
   end
 
-  def delete_app(%Github.App{} = app) do
-    Repo.delete(app)
+  def delete_app_by_installation_id(installation_id) do
+    from(app in Github.App, where: app.installation_id == ^installation_id)
+    |> Repo.delete_all()
   end
 
   def set_repos(%Github.App{} = app, names) do
@@ -25,6 +26,12 @@ defmodule Fastrepl.Github do
   def list_apps(%Account{} = account) do
     from(app in Github.App, where: app.account_id == ^account.id)
     |> Repo.all()
+  end
+
+  def list_installed_repos(%Account{} = account) do
+    from(app in Github.App, where: app.account_id == ^account.id)
+    |> Repo.all()
+    |> Enum.flat_map(& &1.repo_full_names)
   end
 
   def get_installation_token!(installation_id) do
