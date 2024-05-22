@@ -84,7 +84,6 @@ defmodule Fastrepl.MixProject do
       {:castore, ">= 0.0.0"},
       {:retry, "~> 0.18"},
       {:earmark, "~> 1.4"},
-      {:assent, "~> 0.2.9"},
       {:rustler, "~> 0.32.1"},
       {:live_svelte, "~> 0.13.1"},
       {:oapi_github, "~> 0.3.3"},
@@ -95,7 +94,10 @@ defmodule Fastrepl.MixProject do
        rev: "8befbd25d3b1c065a7c4d8ec402c04601833052f"},
       {:readability, "~> 0.12"},
       {:memoize, "~> 1.4"},
-      {:yaml_elixir, "~> 2.9"}
+      {:yaml_elixir, "~> 2.9"},
+      {:ueberauth, "~> 0.10"},
+      {:ueberauth_github, "~> 0.8"},
+      {:identity, github: "aj-foster/identity", branch: "main"}
     ]
   end
 

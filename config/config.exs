@@ -65,6 +65,13 @@ config :posthog,
   api_url: "https://us.i.posthog.com",
   api_key: "phc_qdLGlOK8YuOSe6dbBNlD3QbSzjASgIuJevfB9Xi4gKz"
 
+config :identity, repo: Fastrepl.Repo, user: Identity.User
+
+config :ueberauth, Ueberauth,
+  providers: [
+    github: {Ueberauth.Strategy.Github, []}
+  ]
+
 config :fastrepl, :env, Mix.env()
 config :fastrepl, :root, File.cwd!()
 

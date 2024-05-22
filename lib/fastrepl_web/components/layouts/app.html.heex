@@ -10,8 +10,8 @@
         GitHub
       </a>
 
-      <%= if @current_user do %>
-        <FastreplWeb.AuthComponents.github mode={:sign_out} href="/auth/github/out" />
+      <%= if assigns[:current_user] do %>
+        <FastreplWeb.AuthComponents.github mode={:sign_out} href="/logout" />
       <% else %>
         <FastreplWeb.AuthComponents.github mode={:sign_in} href="/auth/github" />
       <% end %>

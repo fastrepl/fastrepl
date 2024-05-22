@@ -1,7 +1,6 @@
 defmodule FastreplWeb.Router do
   use FastreplWeb, :router
-
-  import FastreplWeb.GithubAuth
+  import Identity.Plug
 
   if Application.compile_env(:fastrepl, :dev_routes) do
     scope "/dev" do
@@ -14,34 +13,39 @@ defmodule FastreplWeb.Router do
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
+    plug :fetch_identity
     plug :fetch_live_flash
     plug :put_root_layout, html: {FastreplWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
-    plug :fetch_github_user
   end
 
   pipeline :api do
     plug :accepts, ["json"]
   end
 
-  pipeline :webhook do
-    plug :accepts, ["json"]
+  scope "/", FastreplWeb do
+    pipe_through [:browser]
+
+    get "/login", AuthController, :login
+    get "/logout", AuthController, :logout
   end
 
   scope "/", FastreplWeb do
     pipe_through [:browser]
 
-    live_session :main,
-      on_mount: [{FastreplWeb.GithubAuth, :mount_current_user}] do
+    live_session :any, on_mount: [{Identity.LiveView, :fetch_identity}] do
       live "/", ThreadsLive, :none
-      live "/thread/:id", ThreadLive, :none
 
       live "/demo", ThreadsDemoLive, :demo
       live "/demo/thread/:id", ThreadLive, :demo
 
       live "/dev/debug", DevDebugLive, :none
       live "/dev/url", DevUrlLive, :none
+    end
+
+    live_session :only, on_mount: [{Identity.LiveView, {:redirect_if_unauthenticated, to: "/"}}] do
+      live "/thread/:id", ThreadLive, :none
     end
   end
 
@@ -51,16 +55,16 @@ defmodule FastreplWeb.Router do
     get "/patch/:id", GitPatchController, :patch
   end
 
-  scope "/auth/github", FastreplWeb do
-    pipe_through [:browser]
+  scope "/webhook", FastreplWeb do
+    pipe_through [:api]
 
-    get "/", GithubAuthController, :sign_in
-    get "/out", GithubAuthController, :sign_out
-    get "/callback", GithubAuthController, :callback
+    post "/github", GithubWebhookController, :index
   end
 
-  scope "/webhook", FastreplWeb do
-    pipe_through :webhook
-    post "/github", GithubWebhookController, :index
+  scope "/" do
+    pipe_through [:browser]
+
+    get "/auth/:provider", Identity.Controller, :oauth_request, as: :identity
+    get "/auth/:provider/callback", Identity.Controller, :oauth_callback, as: :identity
   end
 end

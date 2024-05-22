@@ -130,22 +130,14 @@ if config_env() != :test do
   config :fastrepl, :proxy_api_base, System.get_env("PROXY_API_BASE")
   config :fastrepl, :proxy_api_key, System.get_env("PROXY_API_KEY")
 
-  config :assent,
-    github: [
-      client_id: System.get_env("GITHUB_CLIENT_ID"),
-      client_secret: System.get_env("GITHUB_CLIENT_SECRET"),
-      redirect_uri:
-        if config_env() == :prod do
-          "https://app.fastrepl.com/auth/github/callback"
-        else
-          "http://localhost:4000/auth/github/callback"
-        end
-    ]
-
   config :oapi_github,
     app_name: "app.fastrepl.com",
     apps: [{:fastrepl, System.get_env("GITHUB_APP_ID"), System.get_env("GITHUB_APP_SECRET")}],
     default_auth: {System.get_env("GITHUB_CLIENT_ID"), System.get_env("GITHUB_CLIENT_SECRET")}
+
+  config :ueberauth, Ueberauth.Strategy.Github.OAuth,
+    client_id: System.get_env("GITHUB_CLIENT_ID"),
+    client_secret: System.get_env("GITHUB_CLIENT_SECRET")
 end
 
 if config_env() == :prod do
