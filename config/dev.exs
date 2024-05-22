@@ -86,6 +86,8 @@ config :fastrepl, :redis_url, "redis://default:password@localhost:6379"
 
 config :fastrepl, :clone_dir, "./tmp/repos"
 
+config :fastrepl, :github_app_url, "https://github.com/apps/fastrepl-dev/installations/new"
+
 if System.get_env("DEBUG_OTEL") == "1" do
   config :opentelemetry,
     span_processor: :simple,

@@ -16,6 +16,8 @@ config :swoosh, local: false
 # Do not print debug messages in production
 config :logger, level: :info
 
+config :fastrepl, :github_app_url, "https://github.com/apps/fastrepl/installations/new"
+
 config :fastrepl, Fastrepl.Native.CodeUtils,
   crate: :code_utils,
   skip_compilation?: true,

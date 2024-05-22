@@ -46,6 +46,7 @@ defmodule FastreplWeb.Router do
 
     live_session :only, on_mount: [{Identity.LiveView, {:redirect_if_unauthenticated, to: "/"}}] do
       live "/thread/:id", ThreadLive, :none
+      live "/setting", SettingLive, :none
     end
   end
 
