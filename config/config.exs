@@ -72,6 +72,11 @@ config :ueberauth, Ueberauth,
     github: {Ueberauth.Strategy.Github, []}
   ]
 
+config :fastrepl, Oban,
+  engine: Oban.Engines.Basic,
+  queues: [default: 10],
+  repo: Fastrepl.Repo
+
 config :fastrepl, :env, Mix.env()
 config :fastrepl, :root, File.cwd!()
 

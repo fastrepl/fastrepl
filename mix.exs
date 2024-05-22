@@ -97,7 +97,8 @@ defmodule Fastrepl.MixProject do
       {:yaml_elixir, "~> 2.9"},
       {:ueberauth, "~> 0.10"},
       {:ueberauth_github, "~> 0.8"},
-      {:identity, github: "aj-foster/identity", branch: "main"}
+      {:identity, github: "aj-foster/identity", branch: "main"},
+      {:oban, "~> 2.17"}
     ]
   end
 

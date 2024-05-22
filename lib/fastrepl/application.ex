@@ -14,6 +14,7 @@ defmodule Fastrepl.Application do
       {NodeJS.Supervisor, [path: LiveSvelte.SSR.NodeJS.server_path(), pool_size: 4]},
       FastreplWeb.Telemetry,
       Fastrepl.Repo,
+      {Oban, Application.fetch_env!(:fastrepl, Oban)},
       {DNSCluster, query: Application.get_env(:fastrepl, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Fastrepl.PubSub},
       # Start the Finch HTTP client for sending emails
