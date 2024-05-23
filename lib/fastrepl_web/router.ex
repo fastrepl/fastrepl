@@ -47,10 +47,10 @@ defmodule FastreplWeb.Router do
         {FastreplWeb.Auth, :fetch_account},
         FastreplWeb.Nav
       ] do
-      live "/", FastreplWeb.ThreadsLive, :none
+      live "/", FastreplWeb.MainLive, :none
+      live "/chats", FastreplWeb.ChatsLive, :none
+      live "/chat/:id", FastreplWeb.ChatLive, :none
       live "/settings", FastreplWeb.SettingsLive, :none
-      live "/threads", FastreplWeb.ThreadsDemoLive, :none
-      live "/thread/:id", FastreplWeb.ThreadLive, :none
     end
 
     live_session :others,

@@ -9,8 +9,10 @@ defmodule Fastrepl.Application do
   def start(_type, _args) do
     children = [
       {DynamicSupervisor, name: Fastrepl.OrchestratorSupervisor},
+      {DynamicSupervisor, name: Fastrepl.ChatManagerSupervisor},
       {Task.Supervisor, name: Fastrepl.TaskSupervisor},
       {Registry, keys: :unique, name: Fastrepl.OrchestratorRegistry},
+      {Registry, keys: :unique, name: Fastrepl.ChatManagerRegistry},
       {NodeJS.Supervisor, [path: LiveSvelte.SSR.NodeJS.server_path(), pool_size: 4]},
       FastreplWeb.Telemetry,
       Fastrepl.Repo,
