@@ -5,6 +5,8 @@ defmodule Fastrepl.Accounts.Account do
   alias Identity.User
   alias Fastrepl.Accounts.Member
 
+  @type t :: %__MODULE__{}
+
   schema "accounts" do
     field :name, :string
     belongs_to :user, User, type: :binary_id
