@@ -1,6 +1,10 @@
 require Protocol
 Protocol.derive(Jason.Encoder, Stripe.Customer)
 Protocol.derive(Jason.Encoder, Stripe.Subscription)
+Protocol.derive(Jason.Encoder, Stripe.SubscriptionItem)
+Protocol.derive(Jason.Encoder, Stripe.List)
+Protocol.derive(Jason.Encoder, Stripe.Plan)
+Protocol.derive(Jason.Encoder, Stripe.Price)
 
 defmodule Fastrepl.Billings.Billing do
   use Ecto.Schema

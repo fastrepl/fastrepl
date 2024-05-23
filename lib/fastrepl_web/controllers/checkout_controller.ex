@@ -4,15 +4,15 @@ defmodule FastreplWeb.CheckoutController do
 
   alias Stripe.Checkout.Session
 
-  def session(conn, params) do
-    item_index = Map.get(params, "i", "0") |> String.to_integer()
-
+  def session(conn, %{"a" => account_id, "i" => item_index}) do
     item =
-      Application.fetch_env!(:fastrepl, :stripe_items)
-      |> Enum.at(item_index)
+      item_index
+      |> String.to_integer()
+      |> then(&Enum.at(Application.fetch_env!(:fastrepl, :stripe_items), &1))
 
     result =
       Session.create(%{
+        metadata: %{"account_id" => account_id},
         ui_mode: :hosted,
         mode: :subscription,
         line_items: [%{price: item, quantity: 1}],

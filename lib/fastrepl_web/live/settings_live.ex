@@ -50,6 +50,14 @@ defmodule FastreplWeb.SettingsLive do
 
         <h4 class="text-md font-semibold mt-4">Linear</h4>
         <p>Coming soon...</p>
+
+        <h3 class="text-lg font-semibold mt-4">Pro</h3>
+        <.link
+          href={~p"/checkout/session?a=1&i=0"}
+          class="text-blue-500 font-semibold hover:underline"
+        >
+          Link
+        </.link>
       </div>
     </div>
     """
