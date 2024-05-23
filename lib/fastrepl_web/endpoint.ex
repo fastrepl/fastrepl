@@ -37,6 +37,11 @@ defmodule FastreplWeb.Endpoint do
   plug Plug.RequestId
   plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]
 
+  plug Stripe.WebhookPlug,
+    at: "/webhook/stripe",
+    handler: FastreplWeb.StripeWebhookHandler,
+    secret: Application.compile_env(:fastrepl, :stripe_webhook_secret)
+
   plug Plug.Parsers,
     parsers: [:urlencoded, :multipart, :json],
     pass: ["*/*"],
