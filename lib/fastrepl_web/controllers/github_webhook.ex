@@ -1,7 +1,4 @@
 defmodule FastreplWeb.GithubWebhookHandler do
-  use FastreplWeb, :controller
-  require Logger
-
   alias Fastrepl.Github
 
   # https://docs.github.com/en/webhooks/webhook-events-and-payloads#installation
@@ -12,13 +9,13 @@ defmodule FastreplWeb.GithubWebhookHandler do
       "repositories" => repos
     } = payload
 
-    if action == "created" do
-      app = Github.get_app_by_installation_id(installation_id)
-      Github.set_repos(app, Enum.map(repos, & &1["full_name"]))
-    end
+    case action do
+      "created" ->
+        app = Github.get_app_by_installation_id(installation_id)
+        Github.set_repos(app, Enum.map(repos, & &1["full_name"]))
 
-    if action == "deleted" do
-      Github.delete_app_by_installation_id(installation_id)
+      "deleted" ->
+        Github.delete_app_by_installation_id(installation_id)
     end
   end
 
@@ -26,16 +23,27 @@ defmodule FastreplWeb.GithubWebhookHandler do
   def handle_event("installation_repositories", payload) do
     %{
       "action" => action,
-      "installation" => %{"id" => _installation_id},
-      "repositories_added" => _repositories_added,
-      "repositories_removed" => _repositories_removed
+      "installation" => %{"id" => installation_id},
+      "repositories_added" => repositories_added,
+      "repositories_removed" => repositories_removed
     } = payload
 
-    if action == "added" do
-    end
+    app = Github.get_app_by_installation_id(installation_id)
 
-    if action == "removed" do
-    end
+    repos =
+      case action do
+        "added" ->
+          existing = app.repo_full_names |> MapSet.new()
+          added = repositories_added |> Enum.map(& &1["full_name"]) |> MapSet.new()
+          MapSet.union(existing, added) |> MapSet.to_list()
+
+        "removed" ->
+          existing = app.repo_full_names |> MapSet.new()
+          removed = repositories_removed |> Enum.map(& &1["full_name"]) |> MapSet.new()
+          MapSet.difference(existing, removed) |> MapSet.to_list()
+      end
+
+    Github.set_repos(app, repos)
   end
 
   # https://docs.github.com/en/webhooks/webhook-events-and-payloads#issues
@@ -48,21 +56,14 @@ defmodule FastreplWeb.GithubWebhookHandler do
     } = payload
 
     case action do
-      "opened" ->
-        :todo
-
-      "closed" ->
-        :todo
-
-      "labeled" ->
-        :todo
-
-      "unlabeled" ->
-        :todo
+      "opened" -> :ok
+      "closed" -> :ok
+      "labeled" -> :ok
+      "unlabeled" -> :ok
     end
   end
 
-  def handle_event(event, payload) do
-    Logger.info("Unhandled event: #{event}, #{inspect(payload)}")
+  def handle_event(event, _payload) do
+    {:error, %{type: :unhandled, event: event}}
   end
 end

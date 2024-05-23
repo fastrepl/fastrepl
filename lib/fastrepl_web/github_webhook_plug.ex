@@ -1,30 +1,46 @@
 defmodule FastreplWeb.GithubWebhookPlug do
+  @behaviour Plug
+
+  require Logger
+
   import Plug.Conn
+  alias Plug.Conn
 
-  def init(opts), do: opts
+  @impl true
+  def init(opts) do
+    path_info = String.split(opts[:at], "/", trim: true)
 
-  def call(conn, opts) do
-    handler = Keyword.fetch!(opts, :handler)
+    opts
+    |> Enum.into(%{})
+    |> Map.put_new(:path_info, path_info)
+  end
 
-    case conn.method do
-      "POST" ->
-        {:ok, body, conn} = read_body(conn)
+  @impl true
+  def call(
+        %Conn{method: "POST", path_info: path_info} = conn,
+        %{path_info: path_info, handler: handler}
+      ) do
+    with [event] <- get_req_header(conn, "x-github-event"),
+         {:ok, body, conn} <- read_body(conn),
+         {:ok, params} <- Jason.decode(body),
+         :ok <- handle_event!(handler, event, params) do
+      conn |> send_resp(200, "") |> halt()
+    else
+      error ->
+        Logger.error("while handling github webhook: #{inspect(error)}")
+        conn |> send_resp(200, "") |> halt()
+    end
+  end
 
-        params = Jason.decode!(body)
+  @impl true
+  def call(conn, _), do: conn
 
-        event =
-          conn
-          |> Plug.Conn.get_req_header("x-github-event")
-          |> Enum.at(0)
-
-        Task.Supervisor.async_nolink(Fastrepl.TaskSupervisor, fn ->
-          apply(handler, :handle_event, [event, params])
-        end)
-
-        send_resp(conn, 200, "")
-
-      _ ->
-        send_resp(conn, 404, "Not Found")
+  defp handle_event!(handler, event, params) do
+    case apply(handler, :handle_event, [event, params]) do
+      :ok -> :ok
+      {:ok, _} -> :ok
+      {:error, error} -> {:error, error}
+      _ -> :error
     end
   end
 end
