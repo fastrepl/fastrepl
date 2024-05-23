@@ -34,6 +34,8 @@ defmodule FastreplWeb.Router do
   scope "/", FastreplWeb do
     pipe_through [:browser]
 
+    get "/checkout/session", CheckoutController, :session
+
     live_session :any, on_mount: [{Identity.LiveView, :fetch_identity}] do
       live "/", ThreadsLive, :none
 

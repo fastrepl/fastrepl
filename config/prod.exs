@@ -23,6 +23,12 @@ config :fastrepl, Fastrepl.Native.CodeUtils,
   skip_compilation?: true,
   load_from: {:fastrepl, "priv/native/libcode_utils"}
 
+config :fastrepl, :stripe_items, [
+  "price_1OHh7mEABq1oJeLyVgvutg8Y",
+  "price_1OHh7mEABq1oJeLyVgvutg8Y",
+  "price_1OHh7mEABq1oJeLyVgvutg8Y"
+]
+
 config :opentelemetry,
   traces_exporter: :otlp,
   span_processor: :batch,

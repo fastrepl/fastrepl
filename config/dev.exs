@@ -88,6 +88,12 @@ config :fastrepl, :clone_dir, "./tmp/repos"
 
 config :fastrepl, :github_app_url, "https://github.com/apps/fastrepl-dev/installations/new"
 
+config :fastrepl, :stripe_items, [
+  "price_1OHh7mEABq1oJeLyVgvutg8Y",
+  "price_1OHh7mEABq1oJeLyVgvutg8Y",
+  "price_1OHh7mEABq1oJeLyVgvutg8Y"
+]
+
 if System.get_env("DEBUG_OTEL") == "1" do
   config :opentelemetry,
     span_processor: :simple,
