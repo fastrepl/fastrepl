@@ -98,7 +98,8 @@ defmodule Fastrepl.MixProject do
       {:ueberauth, "~> 0.10"},
       {:ueberauth_github, "~> 0.8"},
       {:identity, github: "aj-foster/identity", branch: "main"},
-      {:oban, "~> 2.17"}
+      {:oban, "~> 2.17"},
+      {:stripity_stripe, "~> 3.2"}
     ]
   end
 
