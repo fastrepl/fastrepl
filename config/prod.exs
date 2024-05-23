@@ -29,6 +29,8 @@ config :fastrepl, :stripe_items, [
   "price_1OHh7mEABq1oJeLyVgvutg8Y"
 ]
 
+config :fastrepl, :stripe_webhook_secret, System.get_env("STRIPE_WEBHOOK_SECRET")
+
 config :opentelemetry,
   traces_exporter: :otlp,
   span_processor: :batch,

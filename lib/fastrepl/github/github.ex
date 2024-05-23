@@ -12,6 +12,11 @@ defmodule Fastrepl.Github do
     |> Repo.insert()
   end
 
+  def get_app_by_installation_id(installation_id) do
+    from(app in Github.App, where: app.installation_id == ^installation_id)
+    |> Repo.one()
+  end
+
   def delete_app_by_installation_id(installation_id) do
     from(app in Github.App, where: app.installation_id == ^installation_id)
     |> Repo.delete_all()

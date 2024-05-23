@@ -94,6 +94,8 @@ config :fastrepl, :stripe_items, [
   "price_1OHh7mEABq1oJeLyVgvutg8Y"
 ]
 
+config :fastrepl, :stripe_webhook_secret, "http://localhost:4000/webhook/stripe"
+
 if System.get_env("DEBUG_OTEL") == "1" do
   config :opentelemetry,
     span_processor: :simple,

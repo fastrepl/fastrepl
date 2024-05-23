@@ -37,6 +37,10 @@ defmodule FastreplWeb.Endpoint do
   plug Plug.RequestId
   plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]
 
+  plug FastreplWeb.GithubWebhookPlug,
+    at: "/webhook/github",
+    handler: FastreplWeb.GithubWebhookHandler
+
   plug Stripe.WebhookPlug,
     at: "/webhook/stripe",
     handler: FastreplWeb.StripeWebhookHandler,

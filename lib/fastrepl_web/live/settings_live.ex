@@ -1,4 +1,4 @@
-defmodule FastreplWeb.SettingLive do
+defmodule FastreplWeb.SettingsLive do
   use FastreplWeb, :live_view
 
   alias Fastrepl.Github

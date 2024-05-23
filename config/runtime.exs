@@ -150,5 +150,4 @@ if config_env() == :prod do
     ]
 end
 
-config :fastrepl, :stripe_webhook_secret, System.get_env("STRIPE_WEBHOOK_SECRET")
 config :stripity_stripe, api_key: System.get_env("STRIPE_SECRET_KEY")

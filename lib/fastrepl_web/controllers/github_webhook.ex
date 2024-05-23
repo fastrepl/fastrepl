@@ -1,24 +1,11 @@
-defmodule FastreplWeb.GithubWebhookController do
+defmodule FastreplWeb.GithubWebhookHandler do
   use FastreplWeb, :controller
   require Logger
 
   alias Fastrepl.Github
 
-  def index(conn, params) do
-    event =
-      conn
-      |> Plug.Conn.get_req_header("x-github-event")
-      |> Enum.at(0)
-
-    Task.Supervisor.async_nolink(Fastrepl.TaskSupervisor, fn ->
-      handle_event(event, params, conn.assigns.current_account)
-    end)
-
-    conn |> send_resp(200, "")
-  end
-
   # https://docs.github.com/en/webhooks/webhook-events-and-payloads#installation
-  defp handle_event("installation", payload, current_account) do
+  def handle_event("installation", payload) do
     %{
       "action" => action,
       "installation" => %{"id" => installation_id},
@@ -26,7 +13,8 @@ defmodule FastreplWeb.GithubWebhookController do
     } = payload
 
     if action == "created" do
-      Github.add_app(current_account, %{repo_full_names: Enum.map(repos, & &1["full_name"])})
+      app = Github.get_app_by_installation_id(installation_id)
+      Github.set_repos(app, Enum.map(repos, & &1["full_name"]))
     end
 
     if action == "deleted" do
@@ -35,7 +23,7 @@ defmodule FastreplWeb.GithubWebhookController do
   end
 
   # https://docs.github.com/en/webhooks/webhook-events-and-payloads#installation_repositories
-  defp handle_event("installation_repositories", payload, _current_account) do
+  def handle_event("installation_repositories", payload) do
     %{
       "action" => action,
       "installation" => %{"id" => _installation_id},
@@ -51,7 +39,7 @@ defmodule FastreplWeb.GithubWebhookController do
   end
 
   # https://docs.github.com/en/webhooks/webhook-events-and-payloads#issues
-  defp handle_event("issues", payload, _current_account) do
+  def handle_event("issues", payload) do
     %{
       "action" => action,
       "installation" => %{"id" => _installation_id},
@@ -74,7 +62,7 @@ defmodule FastreplWeb.GithubWebhookController do
     end
   end
 
-  defp handle_event(event, payload, _current_account) do
+  def handle_event(event, payload) do
     Logger.info("Unhandled event: #{event}, #{inspect(payload)}")
   end
 end
