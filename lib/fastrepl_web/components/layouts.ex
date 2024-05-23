@@ -16,8 +16,8 @@ defmodule FastreplWeb.Layouts do
         <div class="border-t border-gray-100">
           <div class="px-2">
             <div class="py-4">
-              <a
-                href="#"
+              <.link
+                navigate={~p"/settings"}
                 class={[
                   "group relative flex justify-center rounded px-2 py-1.5",
                   if(@active_tab == :settings, do: "bg-blue-50 text-blue-700", else: "text-gray-500")
@@ -28,13 +28,13 @@ defmodule FastreplWeb.Layouts do
                 <span class="invisible absolute start-full top-1/2 ms-4 -translate-y-1/2 rounded bg-gray-900 px-2 py-1.5 text-xs font-medium text-white group-hover:visible">
                   Settings
                 </span>
-              </a>
+              </.link>
             </div>
 
             <ul class="space-y-2 border-t border-gray-100 pt-4">
               <li>
-                <a
-                  href="#"
+                <.link
+                  navigate={~p"/settings"}
                   class="group relative flex justify-center rounded px-2 py-1.5 text-gray-500 hover:bg-gray-50 hover:text-gray-700"
                 >
                   <span class="hero-command-line-solid w-4 h-4" />
@@ -42,12 +42,12 @@ defmodule FastreplWeb.Layouts do
                   <span class="invisible absolute start-full top-1/2 ms-4 -translate-y-1/2 rounded bg-gray-900 px-2 py-1.5 text-xs font-medium text-white group-hover:visible">
                     Coding
                   </span>
-                </a>
+                </.link>
               </li>
 
               <li>
-                <a
-                  href="#"
+                <.link
+                  navigate={~p"/threads"}
                   class="group relative flex justify-center rounded px-2 py-1.5 text-gray-500 hover:bg-gray-50 hover:text-gray-700"
                 >
                   <span class="hero-chat-bubble-left-right-solid w-4 h-4" />
@@ -55,7 +55,7 @@ defmodule FastreplWeb.Layouts do
                   <span class="invisible absolute start-full top-1/2 ms-4 -translate-y-1/2 rounded bg-gray-900 px-2 py-1.5 text-xs font-medium text-white group-hover:visible">
                     Chat
                   </span>
-                </a>
+                </.link>
               </li>
             </ul>
           </div>

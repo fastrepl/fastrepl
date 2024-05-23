@@ -10,10 +10,6 @@ defmodule FastreplWeb.ThreadsLive do
         Fastrepl
       </h2>
 
-      <p class="mt-2">
-        You can try out the demo <.link href={~p"/demo"} class="underline text-blue-500 font-semibold">here</.link>.
-      </p>
-
       <div class="flex flex-col gap-2 mt-4">
         <%= for { id, _pid } <- @threads  do %>
           <div class="w-[600px]">

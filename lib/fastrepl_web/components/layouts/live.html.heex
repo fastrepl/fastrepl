@@ -1,0 +1,32 @@
+<header class="px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between border-b border-zinc-100 py-3 text-sm">
+      <div class="flex items-center gap-4 text-zinc-900">
+        <a href="/" class="font-semibold text-zinc-900">
+          Home
+        </a>
+      </div>
+      <div class="flex items-center gap-4 font-semibold leading-6 text-zinc-900">
+        <.link href="https://fastrepl.com" class="hover:text-zinc-700">
+          Docs
+        </.link>
+  
+        <a href="https://github.com/fastrepl/fastrepl" class="hover:text-zinc-700">
+          GitHub
+        </a>
+  
+        <%= if assigns[:current_user] do %>
+          <FastreplWeb.AuthComponents.github mode={:sign_out} href="/logout" />
+        <% else %>
+          <FastreplWeb.AuthComponents.github mode={:sign_in} href="/auth/github" />
+        <% end %>
+      </div>
+    </div>
+  </header>
+  
+  <div class="flex">
+    <FastreplWeb.Layouts.side_menu active_tab={@active_tab} />
+    <main class="flex-1 overflow-auto px-4 py-4 sm:px-6 lg:px-8">
+      <.flash_group flash={@flash} />
+      <%= @inner_content %>
+    </main>
+  </div>

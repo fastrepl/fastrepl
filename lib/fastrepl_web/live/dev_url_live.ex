@@ -71,6 +71,6 @@ defmodule FastreplWeb.DevUrlLive do
   end
 
   def handle_event("submit", %{"url" => url}, socket) do
-    {:noreply, socket |> push_patch(to: ~p"/dev/url?url=#{url}")}
+    {:noreply, socket |> push_patch(to: "/dev/url?url=#{url}")}
   end
 end

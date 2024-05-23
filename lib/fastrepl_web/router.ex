@@ -7,6 +7,8 @@ defmodule FastreplWeb.Router do
       pipe_through :browser
 
       forward "/mailbox", Plug.Swoosh.MailboxPreview
+      live "/debug", FastreplWeb.DevDebugLive, :none
+      live "/url", FastreplWeb.DevUrlLive, :none
     end
   end
 
@@ -39,6 +41,7 @@ defmodule FastreplWeb.Router do
     get "/checkout/session", FastreplWeb.CheckoutController, :session
 
     live_session :app,
+      layout: {FastreplWeb.Layouts, :live},
       on_mount: [
         {Identity.LiveView, {:redirect_if_unauthenticated, to: "/login"}},
         {FastreplWeb.Auth, :fetch_account},
