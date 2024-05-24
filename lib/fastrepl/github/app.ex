@@ -17,7 +17,6 @@ defmodule Fastrepl.Github.App do
     app
     |> cast(attrs, [:installation_id, :repo_full_names])
     |> validate_required([:installation_id])
-    |> unique_constraint(:name)
     |> assoc_constraint(:account)
   end
 end

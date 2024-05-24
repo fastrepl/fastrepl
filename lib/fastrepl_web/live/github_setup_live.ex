@@ -68,21 +68,24 @@ defmodule FastreplWeb.GithubSetupLive do
   end
 
   def handle_event("save", _params, socket) do
-    case Github.add_app(socket.assigns.current_account, socket.assigns.installation_id) do
-      {:ok, _} ->
-        socket =
+    result =
+      Github.add_app(
+        socket.assigns.current_account,
+        %{installation_id: socket.assigns.installation_id}
+      )
+
+    socket =
+      case result do
+        {:ok, _} ->
           socket
           |> redirect(to: "/setting")
           |> put_flash(:info, "Github app installed!")
 
-        {:noreply, socket}
-
-      _ ->
-        socket =
+        _ ->
           socket
           |> put_flash(:error, "Something went wrong!")
+      end
 
-        {:noreply, socket}
-    end
+    {:noreply, socket}
   end
 end
