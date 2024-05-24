@@ -193,7 +193,7 @@ defmodule Fastrepl.Renderer.Github do
   end
 
   defmemo html_from_url(url, timeout \\ 2_000) do
-    res = Fastrepl.req_client() |> Req.get(url: url, receive_timeout: timeout)
+    res = Fastrepl.rest_client() |> Req.get(url: url, receive_timeout: timeout)
 
     case res do
       {:ok, %{body: body}} -> body

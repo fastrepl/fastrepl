@@ -8,8 +8,7 @@ defmodule Fastrepl.AI do
     proxy_url = Application.fetch_env!(:fastrepl, :proxy_api_base)
     proxy_key = Application.fetch_env!(:fastrepl, :proxy_api_key)
 
-    Fastrepl.req_client()
-    |> Req.merge(
+    Fastrepl.rest_client(
       base_url: proxy_url,
       headers: [{"Authorization", "Bearer #{proxy_key}"}]
     )

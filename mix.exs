@@ -100,7 +100,10 @@ defmodule Fastrepl.MixProject do
       {:identity, github: "aj-foster/identity", branch: "main"},
       {:oban, "~> 2.17"},
       {:stripity_stripe, "~> 3.2"},
-      {:jose, "~> 1.11"}
+      {:jose, "~> 1.11"},
+      {:absinthe_client,
+       git: "https://github.com/CargoSense/absinthe_client.git",
+       rev: "6c941127e8f20375c93a8561a9df66eadc6f026e"}
     ]
   end
 

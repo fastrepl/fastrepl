@@ -12,9 +12,20 @@ defmodule Fastrepl do
     |> LangChain.ChatModels.ChatOpenAI.new!()
   end
 
-  def req_client() do
-    Req.new()
-    |> OpentelemetryReq.attach(no_path_params: true)
+  def rest_client(opts \\ []) do
+    Req.new(opts)
+    |> attach_otel()
+  end
+
+  def graphql_client(opts \\ []) do
+    Req.new(opts)
+    |> attach_otel()
+    |> AbsintheClient.attach()
+    |> Req.Request.register_options([:graphql])
+  end
+
+  defp attach_otel(req) do
+    req
     |> Req.Request.register_options([:otel_attrs])
     |> Req.Request.append_request_steps(
       otel_attrs: fn req ->
