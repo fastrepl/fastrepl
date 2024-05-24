@@ -60,30 +60,32 @@ defmodule FastreplWeb.GithubWebhookHandler do
 
     app = Github.get_app_by_installation_id(installation_id)
 
-    case action do
-      "opened" ->
-        args = %{
-          repo_full_name: repo_full_name,
-          thread_id: Nanoid.generate(),
-          issue_number: number,
-          account_id: app.account_id,
-          installation_id: installation_id
-        }
+    if app != nil do
+      case action do
+        "opened" ->
+          args = %{
+            repo_full_name: repo_full_name,
+            thread_id: Nanoid.generate(),
+            issue_number: number,
+            account_id: app.account_id,
+            installation_id: installation_id
+          }
 
-        {:ok, _} =
-          DynamicSupervisor.start_child(
-            Fastrepl.ThreadManagerSupervisor,
-            {Fastrepl.ThreadManager, args}
-          )
+          {:ok, _} =
+            DynamicSupervisor.start_child(
+              Fastrepl.ThreadManagerSupervisor,
+              {Fastrepl.ThreadManager, args}
+            )
 
-      "closed" ->
-        :ok
+        "closed" ->
+          :ok
 
-      "labeled" ->
-        :ok
+        "labeled" ->
+          :ok
 
-      "unlabeled" ->
-        :ok
+        "unlabeled" ->
+          :ok
+      end
     end
   end
 

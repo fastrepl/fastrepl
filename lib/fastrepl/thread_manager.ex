@@ -21,6 +21,7 @@ defmodule Fastrepl.ThreadManager do
 
     token = Github.get_installation_token!(installation_id)
     repo = Github.Repo.from!(repo_full_name, auth: token)
+    issue = Github.Issue.from!(repo_full_name, issue_number, auth: token)
     app = Github.find_app(account_id, repo_full_name)
 
     state =
@@ -28,6 +29,7 @@ defmodule Fastrepl.ThreadManager do
       |> Map.put(:self, self())
       |> Map.put(:thread_id, thread_id)
       |> Map.put(:github_repo, repo)
+      |> Map.put(:github_issue, issue)
       |> Map.put(:github_app, app)
 
     Github.Issue.Comment.create(
@@ -46,7 +48,12 @@ defmodule Fastrepl.ThreadManager do
 
   @impl true
   def handle_call(:state, _from, state) do
-    {:reply, state, state}
+    ret = %{
+      github_issue: state.github_issue,
+      github_repo: state.github_repo
+    }
+
+    {:reply, ret, state}
   end
 
   @impl true

@@ -15,11 +15,11 @@ defmodule Fastrepl.Github.Issue do
           comments: [Comment.t()]
         }
 
-  def from(repo_full_name, issue_number) do
+  def from(repo_full_name, issue_number, opts \\ []) do
     [owner, repo] = String.split(repo_full_name, "/")
 
-    with {:ok, issue} <- GitHub.Issues.get(owner, repo, issue_number),
-         {:ok, comments} <- Comment.list_from(repo_full_name, issue_number) do
+    with {:ok, issue} <- GitHub.Issues.get(owner, repo, issue_number, opts),
+         {:ok, comments} <- Comment.list_from(repo_full_name, issue_number, opts) do
       {:ok,
        %__MODULE__{
          id: issue.id,
@@ -37,8 +37,8 @@ defmodule Fastrepl.Github.Issue do
     end
   end
 
-  def from!(repo_full_name, issue_number) do
-    {:ok, issue} = from(repo_full_name, issue_number)
+  def from!(repo_full_name, issue_number, opts \\ []) do
+    {:ok, issue} = from(repo_full_name, issue_number, opts)
     issue
   end
 
@@ -127,10 +127,11 @@ defmodule Fastrepl.Github.Issue.Comment do
     }
   end
 
-  def list_from(repo_full_name, issue_number) do
+  def list_from(repo_full_name, issue_number, opts \\ []) do
+    opts = Keyword.merge([page: 1, per_page: 50], opts)
     [owner, repo] = String.split(repo_full_name, "/")
 
-    case GitHub.Issues.list_comments(owner, repo, issue_number, page: 1, per_page: 50) do
+    case GitHub.Issues.list_comments(owner, repo, issue_number, opts) do
       {:ok, comments} -> {:ok, Enum.map(comments, &from(&1, repo_full_name))}
       {:error, error} -> {:error, error}
     end
