@@ -8,33 +8,44 @@ defmodule FastreplWeb.SettingsLive do
 
   def render(assigns) do
     ~H"""
-    <div class="mx-auto max-w-3xl">
+    <div>
       <h2 class="text-xl font-semibold">Settings</h2>
 
-      <div class="mt-4">
-        <h3 class="text-lg font-semibold">Teams</h3>
-        <div :if={@accounts.loading}>...</div>
+      <div class="mt-6">
+        <div class="flex items-center gap-2" phx-click={show_modal("team_modal")}>
+          <h3 class="text-lg font-semibold">Teams</h3>
+          <span class="hero-plus text-gray-700 hover:text-black w-4 h-4" />
+        </div>
+
+        <.modal id="team_modal">
+          <.form :let={f} for={@account_form} phx-submit="new_account" class="mb-4 w-[400px]">
+            <div class="flex items-center gap-1">
+              <.input field={f[:name]} type="text" placeholder="New team name" class="w-full" />
+              <.button
+                type="submit"
+                class="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded mt-2"
+                phx-click={hide_modal("team_modal")}
+              >
+                Add
+              </.button>
+            </div>
+          </.form>
+        </.modal>
+
         <div :if={!@accounts.loading and @accounts.result == []}>
           <p>You don't have any teams yet.</p>
         </div>
 
-        <.form :let={f} for={@account_form} phx-submit="new_account" class="mb-4">
-          <div class="flex items-center gap-1">
-            <.input field={f[:name]} type="text" placeholder="New team name" class="w-full" />
-            <.button type="submit" class="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded mt-2">
-              Add
-            </.button>
-          </div>
-        </.form>
+        <div class="w-[200px]">
+          <.input
+            type="select"
+            name="account"
+            value={@current_account.name}
+            options={if @accounts.loading, do: [], else: Enum.map(@accounts.result, & &1.name)}
+          />
+        </div>
 
-        <ul :if={!@accounts.loading}>
-          <li :for={account <- @accounts.result}>
-            <span><%= account.name %></span>
-          </li>
-        </ul>
-
-        <h3 class="text-lg font-semibold mt-4">Integrations</h3>
-        <h4 class="text-md font-semibold mt-4">GitHub</h4>
+        <h3 class="text-lg font-semibold mt-8">GitHub</h3>
         You can
         <.link
           target="_blank"
@@ -44,23 +55,23 @@ defmodule FastreplWeb.SettingsLive do
           install
         </.link>
         our Github app to get access to your repositories.
-        <p :if={!@github_repos.loading} class="my-2">
-          Currently accessable repositories:
-        </p>
-
-        <ul :if={!@github_repos.loading} class="flex flex-col gap-1 max-w-[400px]">
+        <ul
+          :if={!@github_repos.loading}
+          class="flex flex-col gap-1 max-w-[400px] max-h-[300px] overflow-y-auto mt-4"
+        >
           <li :for={repo <- @github_repos.result}>
             <.repo_list_item repo_full_name={repo} />
           </li>
         </ul>
 
-        <h3 class="text-lg font-semibold mt-4">Pro</h3>
+        <h3 class="text-lg font-semibold mt-8">Pro</h3>
         <.link
           href={~p"/checkout/session?a=1&i=0"}
           class="text-blue-500 font-semibold hover:underline"
         >
-          Link
+          Subscribe
         </.link>
+        to our Pro plan to get access to more features.
       </div>
     </div>
     """
@@ -72,7 +83,9 @@ defmodule FastreplWeb.SettingsLive do
 
     socket =
       socket
-      |> assign(:account_form, to_form(%{"name" => ""}))
+      |> assign(:show_team_modal, false)
+      |> assign(:current_account, current_account)
+      |> assign(:account_form, to_form(%{"name" => current_account.name}))
       |> assign(:github_app_url, Application.fetch_env!(:fastrepl, :github_app_url))
       |> assign_async(:github_repos, fn ->
         repos = if(current_account, do: Github.list_installed_repos(current_account), else: [])
