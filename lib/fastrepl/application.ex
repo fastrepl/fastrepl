@@ -8,6 +8,7 @@ defmodule Fastrepl.Application do
   @impl true
   def start(_type, _args) do
     children = [
+      GitHub.Auth.Cache,
       {Task.Supervisor, name: Fastrepl.TaskSupervisor},
       {DynamicSupervisor, name: Fastrepl.ThreadManagerSupervisor},
       {DynamicSupervisor, name: Fastrepl.ChatManagerSupervisor},

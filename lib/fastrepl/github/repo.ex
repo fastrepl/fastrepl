@@ -4,11 +4,11 @@ defmodule Fastrepl.Github.Repo do
   alias Fastrepl.Github
   alias GitHub.Repos, as: Repo
 
-  def from(repo_full_name) do
+  def from(repo_full_name, opts \\ []) do
     [owner_name, repo_name] = String.split(repo_full_name, "/")
 
-    with {:ok, repo} <- Repo.get(owner_name, repo_name),
-         {:ok, branch} <- Repo.get_branch(owner_name, repo_name, repo.default_branch) do
+    with {:ok, repo} <- Repo.get(owner_name, repo_name, opts),
+         {:ok, branch} <- Repo.get_branch(owner_name, repo_name, repo.default_branch, opts) do
       {:ok,
        %__MODULE__{
          full_name: repo_full_name,
@@ -21,8 +21,8 @@ defmodule Fastrepl.Github.Repo do
     end
   end
 
-  def from!(repo_full_name) do
-    {:ok, repo} = from(repo_full_name)
+  def from!(repo_full_name, opts \\ []) do
+    {:ok, repo} = from(repo_full_name, opts)
     repo
   end
 

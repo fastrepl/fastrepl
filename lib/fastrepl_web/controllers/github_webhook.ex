@@ -55,7 +55,7 @@ defmodule FastreplWeb.GithubWebhookHandler do
       "action" => action,
       "installation" => %{"id" => installation_id},
       "issue" => %{"number" => number, "labels" => _labels},
-      "repository" => %{"full_name" => _full_name}
+      "repository" => %{"full_name" => repo_full_name}
     } = payload
 
     app = Github.get_app_by_installation_id(installation_id)
@@ -63,9 +63,11 @@ defmodule FastreplWeb.GithubWebhookHandler do
     case action do
       "opened" ->
         args = %{
+          repo_full_name: repo_full_name,
           thread_id: Nanoid.generate(),
           issue_number: number,
-          account_id: app.account_id
+          account_id: app.account_id,
+          installation_id: installation_id
         }
 
         {:ok, _} =

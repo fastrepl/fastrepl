@@ -136,10 +136,10 @@ defmodule Fastrepl.Github.Issue.Comment do
     end
   end
 
-  def create(repo_full_name, issue_number, body) do
+  def create(repo_full_name, issue_number, body, opts \\ []) do
     [owner, repo] = String.split(repo_full_name, "/")
 
-    case GitHub.Issues.create_comment(owner, repo, issue_number, body) do
+    case GitHub.Issues.create_comment(owner, repo, issue_number, %{body: body}, opts) do
       {:ok, comment} -> {:ok, from(comment, repo_full_name)}
       {:error, error} -> {:error, error}
     end

@@ -8,13 +8,6 @@ defmodule FastreplWeb.ThreadsLive do
       Threads
     </h2>
 
-    <button
-      phx-click="new_thread"
-      class="mt-4 px-2 py-1 rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100"
-    >
-      New thread
-    </button>
-
     <ul>
       <%= for {id, _pid} <- @threads do %>
         <li>
@@ -32,24 +25,6 @@ defmodule FastreplWeb.ThreadsLive do
 
     socket = socket |> assign(:threads, threads)
     {:ok, socket}
-  end
-
-  def handle_event("new_thread", _params, socket) do
-    thread_id = Nanoid.generate()
-
-    {:ok, _} =
-      DynamicSupervisor.start_child(
-        Fastrepl.ThreadManagerSupervisor,
-        {Fastrepl.ThreadManager,
-         %{thread_id: thread_id, account_id: socket.assigns.current_account.id}}
-      )
-
-    socket =
-      socket
-      |> assign(:thread_id, thread_id)
-      |> push_navigate(to: "/thread/#{thread_id}")
-
-    {:noreply, socket}
   end
 
   defp list_active_threads(account_id) do

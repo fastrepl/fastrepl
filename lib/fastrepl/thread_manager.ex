@@ -14,23 +14,32 @@ defmodule Fastrepl.ThreadManager do
         account_id: account_id,
         thread_id: thread_id,
         repo_full_name: repo_full_name,
-        issue_content: _issue_content
+        issue_number: issue_number,
+        installation_id: installation_id
       }) do
-    repo = Github.Repo.from!(repo_full_name)
+    token = Github.get_installation_token!(installation_id)
+    repo = Github.Repo.from!(repo_full_name, auth: token)
     app = Github.find_app(account_id, repo_full_name)
 
-    if app != nil do
-      state =
-        Map.new()
-        |> Map.put(:self, self())
-        |> Map.put(:thread_id, thread_id)
-        |> Map.put(:github_repo, repo)
-        |> Map.put(:github_app, app)
+    state =
+      Map.new()
+      |> Map.put(:self, self())
+      |> Map.put(:thread_id, thread_id)
+      |> Map.put(:github_repo, repo)
+      |> Map.put(:github_app, app)
 
-      {:ok, state}
-    else
-      {:stop, "can not find app"}
-    end
+    Github.Issue.Comment.create(
+      repo_full_name,
+      issue_number,
+      """
+      We have just started processing your issue.
+
+      You can check the progress here: #{FastreplWeb.Endpoint.url()}/thread/#{thread_id}
+      """,
+      auth: token
+    )
+
+    {:ok, state}
   end
 
   @impl true
@@ -39,10 +48,10 @@ defmodule Fastrepl.ThreadManager do
   end
 
   @impl true
-  def handle_call(:prepare_repo, _from, state) do
+  def handle_info(:prepare_repo, state) do
     Task.Supervisor.start_child(Fastrepl.TaskSupervisor, fn ->
       {:ok, root_path} =
-        state.repo.full_name
+        state.github_repo.full_name
         |> Github.URL.clone_with_token(state.github_app.installation_id)
         |> FS.clone(state.github_repo)
 
@@ -56,8 +65,9 @@ defmodule Fastrepl.ThreadManager do
 
       send(state.self, {:set, %{root_path: root_path, retrieval_ctx: ctx}})
       precompute_embeddings(ctx.chunks)
-      send(state.self, :retrieve)
     end)
+
+    {:noreply, state}
   end
 
   @impl true
