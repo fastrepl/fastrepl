@@ -28,7 +28,7 @@ defmodule FastreplWeb.ThreadsLive do
   end
 
   def mount(_params, _session, socket) do
-    threads = [] ++ list_active_threads(123)
+    threads = [] ++ list_active_threads(socket.assigns.current_account.id)
 
     socket = socket |> assign(:threads, threads)
     {:ok, socket}

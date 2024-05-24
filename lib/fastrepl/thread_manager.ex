@@ -1,22 +1,33 @@
 defmodule Fastrepl.ThreadManager do
   use GenServer, restart: :transient
 
-  def start_link(
-        %{
-          account_id: account_id,
-          thread_id: thread_id,
-          issue_number: issue_number
-        } = args
-      ) do
+  alias Fastrepl.Github
+
+  def start_link(%{account_id: account_id, thread_id: thread_id} = args) do
     GenServer.start_link(__MODULE__, args, name: via_registry(thread_id, account_id))
   end
 
   @impl true
-  def init(args) do
+  def init(%{thread_id: thread_id, repo_full_name: repo_full_name, issue_number: issue_number}) do
+    repo = Github.Repo.from!(repo_full_name)
+    issue = Github.Issue.from!(repo_full_name, issue_number)
+
     state =
       Map.new()
       |> Map.put(:self, self())
-      |> Map.put(:thread_id, args.thread_id)
+      |> Map.put(:thread_id, thread_id)
+      |> Map.put(:github_repo, repo)
+      |> Map.put(:github_issue, issue)
+
+    {:ok, state}
+  end
+
+  @impl true
+  def init(%{thread_id: thread_id}) do
+    state =
+      Map.new()
+      |> Map.put(:self, self())
+      |> Map.put(:thread_id, thread_id)
 
     {:ok, state}
   end
