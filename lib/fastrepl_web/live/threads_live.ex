@@ -3,12 +3,9 @@ defmodule FastreplWeb.ThreadsLive do
 
   def render(assigns) do
     ~H"""
-    <div></div>
-    <h2 class="font-semibold text-xl">
-      Threads
-    </h2>
+    <h2 class="text-xl font-semibold">Threads</h2>
 
-    <ul>
+    <ul class="mt-8">
       <%= for {id, _pid} <- @threads do %>
         <li>
           <.link navigate={~p"/thread/#{id}"} class="text-sm font-semibold hover:underline">

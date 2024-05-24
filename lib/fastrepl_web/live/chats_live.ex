@@ -3,11 +3,8 @@ defmodule FastreplWeb.ChatsLive do
 
   def render(assigns) do
     ~H"""
-    <div class="mx-auto max-w-4xl">
-      <.svelte name="ChatEditor" socket={@socket} ssr={false} props={%{}} />
-    </div>
-
-    <button phx-click="submit">Create</button>
+    <h2 class="text-xl font-semibold">Chats</h2>
+    <p>Chat mode is planned, but not yet available.</p>
     """
   end
 
@@ -30,9 +27,5 @@ defmodule FastreplWeb.ChatsLive do
       |> push_navigate(to: "/chat/#{chat_id}")
 
     {:noreply, socket}
-  end
-
-  def handle_event("test", _params, socket) do
-    {:noreply, socket |> assign(:abc, 321) |> push_patch(to: "/chats")}
   end
 end

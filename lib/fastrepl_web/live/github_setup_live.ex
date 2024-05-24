@@ -20,12 +20,14 @@ defmodule FastreplWeb.GithubSetupLive do
           phx-change="change_account"
           class="flex flex-row gap-2 items-center"
         >
-          <.input
-            type="select"
-            name="account"
-            field={@form[:account]}
-            options={if @accounts.loading, do: [], else: @accounts.result}
-          />
+          <div class="w-[200px]">
+            <.input
+              type="select"
+              name="account"
+              field={@form[:account]}
+              options={if @accounts.loading, do: [], else: @accounts.result}
+            />
+          </div>
           <.button type="submit" class="py-1 mt-2">Save</.button>
         </.form>
       </div>

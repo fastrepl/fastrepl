@@ -11,10 +11,10 @@ defmodule FastreplWeb.SettingsLive do
     <div>
       <h2 class="text-xl font-semibold">Settings</h2>
 
-      <div class="mt-6">
+      <div class="mt-8">
         <div class="flex items-center gap-2" phx-click={show_modal("team_modal")}>
           <h3 class="text-lg font-semibold">Teams</h3>
-          <span class="hero-plus text-gray-700 hover:text-black w-4 h-4" />
+          <%!-- <span class="hero-plus text-gray-700 hover:text-black w-4 h-4" /> --%>
         </div>
 
         <.modal id="team_modal">
@@ -45,34 +45,40 @@ defmodule FastreplWeb.SettingsLive do
           />
         </div>
 
-        <h3 class="text-lg font-semibold mt-8">GitHub</h3>
-        You can
-        <.link
-          target="_blank"
-          class="text-blue-500 font-semibold hover:underline"
-          href={@github_app_url}
-        >
-          install
-        </.link>
-        our Github app to get access to your repositories.
-        <ul
-          :if={!@github_repos.loading}
-          class="flex flex-col gap-1 max-w-[400px] max-h-[300px] overflow-y-auto mt-4"
-        >
-          <li :for={repo <- @github_repos.result}>
-            <.repo_list_item repo_full_name={repo} />
-          </li>
-        </ul>
-
-        <h3 class="text-lg font-semibold mt-8">Pro</h3>
+        <h3 class="text-lg font-semibold mt-8">
+          Plan
+        </h3>
+        <p>
+          You are currently on the <strong>Free</strong> plan.
+        </p>
         <.link
           href={~p"/checkout/session?a=1&i=0"}
           class="text-blue-500 font-semibold hover:underline"
         >
           Subscribe
         </.link>
-        to our Pro plan to get access to more features.
+        to our <strong>Pro</strong>
+        plan to get access to more features.
       </div>
+
+      <h3 class="text-lg font-semibold mt-8">GitHub</h3>
+      You can
+      <.link
+        target="_blank"
+        class="text-blue-500 font-semibold hover:underline"
+        href={@github_app_url}
+      >
+        install
+      </.link>
+      our Github app to get access to your repositories.
+      <ul
+        :if={!@github_repos.loading}
+        class="flex flex-col gap-1 max-w-[400px] max-h-[300px] overflow-y-auto mt-4"
+      >
+        <li :for={repo <- @github_repos.result}>
+          <.repo_list_item repo_full_name={repo} />
+        </li>
+      </ul>
     </div>
     """
   end
