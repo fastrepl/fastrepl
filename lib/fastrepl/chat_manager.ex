@@ -1,8 +1,8 @@
 defmodule Fastrepl.ChatManager do
-  use GenServer
+  use GenServer, restart: :transient
 
-  def start_link(%{thread_id: thread_id} = args) do
-    GenServer.start_link(__MODULE__, args, name: via_registry(thread_id))
+  def start_link(%{chat_id: chat_id} = args) do
+    GenServer.start_link(__MODULE__, args, name: via_registry(chat_id))
   end
 
   @impl true
@@ -10,7 +10,7 @@ defmodule Fastrepl.ChatManager do
     state =
       Map.new()
       |> Map.put(:self, self())
-      |> Map.put(:thread_id, args.thread_id)
+      |> Map.put(:chat_id, args.chat_id)
 
     {:ok, state}
   end

@@ -1,4 +1,4 @@
-defmodule FastreplWeb.ThreadsDemoLive do
+defmodule FastreplWeb.OldThreadsDemoLive do
   use FastreplWeb, :live_view
 
   import FastreplWeb.GithubComponents, only: [selectable_repo: 1, selectable_issue: 1]

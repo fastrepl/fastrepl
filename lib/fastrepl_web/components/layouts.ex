@@ -36,6 +36,22 @@ defmodule FastreplWeb.Layouts do
             <ul class="space-y-2 border-t border-gray-100 pt-4">
               <li>
                 <.link
+                  navigate={~p"/threads"}
+                  class={[
+                    "group relative flex justify-center rounded px-2 py-1.5",
+                    if(@active_tab == :threads, do: "bg-blue-50 text-blue-700", else: "text-gray-500")
+                  ]}
+                >
+                  <span class="hero-queue-list-solid w-4 h-4" />
+
+                  <span class="invisible absolute start-full top-1/2 ms-4 -translate-y-1/2 rounded bg-gray-900 px-2 py-1.5 text-xs font-medium text-white group-hover:visible">
+                    Threads
+                  </span>
+                </.link>
+              </li>
+
+              <li>
+                <.link
                   navigate={~p"/chats"}
                   class={[
                     "group relative flex justify-center rounded px-2 py-1.5",

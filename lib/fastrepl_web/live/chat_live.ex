@@ -3,21 +3,20 @@ defmodule FastreplWeb.ChatLive do
 
   def render(assigns) do
     ~H"""
-    <div>123</div>
-
+    <div>chat</div>
     <button phx-click="submit">Submit</button>
     """
   end
 
-  def mount(%{"id" => thread_id}, _session, socket) do
-    case find_existing_orchestrator(thread_id) do
+  def mount(%{"id" => chat_id}, _session, socket) do
+    case find_existing_orchestrator(chat_id) do
       pid when is_pid(pid) ->
         state = GenServer.call(pid, :state)
         send(self(), {:sync, state})
 
         socket =
           socket
-          |> assign(:thread_id, thread_id)
+          |> assign(:chat_id, chat_id)
           |> assign(:manager_pid, pid)
 
         {:ok, socket}
@@ -28,15 +27,14 @@ defmodule FastreplWeb.ChatLive do
   end
 
   def handle_event("submit", _params, socket) do
-    res = GenServer.call(socket.assigns.manager_pid, :submit)
-    IO.inspect(res)
+    GenServer.call(socket.assigns.manager_pid, :submit)
     {:noreply, socket}
   end
 
-  defp find_existing_orchestrator(thread_id) do
+  defp find_existing_orchestrator(chat_id) do
     registry = Application.fetch_env!(:fastrepl, :chat_manager_registry)
 
-    case Registry.lookup(registry, thread_id) do
+    case Registry.lookup(registry, chat_id) do
       [{pid, _value}] -> pid
       [] -> nil
     end

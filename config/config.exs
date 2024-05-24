@@ -80,7 +80,7 @@ config :fastrepl, Oban,
 config :fastrepl, :env, Mix.env()
 config :fastrepl, :root, File.cwd!()
 
-config :fastrepl, :orchestrator_registry, Fastrepl.OrchestratorRegistry
+config :fastrepl, :thread_manager_registry, Fastrepl.ThreadManagerRegistry
 config :fastrepl, :chat_manager_registry, Fastrepl.ChatManagerRegistry
 
 config :fastrepl, :cache, Fastrepl.Cache.Redis

@@ -44,10 +44,12 @@ defmodule FastreplWeb.Router do
       layout: {FastreplWeb.Layouts, :live},
       on_mount: [
         {Identity.LiveView, {:redirect_if_unauthenticated, to: "/login"}},
-        {FastreplWeb.Auth, :fetch_account},
+        {FastreplWeb.Auth, :fetch_or_create_account},
         FastreplWeb.Nav
       ] do
       live "/", FastreplWeb.MainLive, :none
+      live "/threads", FastreplWeb.ThreadsLive, :none
+      live "/thread/:id", FastreplWeb.ThreadLive, :none
       live "/chats", FastreplWeb.ChatsLive, :none
       live "/chat/:id", FastreplWeb.ChatLive, :none
       live "/settings", FastreplWeb.SettingsLive, :none
@@ -56,9 +58,9 @@ defmodule FastreplWeb.Router do
     live_session :others,
       on_mount: [
         {Identity.LiveView, {:redirect_if_unauthenticated, to: "/login"}},
-        {FastreplWeb.Auth, :fetch_account}
+        {FastreplWeb.Auth, :fetch_or_create_account}
       ] do
-      live "/github/setup", FastreplWeb.GithubSetupLive, :none
+      live "/setup/github", FastreplWeb.GithubSetupLive, :none
     end
   end
 end

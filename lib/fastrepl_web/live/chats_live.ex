@@ -16,19 +16,18 @@ defmodule FastreplWeb.ChatsLive do
   end
 
   def handle_event("submit", _params, socket) do
-    thread_id = Nanoid.generate()
+    chat_id = Nanoid.generate()
 
     {:ok, _} =
       DynamicSupervisor.start_child(
         Fastrepl.ChatManagerSupervisor,
-        {Fastrepl.ChatManager, %{thread_id: thread_id}}
+        {Fastrepl.ChatManager, %{chat_id: chat_id}}
       )
 
     socket =
       socket
-      |> assign(:thread_id, thread_id)
-      |> assign(:active_tab, {:chat, thread_id})
-      |> push_navigate(to: "/chat/#{thread_id}")
+      |> assign(:chat_id, chat_id)
+      |> push_navigate(to: "/chat/#{chat_id}")
 
     {:noreply, socket}
   end

@@ -8,11 +8,13 @@ defmodule FastreplWeb.Nav do
 
   defp set_active_tab(_params, _url, socket) do
     active_tab =
-      case {socket.view, socket.assigns[:thread_id]} do
-        {FastreplWeb.SettingsLive, _} -> :settings
-        {FastreplWeb.ChatsLive, _} -> :chats
-        {FastreplWeb.ChatLive, id} -> {:chat, id}
-        {_, _} -> nil
+      case socket.view do
+        FastreplWeb.SettingsLive -> :settings
+        FastreplWeb.ChatsLive -> :chats
+        FastreplWeb.ChatLive -> :chats
+        FastreplWeb.ThreadsLive -> :threads
+        FastreplWeb.ThreadLive -> :threads
+        _ -> nil
       end
 
     {:cont, socket |> assign(active_tab: active_tab)}

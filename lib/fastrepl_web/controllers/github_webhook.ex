@@ -50,16 +50,35 @@ defmodule FastreplWeb.GithubWebhookHandler do
   def handle_event("issues", payload) do
     %{
       "action" => action,
-      "installation" => %{"id" => _installation_id},
-      "issue" => %{"number" => _number, "labels" => _labels},
+      "installation" => %{"id" => installation_id},
+      "issue" => %{"number" => number, "labels" => _labels},
       "repository" => %{"full_name" => _full_name}
     } = payload
 
+    app = Github.get_app_by_installation_id(installation_id)
+
     case action do
-      "opened" -> :ok
-      "closed" -> :ok
-      "labeled" -> :ok
-      "unlabeled" -> :ok
+      "opened" ->
+        args = %{
+          thread_id: Nanoid.generate(),
+          issue_number: number,
+          account_id: app.account_id
+        }
+
+        {:ok, _} =
+          DynamicSupervisor.start_child(
+            Fastrepl.ThreadManagerSupervisor,
+            {Fastrepl.ThreadManager, args}
+          )
+
+      "closed" ->
+        :ok
+
+      "labeled" ->
+        :ok
+
+      "unlabeled" ->
+        :ok
     end
   end
 
