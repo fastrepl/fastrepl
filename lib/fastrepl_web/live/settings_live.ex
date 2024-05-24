@@ -4,6 +4,8 @@ defmodule FastreplWeb.SettingsLive do
   alias Fastrepl.Github
   alias Fastrepl.Accounts
 
+  import FastreplWeb.GithubComponents, only: [repo_list_item: 1]
+
   def render(assigns) do
     ~H"""
     <div class="mx-auto max-w-3xl">
@@ -42,14 +44,15 @@ defmodule FastreplWeb.SettingsLive do
           install
         </.link>
         our Github app to get access to your repositories.
-        <ul :if={!@github_repos.loading}>
+        <p :if={!@github_repos.loading} class="my-2">
+          Currently accessable repositories:
+        </p>
+
+        <ul :if={!@github_repos.loading} class="flex flex-col gap-1 max-w-[400px]">
           <li :for={repo <- @github_repos.result}>
-            <span><%= repo %></span>
+            <.repo_list_item repo_full_name={repo} />
           </li>
         </ul>
-
-        <h4 class="text-md font-semibold mt-4">Linear</h4>
-        <p>Coming soon...</p>
 
         <h3 class="text-lg font-semibold mt-4">Pro</h3>
         <.link

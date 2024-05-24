@@ -2,6 +2,28 @@ defmodule FastreplWeb.GithubComponents do
   use Phoenix.Component
   import FastreplWeb.Utils, only: [clsx: 1]
 
+  attr :repo_full_name, :string
+
+  def repo_list_item(assigns) do
+    ~H"""
+    <div class="flex items-center gap-2 border rounded-md shadow-md justify-between text-sm relative">
+      <div class="flex items-center gap-2">
+        <img
+          src={"//ui-avatars.com/api/?name=#{@repo_full_name}&background=f0e9e9&font-size=0.35"}
+          class="h-8 w-8 rounded flex-shrink-0"
+        />
+        <.link
+          target="_blank"
+          href={"https://github.com/#{@repo_full_name}"}
+          class="hover:font-semibold"
+        >
+          <%= @repo_full_name %>
+        </.link>
+      </div>
+    </div>
+    """
+  end
+
   attr :full_name, :string, required: true
   attr :description, :string, default: ""
   attr :selected, :boolean, default: false
