@@ -10,13 +10,15 @@ defmodule Fastrepl.ThreadManager do
   end
 
   @impl true
-  def init(%{
-        account_id: account_id,
-        thread_id: thread_id,
-        repo_full_name: repo_full_name,
-        issue_number: issue_number,
-        installation_id: installation_id
-      }) do
+  def init(
+        %{
+          account_id: account_id,
+          thread_id: thread_id,
+          repo_full_name: repo_full_name,
+          issue_number: issue_number,
+          installation_id: installation_id
+        } = args
+      ) do
     Process.flag(:trap_exit, true)
 
     token = Github.get_installation_token!(installation_id)
@@ -27,10 +29,12 @@ defmodule Fastrepl.ThreadManager do
     state =
       Map.new()
       |> Map.put(:self, self())
+      |> Map.put(:github_token, token)
       |> Map.put(:thread_id, thread_id)
       |> Map.put(:github_repo, repo)
       |> Map.put(:github_issue, issue)
       |> Map.put(:github_app, app)
+      |> Map.put(:status, Map.get(args, :status, :init_0))
 
     Github.Issue.Comment.create(
       repo_full_name,
@@ -43,12 +47,14 @@ defmodule Fastrepl.ThreadManager do
       auth: token
     )
 
+    send(state.self, :prepare_repo)
     {:ok, state}
   end
 
   @impl true
   def handle_call(:state, _from, state) do
     ret = %{
+      status: state.status,
       github_issue: state.github_issue,
       github_repo: state.github_repo
     }
@@ -59,10 +65,14 @@ defmodule Fastrepl.ThreadManager do
   @impl true
   def handle_info(:prepare_repo, state) do
     Task.Supervisor.start_child(Fastrepl.TaskSupervisor, fn ->
+      send(state.self, {:set_and_sync, %{status: :clone_1}})
+
       {:ok, root_path} =
         state.github_repo.full_name
-        |> Github.URL.clone_with_token(state.github_app.installation_id)
+        |> Github.URL.clone_with_token(state.github_token)
         |> FS.clone(state.github_repo)
+
+      send(state.self, {:set_and_sync, %{status: :index_2}})
 
       ctx =
         root_path
@@ -74,6 +84,8 @@ defmodule Fastrepl.ThreadManager do
 
       send(state.self, {:set, %{root_path: root_path, retrieval_ctx: ctx}})
       precompute_embeddings(ctx.chunks)
+
+      send(state.self, {:set_and_sync, %{status: :start_3}})
     end)
 
     {:noreply, state}
@@ -86,7 +98,20 @@ defmodule Fastrepl.ThreadManager do
 
   @impl true
   def handle_info({:set, data}, state) do
-    state = data |> Enum.reduce(state, fn {k, v}, acc -> Map.put(acc, k, v) end)
+    state =
+      data
+      |> Enum.reduce(state, fn {k, v}, acc -> Map.put(acc, k, v) end)
+
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_info({:set_and_sync, data}, state) do
+    state =
+      data
+      |> Enum.reduce(state, fn {k, v}, acc -> Map.put(acc, k, v) end)
+      |> sync_with_views(data)
+
     {:noreply, state}
   end
 
@@ -121,5 +146,23 @@ defmodule Fastrepl.ThreadManager do
 
   defp registry_module() do
     Application.fetch_env!(:fastrepl, :thread_manager_registry)
+  end
+
+  defp sync_with_views(state, map) when is_map(map) do
+    broadcast(state.thread_id, map)
+    state
+  end
+
+  defp sync_with_views(state, key) when is_atom(key) do
+    broadcast(state.thread_id, %{key => state[key]})
+    state
+  end
+
+  defp broadcast(thread_id, data) do
+    Phoenix.PubSub.broadcast(
+      Fastrepl.PubSub,
+      "thread:#{thread_id}",
+      {:sync, data}
+    )
   end
 end

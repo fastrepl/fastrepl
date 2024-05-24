@@ -4,6 +4,10 @@ defmodule FastreplWeb.ThreadLive do
   def render(assigns) do
     ~H"""
     <div class="w-full h-[calc(100vh-140px)] bg-gray-50 rounded-md">
+      <p :if={assigns[:status]}>
+        <%= @status %>
+      </p>
+
       <p :if={assigns[:github_repo]}>
         <%= @github_repo.full_name %>
       </p>
