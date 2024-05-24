@@ -13,17 +13,13 @@ defmodule Fastrepl.ThreadTest do
     thread_id = Nanoid.generate()
     Phoenix.PubSub.subscribe(Fastrepl.PubSub, "thread:#{thread_id}")
 
-    on_exit(fn ->
-      Phoenix.PubSub.unsubscribe(Fastrepl.PubSub, "thread:#{thread_id}")
-    end)
-
     %{thread_id: thread_id}
   end
 
   test "it works", %{thread_id: thread_id} do
     account = user_fixture() |> account_fixture(%{name: "personal"})
 
-    {:ok, _app} =
+    {:ok, app} =
       Github.add_app(
         account,
         %{installation_id: "123", repo_full_names: ["fastrepl/fastrepl"]}
@@ -34,7 +30,8 @@ defmodule Fastrepl.ThreadTest do
         account_id: account.id,
         thread_id: thread_id,
         repo_full_name: "fastrepl/fastrepl",
-        issue_content: "TODO"
+        issue_number: 1,
+        installation_id: app.installation_id
       })
 
     assert_gh_called(GitHub.Repos.get("fastrepl", "fastrepl"))

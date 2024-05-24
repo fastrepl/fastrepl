@@ -123,7 +123,7 @@ defmodule Fastrepl.Github.Issue.Comment do
       body: comment.body,
       issue_url: comment.html_url,
       is_pr: String.contains?(comment.html_url, "pull"),
-      user_name: comment.user.login
+      user_name: get_in(comment.user, [Access.key(:login, "Unknown")])
     }
   end
 
