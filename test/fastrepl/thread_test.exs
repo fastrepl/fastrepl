@@ -9,7 +9,18 @@ defmodule Fastrepl.ThreadTest do
   alias Fastrepl.Github
   alias Fastrepl.ThreadManager
 
-  test "it works" do
+  setup do
+    thread_id = Nanoid.generate()
+    Phoenix.PubSub.subscribe(Fastrepl.PubSub, "thread:#{thread_id}")
+
+    on_exit(fn ->
+      Phoenix.PubSub.unsubscribe(Fastrepl.PubSub, "thread:#{thread_id}")
+    end)
+
+    %{thread_id: thread_id}
+  end
+
+  test "it works", %{thread_id: thread_id} do
     account = user_fixture() |> account_fixture(%{name: "personal"})
 
     {:ok, _app} =
@@ -21,7 +32,7 @@ defmodule Fastrepl.ThreadTest do
     {:ok, _pid} =
       ThreadManager.start_link(%{
         account_id: account.id,
-        thread_id: Nanoid.generate(),
+        thread_id: thread_id,
         repo_full_name: "fastrepl/fastrepl",
         issue_content: "TODO"
       })
