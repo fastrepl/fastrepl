@@ -11,8 +11,11 @@ defmodule FastreplWeb.GithubWebhookHandler do
 
     case action do
       "created" ->
-        app = Github.get_app_by_installation_id(installation_id)
-        Github.set_repos(app, Enum.map(repos, & &1["full_name"]))
+        # at this point, user is at github_setup_live. The account will be linked there.
+        Github.add_app(%{
+          installation_id: installation_id,
+          repo_full_names: Enum.map(repos, & &1["full_name"])
+        })
 
       "deleted" ->
         Github.delete_app_by_installation_id(installation_id)

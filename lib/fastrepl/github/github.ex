@@ -1,11 +1,18 @@
 defmodule Fastrepl.Github do
   import Ecto.Query, warn: false
+  alias GitHub.Git
   alias Fastrepl.Repo
 
   alias Fastrepl.Accounts.Account
   alias Fastrepl.Github
 
-  def add_app(%Account{} = account, attrs \\ %{}) do
+  def add_app(attrs) do
+    %Github.App{}
+    |> Github.App.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def add_app(%Account{} = account, attrs) do
     %Github.App{}
     |> Github.App.changeset(attrs)
     |> Ecto.Changeset.put_assoc(:account, account)
@@ -28,6 +35,20 @@ defmodule Fastrepl.Github do
   def delete_app_by_installation_id(installation_id) do
     from(app in Github.App, where: app.installation_id == ^installation_id)
     |> Repo.delete_all()
+  end
+
+  def link_account(%Account{} = account, installation_id) do
+    app = Github.get_app_by_installation_id(installation_id)
+
+    if app != nil do
+      app
+      |> Repo.preload(:account)
+      |> Ecto.Changeset.change()
+      |> Ecto.Changeset.put_assoc(:account, account)
+      |> Repo.update()
+    else
+      {:error, "can not find app"}
+    end
   end
 
   def set_repos(%Github.App{} = app, names) do

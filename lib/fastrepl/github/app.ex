@@ -5,7 +5,7 @@ defmodule Fastrepl.Github.App do
   alias Fastrepl.Accounts.Account
 
   schema "github_apps" do
-    field :installation_id, :string
+    field :installation_id, :integer
     field :repo_full_names, {:array, :string}, default: []
     belongs_to :account, Account
 
@@ -17,6 +17,5 @@ defmodule Fastrepl.Github.App do
     app
     |> cast(attrs, [:installation_id, :repo_full_names])
     |> validate_required([:installation_id])
-    |> assoc_constraint(:account)
   end
 end

@@ -68,17 +68,14 @@ defmodule FastreplWeb.GithubSetupLive do
   end
 
   def handle_event("save", _params, socket) do
-    result =
-      Github.add_app(
-        socket.assigns.current_account,
-        %{installation_id: socket.assigns.installation_id}
-      )
+    # github app is already created in webhook handler. we only need to link the account.
+    result = Github.link_account(socket.assigns.current_account, socket.assigns.installation_id)
 
     socket =
       case result do
         {:ok, _} ->
           socket
-          |> redirect(to: "/setting")
+          |> redirect(to: "/settings")
           |> put_flash(:info, "Github app installed!")
 
         _ ->

@@ -3,7 +3,7 @@ defmodule Fastrepl.Repo.Migrations.CreateGithubApps do
 
   def change do
     create table(:github_apps) do
-      add :installation_id, :string
+      add :installation_id, :integer
       add :repo_full_names, {:array, :string}
       add :account_id, references(:accounts, on_delete: :delete_all)
 
