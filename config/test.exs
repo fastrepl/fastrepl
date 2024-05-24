@@ -33,3 +33,5 @@ config :logger, level: :warning
 config :phoenix, :plug_init_mode, :runtime
 
 config :fastrepl, Oban, testing: :inline
+
+config :oapi_github, stack: [{GitHub.Plugin.TestClient, :request, []}]

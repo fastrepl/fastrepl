@@ -12,6 +12,14 @@ defmodule Fastrepl.Github do
     |> Repo.insert()
   end
 
+  def find_app(account_id, repo_full_name) do
+    from(
+      app in Github.App,
+      where: app.account_id == ^account_id and ^repo_full_name in app.repo_full_names
+    )
+    |> Repo.one()
+  end
+
   def get_app_by_installation_id(installation_id) do
     from(app in Github.App, where: app.installation_id == ^installation_id)
     |> Repo.one()

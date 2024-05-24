@@ -14,6 +14,18 @@ defmodule Fastrepl.GithubTest do
       assert app.account_id == account.id
     end
 
+    test "find_app/1" do
+      account = user_fixture() |> account_fixture(%{name: "personal"})
+
+      {:ok, app_1} =
+        Github.add_app(account, %{installation_id: "123", repo_full_names: ["1"]})
+
+      {:ok, app_2} =
+        Github.add_app(account, %{installation_id: "456", repo_full_names: ["2", "3"]})
+
+      assert Github.find_app(account.id, "2").id == app_2.id
+    end
+
     test "get_app_by_installation_id/1" do
       account = user_fixture() |> account_fixture(%{name: "personal"})
 

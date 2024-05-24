@@ -1,18 +1,21 @@
 defmodule Fastrepl.FS do
   require Logger
 
+  alias Fastrepl.Github
   alias Fastrepl.Native.CodeUtils
 
-  def new_repo(repo_url, repo_full_name, repo_sha) do
-    repo_id = String.replace(repo_full_name, "/", "-")
+  @clone_depth 1
+
+  def clone(url, %Github.Repo{} = repo) do
+    repo_id = String.replace(repo.full_name, "/", "-")
 
     dir =
       Application.fetch_env!(:fastrepl, :clone_dir)
-      |> Path.join("#{repo_id}-#{repo_sha}")
+      |> Path.join("#{repo_id}-#{repo.default_branch_head}")
 
     cond do
       File.exists?(dir) -> {:ok, dir}
-      CodeUtils.clone(repo_url, dir, 1) -> {:ok, dir}
+      CodeUtils.clone(url, dir, @clone_depth) -> {:ok, dir}
       true -> {:error, "failed to clone repo"}
     end
   end
