@@ -1,6 +1,5 @@
 defmodule Fastrepl.Github do
   import Ecto.Query, warn: false
-  alias GitHub.Git
   alias Fastrepl.Repo
 
   alias Fastrepl.Accounts.Account
