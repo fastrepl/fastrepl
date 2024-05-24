@@ -17,6 +17,8 @@ defmodule Fastrepl.ThreadManager do
         issue_number: issue_number,
         installation_id: installation_id
       }) do
+    Process.flag(:trap_exit, true)
+
     token = Github.get_installation_token!(installation_id)
     repo = Github.Repo.from!(repo_full_name, auth: token)
     app = Github.find_app(account_id, repo_full_name)
@@ -79,6 +81,20 @@ defmodule Fastrepl.ThreadManager do
   def handle_info({:set, data}, state) do
     state = data |> Enum.reduce(state, fn {k, v}, acc -> Map.put(acc, k, v) end)
     {:noreply, state}
+  end
+
+  @impl true
+  def handle_info({:EXIT, _pid, reason}, state) do
+    {:stop, reason, state}
+  end
+
+  @impl true
+  def terminate(_reason, state) do
+    if state[:thread_id] do
+      Registry.unregister(registry_module(), state.thread_id)
+    end
+
+    :ok
   end
 
   defp precompute_embeddings(docs, cb \\ fn _chunks -> :ok end) do
