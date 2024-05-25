@@ -1,12 +1,7 @@
 defmodule Fastrepl.SemanticFunction.Modify do
-  use Retry
-
   alias Fastrepl.Repository
   alias Fastrepl.Repository.Mutation
   alias Fastrepl.Repository.Comment
-
-  alias LangChain.Chains.LLMChain
-  alias LangChain.Message
 
   @spec run(Repository.t(), Comment.t()) :: {:ok, Mutation.t()} | {:error, any()}
   def run(repo, comment) do
@@ -22,8 +17,9 @@ defmodule Fastrepl.SemanticFunction.Modify do
       |> Enum.join("\n")
 
     messages = [
-      Message.new_system!(
-        """
+      %{
+        role: "system",
+        content: """
         You are a senior software engineer with extensive experience in modifying existing codebases.
 
         The user will provide you with a file and comments about the file.
@@ -37,10 +33,10 @@ defmodule Fastrepl.SemanticFunction.Modify do
         For example:
         #{section_modified_example()}
         """
-        |> String.trim()
-      ),
-      Message.new_user!(
-        """
+      },
+      %{
+        role: "user",
+        content: """
         Here's the file:
 
         ```#{file.path}
@@ -51,8 +47,7 @@ defmodule Fastrepl.SemanticFunction.Modify do
 
         #{section_to_modify(target, comment.content)}
         """
-        |> String.trim()
-      )
+      }
     ]
 
     case llm(messages) do
@@ -72,15 +67,19 @@ defmodule Fastrepl.SemanticFunction.Modify do
   end
 
   defp llm(messages) do
-    retry with: exponential_backoff() |> randomize |> cap(2_000) |> expiry(6_000) do
-      LLMChain.new!(%{
-        llm: Fastrepl.chat_model(%{model: "gpt-4-turbo", stream: false, temperature: 0})
-      })
-      |> LLMChain.add_messages(messages)
-      |> LLMChain.run()
-    after
-      {:ok, _, %Message{} = message} -> parse_section_modified(message.content)
-    else
+    result =
+      Fastrepl.AI.chat(
+        %{
+          model: "gpt-4-turbo",
+          stream: false,
+          temperature: 0,
+          messages: messages
+        },
+        otel_attrs: %{module: __MODULE__}
+      )
+
+    case result do
+      {:ok, content} -> parse_section_modified(content)
       error -> error
     end
   end
