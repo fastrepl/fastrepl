@@ -50,3 +50,5 @@ tasks:
 
   redis:up: docker run -d --name redis-container -p 6379:6379 redis:latest --requirepass "password"
   redis:down: docker rm -f redis-container
+
+  stripe: stripe listen --forward-to localhost:4000/webhook/stripe
