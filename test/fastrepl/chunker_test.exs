@@ -24,7 +24,7 @@ defmodule Fastrepl.ChunckerTest do
 
     test "enture max tokens" do
       root_path = System.tmp_dir!() |> Path.join(Nanoid.generate())
-      Fastrepl.Native.CodeUtils.clone("https://github.com/brainlid/langchain", root_path, 1)
+      Fastrepl.Native.CodeUtils.clone_depth("https://github.com/brainlid/langchain", root_path, 1)
 
       chunks =
         root_path
