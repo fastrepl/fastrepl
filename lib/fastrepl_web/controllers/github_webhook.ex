@@ -11,10 +11,13 @@ defmodule FastreplWeb.GithubWebhookHandler do
 
     case action do
       "created" ->
+        repo_full_names = Enum.map(repos, & &1["full_name"])
+        repo_full_names |> Enum.each(&Github.Repo.create_label(&1, installation_id))
+
         # at this point, user is at github_setup_live. The account will be linked there.
         Github.add_app(%{
           installation_id: installation_id,
-          repo_full_names: Enum.map(repos, & &1["full_name"])
+          repo_full_names: repo_full_names
         })
 
       "deleted" ->
@@ -54,39 +57,43 @@ defmodule FastreplWeb.GithubWebhookHandler do
     %{
       "action" => action,
       "installation" => %{"id" => installation_id},
-      "issue" => %{"number" => number, "labels" => _labels},
+      "issue" => %{"number" => number, "labels" => labels},
       "repository" => %{"full_name" => repo_full_name}
     } = payload
 
     app = Github.get_app_by_installation_id(installation_id)
 
+    args = %{
+      repo_full_name: repo_full_name,
+      thread_id: Nanoid.generate(),
+      issue_number: number,
+      account_id: app.account_id,
+      installation_id: installation_id
+    }
+
     if app != nil do
       case action do
         "opened" ->
-          args = %{
-            repo_full_name: repo_full_name,
-            thread_id: Nanoid.generate(),
-            issue_number: number,
-            account_id: app.account_id,
-            installation_id: installation_id
-          }
-
-          {:ok, _} =
-            DynamicSupervisor.start_child(
-              Fastrepl.ThreadManagerSupervisor,
-              {Fastrepl.ThreadManager, args}
-            )
-
-        "closed" ->
-          :ok
+          if Enum.any?(labels, &(&1["name"] == "fastrepl")) do
+            {:ok, _} =
+              DynamicSupervisor.start_child(
+                Fastrepl.ThreadManagerSupervisor,
+                {Fastrepl.ThreadManager, args}
+              )
+          end
 
         "labeled" ->
-          :ok
-
-        "unlabeled" ->
-          :ok
+          if Enum.any?(labels, &(&1["name"] == "fastrepl")) do
+            {:ok, _} =
+              DynamicSupervisor.start_child(
+                Fastrepl.ThreadManagerSupervisor,
+                {Fastrepl.ThreadManager, args}
+              )
+          end
       end
     end
+
+    :ok
   end
 
   def handle_event(event, _payload) do
