@@ -27,7 +27,7 @@ defmodule Fastrepl.Billings do
   def get_billing_by_customer_id(id) do
     query =
       from b in Billing,
-        where: fragment("?->>'id' = ?", b.stripe_customer, ^id)
+        where: json_extract_path(b.stripe_customer, ["id"]) == ^id
 
     Repo.one(query)
   end
@@ -35,7 +35,7 @@ defmodule Fastrepl.Billings do
   def get_billing_by_subscription_id(id) do
     query =
       from b in Billing,
-        where: fragment("?->>'id' = ?", b.stripe_subscription, ^id)
+        where: fragment("?->>'id' = ?", b.stripe_customer, ^id)
 
     Repo.one(query)
   end
