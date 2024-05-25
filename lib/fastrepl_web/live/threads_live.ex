@@ -1,16 +1,16 @@
 defmodule FastreplWeb.ThreadsLive do
   use FastreplWeb, :live_view
 
+  import FastreplWeb.ThreadComponents, only: [thread_list_item: 1]
+
   def render(assigns) do
     ~H"""
     <h2 class="text-xl font-semibold">Threads</h2>
 
-    <ul class="mt-8">
+    <ul class="mt-8 max-w-[400px]">
       <%= for {id, _pid} <- @threads do %>
         <li>
-          <.link navigate={~p"/thread/#{id}"} class="text-sm font-semibold hover:underline">
-            <%= id %>
-          </.link>
+          <.thread_list_item id={id} />
         </li>
       <% end %>
     </ul>

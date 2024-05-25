@@ -33,4 +33,22 @@ defmodule FastreplWeb.ThreadComponents do
     </div>
     """
   end
+
+  attr :id, :string
+
+  def thread_list_item(assigns) do
+    ~H"""
+    <div class="flex items-center gap-2 border rounded-md shadow-md justify-between text-sm relative">
+      <div class="flex items-center gap-2">
+        <img
+          src={"//ui-avatars.com/api/?name=#{@id}&background=f0e9e9&font-size=0.35"}
+          class="h-8 w-8 rounded flex-shrink-0"
+        />
+        <.link navigate={"/thread/#{@id}"} class="hover:font-semibold">
+          <%= @id %>
+        </.link>
+      </div>
+    </div>
+    """
+  end
 end

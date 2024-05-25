@@ -73,7 +73,7 @@ defmodule FastreplWeb.SettingsLive do
       our Github app to get access to your repositories.
       <ul
         :if={!@github_repos.loading}
-        class="flex flex-col gap-1 max-w-[400px] max-h-[300px] overflow-y-auto mt-4"
+        class="flex flex-col gap-1 max-w-[400px] max-h-[300px] mt-4 overflow-y-hidden hover:overflow-y-auto"
       >
         <li :for={repo <- @github_repos.result}>
           <.repo_list_item repo_full_name={repo} />
