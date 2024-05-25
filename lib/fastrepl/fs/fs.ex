@@ -15,7 +15,7 @@ defmodule Fastrepl.FS do
 
     cond do
       File.exists?(dir) -> {:ok, dir}
-      CodeUtils.clone(url, dir, @clone_depth) -> {:ok, dir}
+      CodeUtils.clone_depth(url, dir, @clone_depth) -> {:ok, dir}
       true -> {:error, "failed to clone repo"}
     end
   end

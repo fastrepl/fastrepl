@@ -11,8 +11,11 @@ defmodule Fastrepl.Native.CodeUtils do
   @spec grep_file(String.t(), String.t()) :: [integer()]
   def grep_file(_path, _pattern), do: error()
 
-  @spec clone(String.t(), String.t(), pos_integer()) :: boolean()
-  def clone(_repo_url, _dest_path, _depth), do: error()
+  @spec clone_depth(String.t(), String.t(), pos_integer()) :: boolean()
+  def clone_depth(_repo_url, _dest_path, _depth), do: error()
+
+  @spec clone_commit(String.t(), String.t(), String.t()) :: boolean()
+  def clone_commit(_repo_url, _dest_path, _commit_hash), do: error()
 
   @spec commits(String.t()) :: map()
   def commits(_repo_root_path), do: error()

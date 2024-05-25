@@ -1,14 +1,39 @@
 use std::collections::HashMap;
 use std::path::Path;
 
-pub fn clone<'a>(repo_url: &'a str, dest_path: &'a str, depth: i32) -> anyhow::Result<()> {
+pub fn clone_commit<'a>(
+    repo_url: &'a str,
+    dest_path: &'a str,
+    commit_hash: &'a str,
+) -> anyhow::Result<()> {
+    let oid = git2::Oid::from_str(&commit_hash)?;
+
+    let mut fo = git2::FetchOptions::new();
+    fo.depth(1);
+
+    let mut builder = git2::build::RepoBuilder::new();
+    builder.fetch_options(fo);
+
+    let repo = builder.clone(repo_url, Path::new(dest_path))?;
+    let mut remote = repo.find_remote("origin")?;
+    remote.fetch(&[commit_hash], None, None)?;
+
+    let commit = repo.find_commit(oid)?;
+    let obj = commit.as_object();
+    repo.checkout_tree(obj, None).unwrap();
+    repo.set_head_detached(obj.id()).unwrap();
+
+    Ok(())
+}
+
+pub fn clone_depth<'a>(repo_url: &'a str, dest_path: &'a str, depth: i32) -> anyhow::Result<()> {
     let mut fo = git2::FetchOptions::new();
     fo.depth(depth);
 
     let mut builder = git2::build::RepoBuilder::new();
     builder.fetch_options(fo);
-
     builder.clone(repo_url, Path::new(dest_path))?;
+
     Ok(())
 }
 

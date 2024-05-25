@@ -9,14 +9,20 @@ use insta::assert_snapshot;
 fn clone() {
     let repo_url = "https://github.com/fastrepl/fastrepl.git";
     let dest_path = temp_dir().join(nanoid!()).to_str().unwrap().to_string();
-    git::clone(repo_url, &dest_path, 1).unwrap();
+
+    git::clone_commit(
+        repo_url,
+        &dest_path,
+        "048621d82171d930eec6c8cda41b164eff424c6b",
+    )
+    .unwrap();
 }
 
 #[test]
 fn patches() {
     let repo_url = "https://github.com/fastrepl/fastrepl.git";
     let dest_path = temp_dir().join(nanoid!()).to_str().unwrap().to_string();
-    git::clone(repo_url, &dest_path, 1).unwrap();
+    git::clone_depth(repo_url, &dest_path, 1).unwrap();
 
     let result = git::patches(&dest_path).unwrap();
     assert_eq!(result.len(), 0);
@@ -62,13 +68,19 @@ fn patches() {
     assert_snapshot!(result.get(".iex.exs").unwrap(), @r###"
     diff --git a/.iex.exs b/.iex.exs
     deleted file mode 100644
-    index 5beac86..0000000
+    index 3860f7d..0000000
     --- a/.iex.exs
     +++ /dev/null
-    @@ -1,3 +0,0 @@
+    @@ -1,9 +0,0 @@
     -import Ecto.Query
+    -alias Fastrepl.Repo
     -
-    -alias Fastrepl.{Repo}
+    -alias Identity.User
+    -alias Fastrepl.Accounts.Member
+    -alias Fastrepl.Accounts.Account
+    -alias Fastrepl.Billings.Billing
+    -
+    -alias Fastrepl.Github
     "###);
 }
 
@@ -76,7 +88,7 @@ fn patches() {
 fn commits() {
     let repo_url = "https://github.com/fastrepl/fastrepl.git";
     let dest_path = temp_dir().join(nanoid!()).to_str().unwrap().to_string();
-    git::clone(repo_url, &dest_path, 5).unwrap();
+    git::clone_depth(repo_url, &dest_path, 5).unwrap();
 
     let result = git::commits(&dest_path).unwrap();
     assert_eq!(result.len(), 4);

@@ -12,7 +12,8 @@ mod tests;
 rustler::init!(
     "Elixir.Fastrepl.Native.CodeUtils",
     [
-        clone,
+        clone_commit,
+        clone_depth,
         commits,
         unified_diffs,
         unified_diff,
@@ -23,8 +24,16 @@ rustler::init!(
 );
 
 #[rustler::nif(schedule = "DirtyIo")]
-fn clone<'a>(repo_url: &'a str, dest_path: &'a str, depth: i32) -> bool {
-    match git::clone(repo_url, dest_path, depth) {
+fn clone_commit<'a>(repo_url: &'a str, dest_path: &'a str, commit_hash: &'a str) -> bool {
+    match git::clone_commit(repo_url, dest_path, commit_hash) {
+        Ok(_) => true,
+        Err(_) => false,
+    }
+}
+
+#[rustler::nif(schedule = "DirtyIo")]
+fn clone_depth<'a>(repo_url: &'a str, dest_path: &'a str, depth: i32) -> bool {
+    match git::clone_depth(repo_url, dest_path, depth) {
         Ok(_) => true,
         Err(_) => false,
     }
