@@ -15,6 +15,10 @@ defmodule Fastrepl do
 
   defp attach_otel(req) do
     req
+    |> OpentelemetryReq.attach(
+      propagate_trace_ctx: true,
+      no_path_params: true
+    )
     |> Req.Request.register_options([:otel_attrs])
     |> Req.Request.append_request_steps(
       otel_attrs: fn req ->
