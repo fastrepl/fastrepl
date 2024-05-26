@@ -107,6 +107,9 @@ defmodule FastreplWeb.GithubWebhookHandler do
                 {Fastrepl.ThreadManager, args}
               )
           end
+
+        _ ->
+          :ok
       end
 
       :ok
