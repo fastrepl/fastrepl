@@ -29,7 +29,7 @@ defmodule Fastrepl.AI do
 
     case resp do
       {:ok, %{status: 200, body: %{"data" => data}}} ->
-        {:ok, data |> get_in([Access.at(0), "embedding"])}
+        {:ok, data |> Enum.map(& &1["embedding"])}
 
       {:ok, data} ->
         {:error, data}
