@@ -8,7 +8,7 @@ defmodule FastreplWeb.SettingsLive do
 
   def render(assigns) do
     ~H"""
-    <div>
+    <div class="px-[15px] py-[20px]">
       <h2 class="text-xl font-semibold">Settings</h2>
 
       <div class="mt-8">

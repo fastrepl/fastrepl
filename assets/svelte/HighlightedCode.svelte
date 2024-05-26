@@ -2,8 +2,10 @@
   import { HighlightAuto, LineNumbers } from "svelte-highlight";
   import theme from "svelte-highlight/styles/one-light";
 
+  import type { Selection } from "$lib/types";
+
   export let content: string;
-  export let selections: number[][] = [];
+  export let selections: Selection[] = [];
 
   let code = "";
 
@@ -16,8 +18,8 @@
     }
   }
 
-  $: highlightedLines = selections.flatMap(([from, to]) =>
-    Array.from({ length: to - from + 1 }, (_, i) => from + i - 1),
+  $: highlightedLines = selections.flatMap(({ start, end }) =>
+    Array.from({ length: end - start + 1 }, (_, i) => start + i - 1),
   );
 </script>
 

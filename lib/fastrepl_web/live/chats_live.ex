@@ -3,8 +3,10 @@ defmodule FastreplWeb.ChatsLive do
 
   def render(assigns) do
     ~H"""
-    <h2 class="text-xl font-semibold">Chats</h2>
-    <p>Chat mode is planned, but not yet available.</p>
+    <div class="px-[15px] py-[20px]">
+      <h2 class="text-xl font-semibold">Chats</h2>
+      <p>Chat mode is planned, but not yet available.</p>
+    </div>
     """
   end
 

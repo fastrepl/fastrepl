@@ -27,8 +27,6 @@
   <FastreplWeb.Layouts.side_menu active_tab={@active_tab} />
   <main class="flex-1 overflow-auto px-4 py-4 sm:px-6 lg:px-8">
     <.flash_group flash={@flash} />
-    <div class="px-[15px] py-[20px]">
-      <%= @inner_content %>
-    </div>
+    <div><%= @inner_content %></div>
   </main>
 </div>

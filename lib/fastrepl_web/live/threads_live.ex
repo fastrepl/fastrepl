@@ -5,15 +5,17 @@ defmodule FastreplWeb.ThreadsLive do
 
   def render(assigns) do
     ~H"""
-    <h2 class="text-xl font-semibold">Threads</h2>
+    <div class="px-[15px] py-[20px]">
+      <h2 class="text-xl font-semibold">Threads</h2>
 
-    <ul class="mt-8 max-w-[400px]">
-      <%= for {id, _pid} <- @threads do %>
-        <li>
-          <.thread_list_item id={id} />
-        </li>
-      <% end %>
-    </ul>
+      <ul class="mt-8 max-w-[400px]">
+        <%= for {id, _pid} <- @threads do %>
+          <li>
+            <.thread_list_item id={id} />
+          </li>
+        <% end %>
+      </ul>
+    </div>
     """
   end
 

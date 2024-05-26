@@ -4,7 +4,7 @@ defmodule Fastrepl.Retrieval.Executor do
   alias Fastrepl.Retrieval.Context
   alias Fastrepl.Retrieval.Result
 
-  @spec run(Context.t(), map()) :: {Context.t(), [Result.t()]}
+  @spec run(Context.t(), [map()]) :: {Context.t(), [Result.t()]}
   def run(%Context{} = retrieval_ctx, plans) do
     Tracing.span %{}, "executor" do
       ctx = Tracing.current_ctx()

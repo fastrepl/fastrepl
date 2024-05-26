@@ -5,7 +5,7 @@
   import { type TreeNode } from "$lib/utils/tree";
 
   export let items: TreeNode[] = [];
-  export let currentFilePath: string | null = null;
+  export let currentFilePath: string | undefined = undefined;
   export let handleClickFile: (path: string) => void;
 </script>
 

@@ -7,7 +7,7 @@ defmodule FastreplWeb.Layouts do
 
   def side_menu(assigns) do
     ~H"""
-    <div class="flex h-[calc(100vh-100px)] w-16 flex-col justify-between border-e bg-white">
+    <div class="flex h-[calc(100vh-80px)] w-16 flex-col justify-between border-e bg-white">
       <div>
         <div class="inline-flex size-16 items-center justify-center">
           <span class="grid size-10 place-content-center rounded-lg bg-gray-100 text-xs text-gray-600">

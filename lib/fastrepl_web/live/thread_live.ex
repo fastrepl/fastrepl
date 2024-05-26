@@ -1,19 +1,46 @@
 defmodule FastreplWeb.ThreadLive do
   use FastreplWeb, :live_view
 
+  import FastreplWeb.SessionComponents, only: [github_issue: 1, github_repo: 1]
+
   def render(assigns) do
     ~H"""
-    <div class="w-full h-[calc(100vh-140px)] bg-gray-50 rounded-md">
-      <p :if={assigns[:status]}>
-        <%= @status %>
-      </p>
+    <div class="bg-gray-50 rounded-md">
+      <%= if assigns[:status] != :start_3 do %>
+        <div class="flex flex-col gap-1 items-center">
+          <div :if={assigns[:github_issue]}>
+            <.github_issue
+              name={@github_repo.full_name}
+              title={@github_issue.title}
+              number={@github_issue.number}
+            />
+          </div>
 
-      <p :if={assigns[:github_repo]}>
-        <%= @github_repo.full_name %>
-      </p>
-      <p :if={assigns[:github_issue]}>
-        <%= @github_issue.title %>
-      </p>
+          <div :if={assigns[:github_repo]}>
+            <.github_repo
+              name={@github_repo.full_name}
+              sha={@github_repo.default_branch_head}
+              description={@github_repo.description}
+            />
+          </div>
+        </div>
+      <% else %>
+        <.svelte
+          name="Session"
+          socket={@socket}
+          ssr={false}
+          props={
+            %{
+              repoFullName: @github_repo.full_name,
+              paths: [],
+              diffs: [],
+              files: [],
+              comments: [],
+              messages: []
+            }
+          }
+        />
+      <% end %>
     </div>
     """
   end
@@ -38,6 +65,14 @@ defmodule FastreplWeb.ThreadLive do
 
   def handle_info({:sync, state}, socket) do
     {:noreply, socket |> assign(state)}
+  end
+
+  def handle_event("comment:add", %{"comment" => _comment}, socket) do
+    {:noreply, socket}
+  end
+
+  def handle_event("file:add", %{"path" => path}, socket) do
+    {:reply, %{file: %{path: path, content: "TODO"}}, socket}
   end
 
   defp find_existing_manager(thread_id) do

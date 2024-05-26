@@ -8,6 +8,7 @@ defmodule Fastrepl.ThreadManager do
   alias Fastrepl.Retrieval
   alias Fastrepl.Sessions.Ticket
   alias Fastrepl.Sessions.Session
+  alias Fastrepl.Repository
 
   def start_link(%{account_id: account_id, thread_id: thread_id} = args) do
     GenServer.start_link(__MODULE__, args, name: via_registry(thread_id, account_id))
@@ -55,6 +56,8 @@ defmodule Fastrepl.ThreadManager do
       github_issue_comment_id: comment_id
     }
 
+    repository = %Repository{}
+
     state =
       Map.new()
       |> Map.put(:self, self())
@@ -62,6 +65,7 @@ defmodule Fastrepl.ThreadManager do
       |> Map.put(:github_token, token)
       |> Map.put(:session, session)
       |> Map.put(:thread_id, thread_id)
+      |> Map.put(:repository, repository)
 
     send(state.self, :prepare_repo)
     {:ok, state}
@@ -79,6 +83,10 @@ defmodule Fastrepl.ThreadManager do
   end
 
   @impl true
+  def handle_call({:file, path}, from, state) do
+  end
+
+  @impl true
   def handle_info(:prepare_repo, state) do
     Task.Supervisor.start_child(Fastrepl.TaskSupervisor, fn ->
       send(state.self, {:update, :status, :clone_1})
@@ -90,7 +98,7 @@ defmodule Fastrepl.ThreadManager do
           state.github_token
         )
 
-      send(state.self, {:update, :status, :clone_2})
+      send(state.self, {:update, :status, :index_2})
 
       ctx =
         root_path
@@ -104,15 +112,25 @@ defmodule Fastrepl.ThreadManager do
       precompute_embeddings(ctx.chunks)
 
       send(state.self, {:update, :status, :start_3})
-      send(state.self, :start_retrieval)
+      send(state.self, :retrieval)
     end)
 
     {:noreply, state}
   end
 
   @impl true
-  def handle_info(:start_retrieval, state) do
-    _ = Retrieval.Planner.run(state.retrieval_ctx, state.session.ticket.github_issue)
+  def handle_info(:retrieval, state) do
+    {ctx, plans} = Retrieval.Planner.run(state.retrieval_ctx, state.session.ticket.github_issue)
+    {_, executor_result} = Retrieval.Executor.run(ctx, plans)
+
+    results =
+      executor_result
+      |> Retrieval.Reranker.run()
+      |> Retrieval.Result.fuse(min_distance: 10)
+      |> Enum.take(3)
+
+    IO.inspect(results)
+
     {:noreply, state}
   end
 
