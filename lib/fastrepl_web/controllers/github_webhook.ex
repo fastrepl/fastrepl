@@ -14,7 +14,10 @@ defmodule FastreplWeb.GithubWebhookHandler do
     case action do
       "created" ->
         repo_full_names = Enum.map(repos, & &1["full_name"])
-        repo_full_names |> Enum.each(&Github.Repo.create_label(&1, installation_id))
+
+        repo_full_names
+        |> Enum.map(&Task.async(fn -> Github.Repo.create_label(&1, installation_id) end))
+        |> Task.await_many()
 
         case Github.get_app_by_installation_id(installation_id) do
           nil ->

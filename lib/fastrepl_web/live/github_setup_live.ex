@@ -90,11 +90,10 @@ defmodule FastreplWeb.GithubSetupLive do
         {:ok, _} ->
           socket
           |> redirect(to: "/settings")
-          |> put_flash(:info, "Success! It might takes a while for the changes to take effect.")
+          |> put_flash(:info, "Github app installed!")
 
         {:error, _} ->
-          socket
-          |> put_flash(:error, "Something went wrong!")
+          socket |> put_flash(:error, "Something went wrong!")
       end
 
     {:noreply, socket}
