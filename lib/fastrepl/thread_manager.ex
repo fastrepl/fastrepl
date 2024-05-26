@@ -1,78 +1,96 @@
 defmodule Fastrepl.ThreadManager do
   use GenServer, restart: :transient
+  use Tracing
+  require Logger
 
   alias Fastrepl.FS
   alias Fastrepl.Github
   alias Fastrepl.Retrieval
+  alias Fastrepl.Sessions.Ticket
+  alias Fastrepl.Sessions.Session
 
   def start_link(%{account_id: account_id, thread_id: thread_id} = args) do
     GenServer.start_link(__MODULE__, args, name: via_registry(thread_id, account_id))
   end
 
   @impl true
-  def init(
-        %{
-          account_id: account_id,
-          thread_id: thread_id,
-          repo_full_name: repo_full_name,
-          issue_number: issue_number,
-          installation_id: installation_id
-        } = args
-      ) do
+  def init(%{
+        account_id: account_id,
+        thread_id: thread_id,
+        installation_id: installation_id,
+        repo_full_name: repo_full_name,
+        issue_number: issue_number
+      }) do
     Process.flag(:trap_exit, true)
 
     token = Github.get_installation_token!(installation_id)
     repo = Github.Repo.from!(repo_full_name, auth: token)
     issue = Github.Issue.from!(repo_full_name, issue_number, auth: token)
-    app = Github.find_app(account_id, repo_full_name)
+
+    {:ok, %{id: comment_id}} =
+      Github.Issue.Comment.create(
+        repo_full_name,
+        issue_number,
+        """
+        We have just started processing your issue.
+
+        You can check the progress here: #{FastreplWeb.Endpoint.url()}/thread/#{thread_id}
+        """,
+        auth: token
+      )
+
+    ticket = %Ticket{
+      type: :github,
+      github_repo_full_name: repo_full_name,
+      github_repo_sha: repo.default_branch_head,
+      github_issue_number: issue_number,
+      github_repo: repo,
+      github_issue: issue
+    }
+
+    session = %Session{
+      status: :init_0,
+      ticket: ticket,
+      display_id: thread_id,
+      github_issue_comment_id: comment_id
+    }
 
     state =
       Map.new()
       |> Map.put(:self, self())
+      |> Map.put(:account_id, account_id)
       |> Map.put(:github_token, token)
+      |> Map.put(:session, session)
       |> Map.put(:thread_id, thread_id)
-      |> Map.put(:github_repo, repo)
-      |> Map.put(:github_issue, issue)
-      |> Map.put(:github_app, app)
-      |> Map.put(:status, Map.get(args, :status, :init_0))
-
-    Github.Issue.Comment.create(
-      repo_full_name,
-      issue_number,
-      """
-      We have just started processing your issue.
-
-      You can check the progress here: #{FastreplWeb.Endpoint.url()}/thread/#{thread_id}
-      """,
-      auth: token
-    )
 
     send(state.self, :prepare_repo)
     {:ok, state}
   end
 
   @impl true
-  def handle_call(:state, _from, state) do
-    ret = %{
-      status: state.status,
-      github_issue: state.github_issue,
-      github_repo: state.github_repo
+  def handle_call(:init_state, _from, state) do
+    init_state = %{
+      status: state.session.status,
+      github_issue: state.session.ticket.github_issue,
+      github_repo: state.session.ticket.github_repo
     }
 
-    {:reply, ret, state}
+    {:reply, init_state, state}
   end
 
   @impl true
   def handle_info(:prepare_repo, state) do
     Task.Supervisor.start_child(Fastrepl.TaskSupervisor, fn ->
-      send(state.self, {:set_and_sync, %{status: :clone_1}})
+      send(state.self, {:update, :status, :clone_1})
 
       {:ok, root_path} =
-        state.github_repo.full_name
-        |> Github.URL.clone_with_token(state.github_token)
-        |> FS.clone(state.github_repo)
+        FS.clone(
+          state.session.ticket.github_repo_full_name,
+          state.session.ticket.github_repo_sha,
+          state.github_token
+        )
 
-      send(state.self, {:set_and_sync, %{status: :index_2}})
+      send(state.self, {:update, :status, :clone_2})
 
       ctx =
         root_path
@@ -82,35 +100,36 @@ defmodule Fastrepl.ThreadManager do
           Retrieval.Tool.KeywordSearch
         ])
 
-      send(state.self, {:set, %{root_path: root_path, retrieval_ctx: ctx}})
+      send(state.self, {:update, :retrieval_ctx, ctx})
       precompute_embeddings(ctx.chunks)
 
-      send(state.self, {:set_and_sync, %{status: :start_3}})
+      send(state.self, {:update, :status, :start_3})
+      send(state.self, :start_retrieval)
     end)
 
     {:noreply, state}
   end
 
   @impl true
-  def handle_info(:retrieve, state) do
+  def handle_info(:start_retrieval, state) do
+    _ = Retrieval.Planner.run(state.retrieval_ctx, state.session.ticket.github_issue)
     {:noreply, state}
   end
 
   @impl true
-  def handle_info({:set, data}, state) do
+  def handle_info({:update, key, value}, state) do
     state =
-      data
-      |> Enum.reduce(state, fn {k, v}, acc -> Map.put(acc, k, v) end)
+      case key do
+        :status ->
+          sync_with_views(state, %{status: value})
+          state |> update_in([:session, Access.key(:status)], fn _ -> value end)
 
-    {:noreply, state}
-  end
+        :retrieval_ctx ->
+          state |> Map.put(:retrieval_ctx, value)
 
-  @impl true
-  def handle_info({:set_and_sync, data}, state) do
-    state =
-      data
-      |> Enum.reduce(state, fn {k, v}, acc -> Map.put(acc, k, v) end)
-      |> sync_with_views(data)
+        _ ->
+          state
+      end
 
     {:noreply, state}
   end
@@ -150,11 +169,6 @@ defmodule Fastrepl.ThreadManager do
 
   defp sync_with_views(state, map) when is_map(map) do
     broadcast(state.thread_id, map)
-    state
-  end
-
-  defp sync_with_views(state, key) when is_atom(key) do
-    broadcast(state.thread_id, %{key => state[key]})
     state
   end
 

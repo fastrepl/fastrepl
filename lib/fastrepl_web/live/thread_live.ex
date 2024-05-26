@@ -27,11 +27,12 @@ defmodule FastreplWeb.ThreadLive do
       nil ->
         {:ok, socket |> redirect(to: "/threads")}
 
-      pid when is_pid(pid) ->
-        state = GenServer.call(pid, :state)
-        send(self(), {:sync, state})
+      pid ->
+        state =
+          GenServer.call(pid, :init_state)
+          |> Map.merge(%{manager_pid: pid, thread_id: thread_id})
 
-        {:ok, socket |> assign(manager_pid: pid, thread_id: thread_id)}
+        {:ok, socket |> assign(state)}
     end
   end
 
@@ -43,7 +44,7 @@ defmodule FastreplWeb.ThreadLive do
     registry = Application.fetch_env!(:fastrepl, :thread_manager_registry)
 
     case Registry.lookup(registry, thread_id) do
-      [{pid, _value}] -> pid
+      [{pid, _value}] when is_pid(pid) -> pid
       [] -> nil
     end
   end
