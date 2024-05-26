@@ -15,7 +15,7 @@ defmodule Fastrepl.Github.App do
   @doc false
   def changeset(app, attrs) do
     app
-    |> cast(attrs, [:installation_id, :repo_full_names])
+    |> cast(attrs, [:installation_id, :repo_full_names, :account_id])
     |> validate_required([:installation_id])
   end
 end

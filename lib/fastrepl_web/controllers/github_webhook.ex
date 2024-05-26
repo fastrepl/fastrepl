@@ -1,4 +1,6 @@
 defmodule FastreplWeb.GithubWebhookHandler do
+  require Logger
+
   alias Fastrepl.Github
 
   # https://docs.github.com/en/webhooks/webhook-events-and-payloads#installation
@@ -14,11 +16,17 @@ defmodule FastreplWeb.GithubWebhookHandler do
         repo_full_names = Enum.map(repos, & &1["full_name"])
         repo_full_names |> Enum.each(&Github.Repo.create_label(&1, installation_id))
 
-        # at this point, user is at github_setup_live. The account will be linked there.
-        Github.add_app(%{
-          installation_id: installation_id,
-          repo_full_names: repo_full_names
-        })
+        case Github.get_app_by_installation_id(installation_id) do
+          nil ->
+            # app is not yet created in the github_setup_live.
+            # we create app here, and account will be linked there.
+            Github.add_app(%{installation_id: installation_id, repo_full_names: repo_full_names})
+
+          app ->
+            # app already created in the github_setup_live.
+            # we just need to update the repositories here.
+            Github.update_app(app, %{repo_full_names: repo_full_names})
+        end
 
       "deleted" ->
         Github.delete_app_by_installation_id(installation_id)
@@ -36,20 +44,24 @@ defmodule FastreplWeb.GithubWebhookHandler do
 
     app = Github.get_app_by_installation_id(installation_id)
 
-    repos =
-      case action do
-        "added" ->
-          existing = app.repo_full_names |> MapSet.new()
-          added = repositories_added |> Enum.map(& &1["full_name"]) |> MapSet.new()
-          MapSet.union(existing, added) |> MapSet.to_list()
+    if app == nil do
+      {:error, "app not found"}
+    else
+      repos =
+        case action do
+          "added" ->
+            existing = app.repo_full_names |> MapSet.new()
+            added = repositories_added |> Enum.map(& &1["full_name"]) |> MapSet.new()
+            MapSet.union(existing, added) |> MapSet.to_list()
 
-        "removed" ->
-          existing = app.repo_full_names |> MapSet.new()
-          removed = repositories_removed |> Enum.map(& &1["full_name"]) |> MapSet.new()
-          MapSet.difference(existing, removed) |> MapSet.to_list()
-      end
+          "removed" ->
+            existing = app.repo_full_names |> MapSet.new()
+            removed = repositories_removed |> Enum.map(& &1["full_name"]) |> MapSet.new()
+            MapSet.difference(existing, removed) |> MapSet.to_list()
+        end
 
-    Github.set_repos(app, repos)
+      Github.set_repos(app, repos)
+    end
   end
 
   # https://docs.github.com/en/webhooks/webhook-events-and-payloads#issues
@@ -71,7 +83,9 @@ defmodule FastreplWeb.GithubWebhookHandler do
       installation_id: installation_id
     }
 
-    if app != nil do
+    if app == nil do
+      {:error, "app not found"}
+    else
       case action do
         "opened" ->
           if Enum.any?(labels, &(&1["name"] == "fastrepl")) do
@@ -91,9 +105,9 @@ defmodule FastreplWeb.GithubWebhookHandler do
               )
           end
       end
-    end
 
-    :ok
+      :ok
+    end
   end
 
   def handle_event(event, _payload) do
