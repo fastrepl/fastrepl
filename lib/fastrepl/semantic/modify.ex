@@ -64,7 +64,7 @@ defmodule Fastrepl.SemanticFunction.Modify do
     result =
       Fastrepl.AI.chat(
         %{
-          model: "gpt-4-turbo",
+          model: "gpt-4o",
           stream: false,
           temperature: 0,
           messages: messages

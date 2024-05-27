@@ -6,7 +6,7 @@ defmodule Fastrepl.Retrieval.Planner do
   alias Fastrepl.Retrieval.Context
 
   @models [
-    "gpt-4-turbo",
+    "gpt-4o",
     "claude-3-haiku"
   ]
 
