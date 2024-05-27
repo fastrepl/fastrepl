@@ -114,6 +114,18 @@ defmodule Fastrepl.ThreadManager do
   end
 
   @impl true
+  def handle_call(:execute, _from, state) do
+    Task.Supervisor.start_child(Fastrepl.TaskSupervisor, fn ->
+      send(state.self, {:update, :status, :execute_4})
+
+      Process.sleep(2000)
+      send(state.self, {:update, :status, :start_3})
+    end)
+
+    {:reply, :ok, state}
+  end
+
+  @impl true
   def handle_info(:prepare_repo, state) do
     Task.Supervisor.start_child(Fastrepl.TaskSupervisor, fn ->
       send(state.self, {:update, :status, :clone_1})

@@ -67,10 +67,15 @@
     "overflow-x-hidden hover:overflow-x-auto",
     "h-[calc(100vh-90px)] overflow-y-hidden hover:overflow-y-auto",
     "bg-gray-50 rounded-lg",
-    "border border-gray-200 px-2 py-1",
+    "border border-gray-200",
   ])}
 >
-  <div class="flex flex-row justify-between items-center">
+  <div
+    class={clsx([
+      "flex flex-row justify-between items-center",
+      "bg-gray-200 px-2 mb-2",
+    ])}
+  >
     <span class="text-xs font-semibold truncate">
       {repoFullName}
     </span>
@@ -79,12 +84,13 @@
         content: `<div class="text-xs text-gray-700">cmd + p</div>`,
       }}
       type="button"
-      class="text-lg text-gray-400 hover:text-gray-800 pl-2"
+      class="text-md text-gray-400 hover:text-gray-800 pl-2"
       on:click={() => (openFileSearch = true)}
     >
       +
     </button>
   </div>
+
   <div class="pl-2">
     <TreeView
       items={tree}

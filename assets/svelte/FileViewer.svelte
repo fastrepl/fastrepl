@@ -4,18 +4,14 @@
   import { clsx } from "clsx";
   import tippy, { type Instance as TippyInstance } from "tippy.js";
 
-  import type { File, Diff, Comment } from "$lib/interfaces";
+  import type { File, Comment } from "$lib/interfaces";
   import type { Selection } from "$lib/types";
 
-  import HighlightedCode from "$components/HighlightedCode.svelte";
-  import CodeDiff from "$components/CodeDiff.svelte";
   import Minimap from "$components/Minimap.svelte";
+  import HighlightedCode from "$components/HighlightedCode.svelte";
   import CodeActionList from "$components/CodeActionList.svelte";
 
-  export let diffs: Diff[] = [];
-  export let showDiffs = false;
-  export let currentFile: File | null = null;
-  export let currentDiff: Diff | null = null;
+  export let file: File;
   export let currentSelection: Selection | null = null;
   export let handleChangeSelection: (s: Selection) => void;
   export let handleAddComment: (c: Comment) => void;
@@ -60,7 +56,7 @@
     contextMenuInstance.hide();
 
     const newComment: Comment = {
-      file_path: currentFile.path,
+      file_path: file.path,
       line_start: currentSelection.start,
       line_end: currentSelection.end,
       content: content,
@@ -158,41 +154,26 @@
 </script>
 
 <div class="flex flex-col">
-  {#if showDiffs && currentDiff}
-    <span class="text-xs rounded-t-lg bg-gray-200 py-1 px-2"> changes </span>
+  <span class="text-xs rounded-t-lg bg-gray-200 py-1 px-2">
+    {file.path}
+  </span>
 
-    <div
-      class={clsx([
-        "h-[calc(100vh-90px)] overflow-y-auto scrollbar-hide bg-gray-50 relative",
-        "border-b border-x border-gray-200 rounded-b-lg",
-      ])}
-    >
-      <CodeDiff content={diffs.map((diff) => diff.content).join("\n")} />
-    </div>
-  {:else if currentFile}
-    <span class="text-xs rounded-t-lg bg-gray-200 py-1 px-2">
-      {currentFile.path}
-    </span>
-
-    <!-- svelte-ignore a11y-no-static-element-interactions -->
-    <div
-      bind:this={codeSnippetContainer}
-      on:mouseup={handleMouseUp}
-      on:contextmenu={handleContextMenu}
-      class={clsx([
-        "h-[calc(100vh-115px)] overflow-y-auto scrollbar-hide",
-        "text-sm selection:bg-[#fef16033]",
-        "border-b border-x border-gray-200 rounded-b-lg",
-      ])}
-    >
-      <HighlightedCode
-        code={currentFile.content}
-        selections={[currentSelection].filter(Boolean)}
-      />
-    </div>
-  {:else}
-    <div class="h-[calc(100vh-90px)] border border-gray-200 rounded-lg"></div>
-  {/if}
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
+  <div
+    bind:this={codeSnippetContainer}
+    on:mouseup={handleMouseUp}
+    on:contextmenu={handleContextMenu}
+    class={clsx([
+      "h-[calc(100vh-115px)] overflow-y-auto scrollbar-hide",
+      "text-sm selection:bg-[#fef16033]",
+      "border-b border-x border-gray-200 rounded-b-lg",
+    ])}
+  >
+    <HighlightedCode
+      code={file.content}
+      selections={[currentSelection].filter(Boolean)}
+    />
+  </div>
 </div>
 
 {#if codeSnippetContainer}

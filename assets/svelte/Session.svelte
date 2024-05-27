@@ -6,18 +6,22 @@
 
   import ActionPanel from "$components/ActionPanel.svelte";
   import FileViewer from "$components/FileViewer.svelte";
+  import DiffViewer from "$components/DiffViewer.svelte";
   import FileNavigator from "$components/FileNavigator.svelte";
 
   export let live: any;
+
   export let repoFullName: string;
   export let paths: string[] = [];
   export let diffs: Diff[] = [];
   export let files: File[] = [];
   export let comments: Comment[] = [];
   export let messages: Message[] = [];
+  export let executing: boolean;
 
   let showDiffs = false;
-  let currentDiff: Diff | null = null;
+  let handleToggleShowDiffs = () => (showDiffs = !showDiffs);
+
   let currentFile: File | null = null;
   let currentSelection: Selection | null = null;
 
@@ -43,23 +47,37 @@
   const handleAddComment = (comment: Comment) => {
     live.pushEvent("comment:add", { comment });
   };
+
+  const handleClickExecute = () => {
+    live.pushEvent("execute", {});
+  };
 </script>
 
 <PaneGroup direction="horizontal">
   <Pane defaultSize={34} minSize={10} order={1}>
-    <ActionPanel {paths} {diffs} {comments} {messages} />
+    <ActionPanel
+      {paths}
+      {diffs}
+      {showDiffs}
+      {handleToggleShowDiffs}
+      {comments}
+      {messages}
+      {handleClickExecute}
+      {executing}
+    />
   </Pane>
   <PaneResizer class="w-2" />
   <Pane defaultSize={50} order={2} minSize={10} class="relative">
-    <FileViewer
-      {diffs}
-      {showDiffs}
-      {currentFile}
-      {currentDiff}
-      {currentSelection}
-      {handleChangeSelection}
-      {handleAddComment}
-    />
+    {#if showDiffs}
+      <DiffViewer {diffs} />
+    {:else}
+      <FileViewer
+        file={currentFile}
+        {currentSelection}
+        {handleChangeSelection}
+        {handleAddComment}
+      />
+    {/if}
   </Pane>
   <PaneResizer class="w-2" />
   <Pane defaultSize={10} minSize={5} order={3}>

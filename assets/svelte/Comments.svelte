@@ -7,12 +7,11 @@
 
   import type { Comment } from "$lib/interfaces";
 
-  export let diffsSize: number;
-  export let showDiffs: boolean;
-  export let handleToggleShowDiffs: () => void;
-
-  export let searching = false;
+  let searching = false;
   export let executing = false;
+  export let diffsSize: number;
+  export let showDiffs = false;
+  export let handleToggleShowDiffs: () => void;
 
   export let items: Comment[] = [];
   export let wipPaths: string[] = [];

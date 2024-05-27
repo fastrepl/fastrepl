@@ -11,12 +11,17 @@
   const TABS = ["Overview", "Chat"];
   let currentTab: (typeof TABS)[number] = TABS[0];
 
+  export let showDiffs = false;
+  export let handleToggleShowDiffs: () => void;
+
   export let paths: string[] = [];
   export let diffs: Diff[] = [];
   export let comments: Comment[] = [];
   export let messages: Message[] = [];
-  const references = [];
+  export let handleClickExecute: () => void;
+  export let executing: boolean;
 
+  const references = [];
   const handleSubmitChat = () => {};
   const handleResetReferences = () => {};
   const handleDeleteReference = () => {};
@@ -52,16 +57,15 @@
     </Tabs.List>
     <Tabs.Content value={TABS[0]} class="bg-gray-50 p-4 h-full">
       <Comments
+        {showDiffs}
+        {handleToggleShowDiffs}
+        {executing}
         diffsSize={diffs.length}
-        showDiffs={false}
-        handleToggleShowDiffs={() => {}}
-        executing={false}
-        searching={false}
         items={comments}
         wipPaths={[]}
         handleClickComment={() => {}}
         handleUpdateComments={() => {}}
-        handleClickExecute={() => {}}
+        {handleClickExecute}
       />
     </Tabs.Content>
     <Tabs.Content value={TABS[1]} class="bg-gray-50 h-full relative p-4">

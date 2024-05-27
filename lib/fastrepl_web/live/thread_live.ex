@@ -6,7 +6,7 @@ defmodule FastreplWeb.ThreadLive do
   def render(assigns) do
     ~H"""
     <div class="bg-gray-50 rounded-md">
-      <%= if assigns[:status] != :start_3 do %>
+      <%= if assigns[:status] in [:init_0, :clone_1, :index_2] do %>
         <div class="flex flex-col gap-1 items-center">
           <div :if={assigns[:github_issue]}>
             <.github_issue
@@ -36,7 +36,8 @@ defmodule FastreplWeb.ThreadLive do
               files: @files,
               comments: @comments,
               diffs: [],
-              messages: []
+              messages: [],
+              executing: @status == :execute_4
             }
           }
         />
@@ -58,6 +59,7 @@ defmodule FastreplWeb.ThreadLive do
         existing_state = GenServer.call(pid, :init_state)
 
         default_state = %{
+          status: :init_0,
           manager_pid: pid,
           thread_id: thread_id,
           paths: [],
@@ -78,6 +80,11 @@ defmodule FastreplWeb.ThreadLive do
   def handle_event("file:add", %{"path" => path}, socket) do
     file = GenServer.call(socket.assigns.manager_pid, {:file_add, path})
     {:reply, file, socket}
+  end
+
+  def handle_event("execute", %{}, socket) do
+    :ok = GenServer.call(socket.assigns.manager_pid, :execute)
+    {:noreply, socket}
   end
 
   def handle_info({:sync, state}, socket) do
