@@ -71,6 +71,8 @@ defmodule Fastrepl.ThreadManager do
   @impl true
   def handle_call(:init_state, _from, state) do
     init_state = %{
+      paths: state.repository.paths,
+      files: state.repository.original_files,
       status: state.session.status,
       github_issue: state.session.ticket.github_issue,
       github_repo: state.session.ticket.github_repo
@@ -82,7 +84,12 @@ defmodule Fastrepl.ThreadManager do
   @impl true
   def handle_call({:file, path}, _from, state) do
     {repo, file} = FS.Repository.add_file!(state.repository, path)
-    {:reply, file, state |> Map.put(:repository, repo)}
+
+    state
+    |> sync_with_views(%{files: repo.original_files})
+    |> Map.put(:repository, repo)
+
+    {:reply, file, state}
   end
 
   @impl true
@@ -120,16 +127,16 @@ defmodule Fastrepl.ThreadManager do
 
   @impl true
   def handle_info(:retrieval, state) do
-    {ctx, plans} = Retrieval.Planner.run(state.retrieval_ctx, state.session.ticket.github_issue)
-    {_, executor_result} = Retrieval.Executor.run(ctx, plans)
+    # {ctx, plans} = Retrieval.Planner.run(state.retrieval_ctx, state.session.ticket.github_issue)
+    # {_, executor_result} = Retrieval.Executor.run(ctx, plans)
 
-    results =
-      executor_result
-      |> Retrieval.Reranker.run()
-      |> Retrieval.Result.fuse(min_distance: 10)
-      |> Enum.take(3)
+    # results =
+    #   executor_result
+    #   |> Retrieval.Reranker.run()
+    #   |> Retrieval.Result.fuse(min_distance: 10)
+    #   |> Enum.take(3)
 
-    IO.inspect(results)
+    # IO.inspect(results)
 
     {:noreply, state}
   end
@@ -139,11 +146,14 @@ defmodule Fastrepl.ThreadManager do
     state =
       case key do
         :status ->
-          sync_with_views(state, %{status: value})
-          state |> update_in([:session, Access.key(:status)], fn _ -> value end)
+          state
+          |> sync_with_views(%{status: value})
+          |> update_in([:session, Access.key(:status)], fn _ -> value end)
 
         :repository ->
-          state |> Map.put(:repository, value)
+          state
+          |> sync_with_views(%{paths: value.paths})
+          |> Map.put(:repository, value)
 
         :retrieval_ctx ->
           state |> Map.put(:retrieval_ctx, value)

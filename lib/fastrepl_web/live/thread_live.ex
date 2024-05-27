@@ -32,9 +32,9 @@ defmodule FastreplWeb.ThreadLive do
           props={
             %{
               repoFullName: @github_repo.full_name,
-              paths: [],
+              paths: @paths,
+              files: @files,
               diffs: [],
-              files: [],
               comments: [],
               messages: []
             }
@@ -55,16 +55,18 @@ defmodule FastreplWeb.ThreadLive do
         {:ok, socket |> redirect(to: "/threads")}
 
       pid ->
-        state =
-          GenServer.call(pid, :init_state)
-          |> Map.merge(%{manager_pid: pid, thread_id: thread_id})
+        existing_state = GenServer.call(pid, :init_state)
 
+        default_state = %{
+          manager_pid: pid,
+          thread_id: thread_id,
+          paths: [],
+          files: []
+        }
+
+        state = Map.merge(default_state, existing_state)
         {:ok, socket |> assign(state)}
     end
-  end
-
-  def handle_info({:sync, state}, socket) do
-    {:noreply, socket |> assign(state)}
   end
 
   def handle_event("comment:add", %{"comment" => _comment}, socket) do
@@ -72,7 +74,12 @@ defmodule FastreplWeb.ThreadLive do
   end
 
   def handle_event("file:add", %{"path" => path}, socket) do
-    {:reply, %{file: %{path: path, content: "TODO"}}, socket}
+    file = GenServer.call(socket.assigns.manager_pid, {:file, path})
+    {:reply, file, socket}
+  end
+
+  def handle_info({:sync, state}, socket) do
+    {:noreply, socket |> assign(state)}
   end
 
   defp find_existing_manager(thread_id) do

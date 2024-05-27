@@ -36,5 +36,6 @@
     class="rounded-b-md"
     --padding-left="0.2em"
     --padding-right="1em"
+    --line-number-color="#9ca3af"
   />
 </HighlightAuto>

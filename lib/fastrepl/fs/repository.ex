@@ -1,10 +1,5 @@
 defmodule Fastrepl.FS.Repository do
-  defstruct [
-    :root_path,
-    :paths,
-    :original_files,
-    :current_files
-  ]
+  defstruct root_path: nil, paths: [], original_files: [], current_files: []
 
   alias __MODULE__
   alias Fastrepl.FS
@@ -21,11 +16,12 @@ defmodule Fastrepl.FS.Repository do
   def from(repo_full_name, commit_sha, auth_token \\ nil) do
     case FS.clone(repo_full_name, commit_sha, auth_token) do
       {:ok, root_path} ->
-        {:ok,
-         %Repository{
-           root_path: root_path,
-           paths: FS.list_informative_files(root_path)
-         }}
+        paths =
+          root_path
+          |> FS.list_informative_files()
+          |> Enum.map(&Path.relative_to(&1, root_path))
+
+        {:ok, %Repository{root_path: root_path, paths: paths}}
 
       {:error, error} ->
         {:error, error}
