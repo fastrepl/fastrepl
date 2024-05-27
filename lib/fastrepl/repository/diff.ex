@@ -96,7 +96,7 @@ defmodule Fastrepl.Repository.Diff do
 
   @spec to_patch(Diff.t()) :: String.t()
   def to_patch(%Diff{mode: :edit} = diff) do
-    CodeUtils.unified_diff(
+    CodeUtils.create_patch(
       Path.join("a", diff.old_path),
       Path.join("b", diff.new_path),
       diff.old_content,
@@ -105,7 +105,7 @@ defmodule Fastrepl.Repository.Diff do
   end
 
   def to_patch(%Diff{mode: :create} = diff) do
-    CodeUtils.unified_diff(
+    CodeUtils.create_patch(
       "/dev/null",
       Path.join("b", diff.new_path),
       "",
@@ -114,7 +114,7 @@ defmodule Fastrepl.Repository.Diff do
   end
 
   def to_patch(%Diff{mode: :delete} = diff) do
-    CodeUtils.unified_diff(
+    CodeUtils.create_patch(
       Path.join("a", diff.old_path),
       "/dev/null",
       diff.old_content,

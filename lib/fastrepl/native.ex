@@ -20,11 +20,11 @@ defmodule Fastrepl.Native.CodeUtils do
   @spec commits(String.t()) :: map()
   def commits(_repo_root_path), do: error()
 
-  @spec unified_diff(String.t(), String.t(), String.t(), String.t()) :: String.t()
-  def unified_diff(_old_path, _new_path, _old_content, _new_content), do: error()
+  @spec create_patch(String.t(), String.t(), String.t(), String.t()) :: String.t()
+  def create_patch(_old_path, _new_path, _old_content, _new_content), do: error()
 
-  @spec unified_diffs(String.t()) :: map()
-  def unified_diffs(_repo_root_path), do: error()
+  @spec apply_patch(String.t(), String.t()) :: String.t()
+  def apply_patch(_base_content, _patch_content), do: error()
 
   defp error(), do: :erlang.nif_error(:nif_not_loaded)
 end

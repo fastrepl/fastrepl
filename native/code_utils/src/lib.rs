@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
 mod chunk;
-mod diff;
 mod ds;
 mod git;
+mod patch;
 mod query;
 
 #[cfg(test)]
@@ -15,8 +15,8 @@ rustler::init!(
         clone_commit,
         clone_depth,
         commits,
-        unified_diffs,
-        unified_diff,
+        create_patch,
+        apply_patch,
         chunker_version,
         chunk_code,
         grep_file,
@@ -96,11 +96,16 @@ fn _grep<R: std::io::Read>(reader: R, pattern: &str) -> Vec<usize> {
 }
 
 #[rustler::nif]
-fn unified_diff<'a>(
+fn create_patch<'a>(
     old_path: &'a str,
     new_path: &'a str,
     old_content: &'a str,
     new_content: &'a str,
 ) -> String {
-    diff::unified(old_path, new_path, old_content, new_content)
+    patch::create(old_path, new_path, old_content, new_content)
+}
+
+#[rustler::nif]
+fn apply_patch<'a>(base_content: &'a str, patch_content: &'a str) -> String {
+    patch::apply(base_content, patch_content)
 }
