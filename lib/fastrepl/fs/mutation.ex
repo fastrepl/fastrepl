@@ -1,5 +1,6 @@
 defmodule Fastrepl.FS.Mutation do
   defstruct [:type, :target_path, :target_section, :data]
+  import Kernel, except: [apply: 2]
 
   alias __MODULE__
   alias Fastrepl.FS
@@ -22,6 +23,10 @@ defmodule Fastrepl.FS.Mutation do
 
   def new(:modify, %{target_path: target_path, target_section: target_section, data: data}) do
     %Mutation{type: :modify, target_path: target_path, target_section: target_section, data: data}
+  end
+
+  def apply(%FS.Repository{} = repo, mutations) when is_list(mutations) do
+    mutations |> Enum.reduce(repo, fn mut, acc -> apply(acc, mut) end)
   end
 
   def apply(%FS.Repository{} = repo, %Mutation{type: :add} = mutation) do
