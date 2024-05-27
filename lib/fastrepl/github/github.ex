@@ -2,8 +2,8 @@ defmodule Fastrepl.Github do
   import Ecto.Query, warn: false
   alias Fastrepl.Repo
 
-  alias Fastrepl.Accounts.Account
   alias Fastrepl.Github
+  alias Fastrepl.Accounts.Account
 
   def add_app(attrs) do
     %Github.App{}
@@ -65,13 +65,13 @@ defmodule Fastrepl.Github do
 
   def create_fastrepl_pr(
         %Github.Repo{} = repo,
-        %{title: title, body: body, changes: changes, auth: auth}
+        %{title: title, body: body, files: files, auth: auth}
       ) do
     with {:ok, target_branch} = create_fastrepl_branch(repo, %{auth: auth}),
          :ok <-
-           make_changes_to_fastrepl_branch(
+           make_commits_to_branch(
              repo,
-             %{changes: changes, target_branch: target_branch, auth: auth}
+             %{files: files, target_branch: target_branch, auth: auth}
            ),
          {:ok, %{number: pr_number}} <-
            GitHub.Pulls.create(
@@ -120,35 +120,42 @@ defmodule Fastrepl.Github do
     end
   end
 
-  defp make_changes_to_fastrepl_branch(
+  defp make_commits_to_branch(
          %Github.Repo{} = repo,
-         %{changes: changes, target_branch: target_branch, auth: auth}
+         %{files: files, target_branch: target_branch, auth: auth}
        ) do
-    changes
-    |> Enum.map(fn change ->
+    files
+    |> Enum.map(fn file ->
       case GitHub.Repos.get_content(
              repo.owner_name,
              repo.repo_name,
-             change.path,
+             file.path,
              ref: repo.base_commit,
              auth: auth
            ) do
-        {:ok, %{sha: sha}} -> Map.put(change, :sha, sha)
-        _ -> nil
+        {:ok, %{sha: sha}} -> {file, sha}
+        _ -> {file, nil}
       end
     end)
-    |> Enum.reject(&is_nil/1)
-    |> Enum.each(fn change ->
+    |> Enum.each(fn {file, sha} ->
+      shared_args = %{
+        content: Base.encode64(file.content),
+        sha: sha,
+        branch: target_branch
+      }
+
+      args =
+        if sha == nil do
+          Map.put(shared_args, :message, "create #{file.path}")
+        else
+          Map.put(shared_args, :message, "modify #{file.path}")
+        end
+
       GitHub.Repos.create_or_update_file_contents(
         repo.owner_name,
         repo.repo_name,
-        change.path,
-        %{
-          message: "modify #{change.path}",
-          content: Base.encode64(change.content),
-          sha: change.sha,
-          branch: target_branch
-        },
+        file.path,
+        args,
         auth: auth
       )
     end)
