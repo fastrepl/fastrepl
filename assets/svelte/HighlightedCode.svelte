@@ -4,19 +4,8 @@
 
   import type { Selection } from "$lib/types";
 
-  export let content: string;
+  export let code: string;
   export let selections: Selection[] = [];
-
-  let code = "";
-
-  $: {
-    code = content;
-    const lines = code.split("\n");
-
-    if (lines.length < 99) {
-      code += "\n".repeat(99 - lines.length);
-    }
-  }
 
   $: highlightedLines = selections.flatMap(({ start, end }) =>
     Array.from({ length: end - start + 1 }, (_, i) => start + i - 1),

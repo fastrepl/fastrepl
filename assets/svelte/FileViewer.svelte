@@ -186,7 +186,7 @@
       ])}
     >
       <HighlightedCode
-        content={currentFile.content}
+        code={currentFile.content}
         selections={[currentSelection].filter(Boolean)}
       />
     </div>
