@@ -1,14 +1,14 @@
-defmodule Fastrepl.Repository.Comment.Writer do
+defmodule Fastrepl.SemanticFunction.CommentWriter do
   alias Fastrepl.Renderer
   alias Fastrepl.Retrieval.Result
   alias Fastrepl.Retrieval.CodeBlock
-  alias Fastrepl.Repository.Comment
+  alias Fastrepl.Sessions.Comment
   alias Fastrepl.Github.Issue
 
   @spec run([Result.t()], Issue.t()) :: [Comment.t()]
   def run(results, issue) do
     goal = """
-    These are Github issues that need to be handled:
+    This is Github issue that need to be handled:
 
     #{Renderer.Github.render_issue(issue)}
     """

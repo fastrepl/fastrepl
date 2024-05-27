@@ -1,20 +1,12 @@
 defmodule Fastrepl.SemanticFunction.Modify do
-  alias Fastrepl.Repository
-  alias Fastrepl.Repository.Mutation
-  alias Fastrepl.Repository.Comment
+  alias Fastrepl.FS.Repository
+  alias Fastrepl.FS.Mutation
+  alias Fastrepl.Sessions.Comment
 
   @spec run(Repository.t(), Comment.t()) :: {:ok, Mutation.t()} | {:error, any()}
   def run(repo, comment) do
     file = repo.current_files |> Enum.find(&(&1.path == comment.file_path))
-
-    target =
-      file.content
-      |> String.split("\n")
-      |> Enum.slice(
-        comment.line_start - 1,
-        comment.line_end - comment.line_start + 1
-      )
-      |> Enum.join("\n")
+    target = Fastrepl.String.read_lines!(file.content, {comment.line_start, comment.line_end})
 
     messages = [
       %{
@@ -52,7 +44,9 @@ defmodule Fastrepl.SemanticFunction.Modify do
 
     case llm(messages) do
       {:ok, content} ->
-        mut = Mutation.new_edit!(%{file_path: file.path, target: target, content: content})
+        mut =
+          Mutation.new(:modify, %{target_path: file.path, target_section: target, data: content})
+
         {:ok, mut}
 
       {:error, message} ->

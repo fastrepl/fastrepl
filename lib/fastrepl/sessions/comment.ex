@@ -1,38 +1,36 @@
-defmodule Fastrepl.Repository.Comment do
-  @moduledoc """
-  Comment contains information or instruction about a specific part of a file.
-  Eventually, it will be used to create a list of Mutations.
-  """
-
+defmodule Fastrepl.Sessions.Comment do
   use Ecto.Schema
   import Ecto.Changeset
 
   alias __MODULE__
+  alias Fastrepl.Sessions.Session
 
-  @type t :: %Comment{}
+  @type t :: %Comment{
+          file_path: String.t(),
+          line_start: integer(),
+          line_end: integer(),
+          content: String.t()
+        }
 
-  @derive Jason.Encoder
-  @primary_key false
-  embedded_schema do
-    # relative path
+  schema "comment" do
     field :file_path, :string
     field :line_start, :integer
     field :line_end, :integer
     field :content, :string
+
+    belongs_to :session, Session
   end
 
-  @spec new(attrs :: map()) :: {:ok, t} | {:error, Ecto.Changeset.t()}
-  def new(attrs \\ %{}) do
-    %Comment{}
+  def changeset(%Comment{} = comment, attrs) do
+    comment
     |> cast(attrs, [:file_path, :line_start, :line_end, :content])
+    |> assoc_constraint(:session)
     |> validate_required([:file_path, :line_start, :line_end, :content])
     |> validate_comment()
-    |> apply_action(:insert)
   end
 
   defp validate_comment(changeset) do
-    line_start = changeset |> get_field(:line_start)
-    line_end = changeset |> get_field(:line_end)
+    {line_start, line_end} = {get_field(changeset, :line_start), get_field(changeset, :line_end)}
 
     cond do
       line_start < 1 ->
