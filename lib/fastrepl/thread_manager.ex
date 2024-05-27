@@ -85,9 +85,10 @@ defmodule Fastrepl.ThreadManager do
   def handle_call({:file, path}, _from, state) do
     {repo, file} = FS.Repository.add_file!(state.repository, path)
 
-    state
-    |> sync_with_views(%{files: repo.original_files})
-    |> Map.put(:repository, repo)
+    state =
+      state
+      |> sync_with_views(%{files: repo.original_files})
+      |> Map.put(:repository, repo)
 
     {:reply, file, state}
   end
