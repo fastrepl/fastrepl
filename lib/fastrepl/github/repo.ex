@@ -1,5 +1,14 @@
 defmodule Fastrepl.Github.Repo do
-  defstruct [:full_name, :description, :default_branch, :default_branch_head]
+  defstruct [
+    :owner_name,
+    :repo_name,
+    :full_name,
+    :description,
+    :default_branch,
+    :default_branch_head,
+    :base_branch,
+    :base_commit
+  ]
 
   alias Fastrepl.Github
   alias GitHub.Repos, as: Repo
@@ -11,10 +20,14 @@ defmodule Fastrepl.Github.Repo do
          {:ok, branch} <- Repo.get_branch(owner_name, repo_name, repo.default_branch, opts) do
       {:ok,
        %__MODULE__{
+         owner_name: owner_name,
+         repo_name: repo_name,
          full_name: repo_full_name,
          description: repo.description,
          default_branch: repo.default_branch,
-         default_branch_head: branch.commit.sha
+         default_branch_head: branch.commit.sha,
+         base_branch: Keyword.get(opts, :base_branch, repo.default_branch),
+         base_commit: Keyword.get(opts, :base_commit, branch.commit.sha)
        }}
     else
       {:error, error} -> {:error, error}
