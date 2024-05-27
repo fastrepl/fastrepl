@@ -4,6 +4,7 @@ defmodule Fastrepl.Sessions.Session do
 
   alias __MODULE__
   alias Fastrepl.Sessions.Ticket
+  alias Fastrepl.Sessions.Comment
 
   @type t :: %Session{}
 
@@ -13,6 +14,7 @@ defmodule Fastrepl.Sessions.Session do
     field :github_issue_comment_id, :integer
 
     has_one :ticket, Ticket
+    has_many :comments, Comment
 
     timestamps(type: :utc_datetime)
   end

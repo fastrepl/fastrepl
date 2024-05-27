@@ -8,6 +8,7 @@ defmodule Fastrepl.ThreadManager do
   alias Fastrepl.Retrieval
   alias Fastrepl.Sessions.Ticket
   alias Fastrepl.Sessions.Session
+  alias Fastrepl.Sessions.Comment
   alias Fastrepl.FS
 
   def start_link(%{account_id: account_id, thread_id: thread_id} = args) do
@@ -53,7 +54,8 @@ defmodule Fastrepl.ThreadManager do
       status: :init_0,
       ticket: ticket,
       display_id: thread_id,
-      github_issue_comment_id: comment_id
+      github_issue_comment_id: comment_id,
+      comments: []
     }
 
     state =
@@ -73,6 +75,7 @@ defmodule Fastrepl.ThreadManager do
     init_state = %{
       paths: state.repository.paths,
       files: state.repository.original_files,
+      comments: state.session.comments,
       status: state.session.status,
       github_issue: state.session.ticket.github_issue,
       github_repo: state.session.ticket.github_repo
@@ -82,7 +85,7 @@ defmodule Fastrepl.ThreadManager do
   end
 
   @impl true
-  def handle_call({:file, path}, _from, state) do
+  def handle_call({:file_add, path}, _from, state) do
     {repo, file} = FS.Repository.add_file!(state.repository, path)
 
     state =
@@ -91,6 +94,23 @@ defmodule Fastrepl.ThreadManager do
       |> Map.put(:repository, repo)
 
     {:reply, file, state}
+  end
+
+  @impl true
+  def handle_call({:comment_add, comment}, _from, state) do
+    comment =
+      comment
+      |> Map.new(fn {k, v} -> {String.to_atom(k), v} end)
+      |> then(&struct(Comment, &1))
+
+    new_comments = [comment | state.session.comments]
+
+    state =
+      state
+      |> sync_with_views(%{comments: new_comments})
+      |> update_in([:session, Access.key(:comments)], fn _ -> new_comments end)
+
+    {:reply, :ok, state}
   end
 
   @impl true

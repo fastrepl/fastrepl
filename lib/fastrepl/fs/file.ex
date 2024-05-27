@@ -1,5 +1,5 @@
 defmodule Fastrepl.FS.File do
-  @derive Jason.Encoder
+  @derive {Jason.Encoder, only: [:path, :content]}
   defstruct [:path, :content]
 
   alias __MODULE__

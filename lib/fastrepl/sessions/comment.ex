@@ -12,6 +12,7 @@ defmodule Fastrepl.Sessions.Comment do
           content: String.t()
         }
 
+  @derive {Jason.Encoder, only: [:file_path, :line_start, :line_end, :content]}
   schema "comment" do
     field :file_path, :string
     field :line_start, :integer

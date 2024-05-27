@@ -34,8 +34,8 @@ defmodule FastreplWeb.ThreadLive do
               repoFullName: @github_repo.full_name,
               paths: @paths,
               files: @files,
+              comments: @comments,
               diffs: [],
-              comments: [],
               messages: []
             }
           }
@@ -61,7 +61,8 @@ defmodule FastreplWeb.ThreadLive do
           manager_pid: pid,
           thread_id: thread_id,
           paths: [],
-          files: []
+          files: [],
+          comments: []
         }
 
         state = Map.merge(default_state, existing_state)
@@ -69,12 +70,13 @@ defmodule FastreplWeb.ThreadLive do
     end
   end
 
-  def handle_event("comment:add", %{"comment" => _comment}, socket) do
+  def handle_event("comment:add", %{"comment" => comment}, socket) do
+    :ok = GenServer.call(socket.assigns.manager_pid, {:comment_add, comment})
     {:noreply, socket}
   end
 
   def handle_event("file:add", %{"path" => path}, socket) do
-    file = GenServer.call(socket.assigns.manager_pid, {:file, path})
+    file = GenServer.call(socket.assigns.manager_pid, {:file_add, path})
     {:reply, file, socket}
   end
 
