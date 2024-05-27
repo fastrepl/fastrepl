@@ -17,4 +17,11 @@ defmodule Fastrepl.StringTest do
       assert_in_delta actual, 0.2, 0.001
     end
   end
+
+  describe "read_lines!/2" do
+    test "simple" do
+      s = 1..100 |> Enum.map(&Integer.to_string/1) |> Enum.join("\n")
+      assert Fastrepl.String.read_lines!(s, {4, 12}) == "4\n5\n6\n7\n8\n9\n10\n11\n12\n"
+    end
+  end
 end

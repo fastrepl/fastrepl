@@ -51,4 +51,14 @@ defmodule Fastrepl.String do
     max_length = max(String.length(source), String.length(target))
     1.0 - levenshtein_distance(source, target) / max_length
   end
+
+  def read_lines!(s, {line_from, line_to}) do
+    {:ok, stream} = StringIO.open(s)
+
+    stream
+    |> IO.binstream(:line)
+    |> Stream.drop(line_from - 1)
+    |> Stream.take(line_to - line_from + 1)
+    |> Enum.join()
+  end
 end

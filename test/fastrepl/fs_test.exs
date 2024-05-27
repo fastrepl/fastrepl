@@ -101,7 +101,7 @@ defmodule Fastrepl.FSTest do
       path = System.tmp_dir!() |> Path.join(Nanoid.generate())
       File.write!(path, 1..100 |> Enum.map(&Integer.to_string/1) |> Enum.join("\n"))
 
-      assert FS.read_lines!(path, {42, 46}) == Enum.join(["42\n", "43\n", "44\n", "45\n", "46\n"])
+      assert FS.read_lines!(path, {42, 46}) == "42\n43\n44\n45\n46\n"
     end
   end
 
