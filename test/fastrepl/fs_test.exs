@@ -118,4 +118,72 @@ defmodule Fastrepl.FSTest do
       assert count > 3
     end
   end
+
+  describe "Repository" do
+    test "it works" do
+      file = %FS.File{
+        path: "a.py",
+        content: 1..10 |> Enum.map(&Integer.to_string/1) |> Enum.join("\n")
+      }
+
+      repo = %FS.Repository{original_files: [file], current_files: [file]}
+
+      ops = [
+        FS.Mutation.new(
+          :add,
+          %{
+            target_path: "b.py",
+            data: 11..20 |> Enum.map(&Integer.to_string/1) |> Enum.join("\n")
+          }
+        ),
+        FS.Mutation.new(
+          :modify,
+          %{
+            target_path: "a.py",
+            target_section: "2\n3",
+            data: "4\n5"
+          }
+        ),
+        FS.Mutation.new(
+          :modify,
+          %{
+            target_path: "a.py",
+            target_section: "7\n8\n9",
+            data: "10"
+          }
+        ),
+        FS.Mutation.new(
+          :modify,
+          %{
+            target_path: "b.py",
+            target_section: "11\n12",
+            data: "1\n2\n3"
+          }
+        )
+      ]
+
+      actual = ops |> Enum.reduce(repo, &FS.Mutation.apply(&2, &1))
+
+      expected = %FS.Repository{
+        original_files: [
+          %FS.File{
+            path: "a.py",
+            content: "1\n2\n3\n4\n5\n6\n7\n8\n9\n10"
+          }
+        ],
+        current_files: [
+          %FS.File{
+            path: "b.py",
+            content: "\n1\n2\n3\n13\n14\n15\n16\n17\n18\n19\n20"
+          },
+          %FS.File{
+            path: "a.py",
+            content: "1\n4\n5\n4\n5\n6\n10\n10"
+          }
+        ]
+      }
+
+      assert actual == expected
+    end
+  end
 end

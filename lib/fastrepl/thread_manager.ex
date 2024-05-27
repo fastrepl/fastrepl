@@ -8,7 +8,7 @@ defmodule Fastrepl.ThreadManager do
   alias Fastrepl.Retrieval
   alias Fastrepl.Sessions.Ticket
   alias Fastrepl.Sessions.Session
-  alias Fastrepl.Repository
+  alias Fastrepl.FS
 
   def start_link(%{account_id: account_id, thread_id: thread_id} = args) do
     GenServer.start_link(__MODULE__, args, name: via_registry(thread_id, account_id))
@@ -56,8 +56,6 @@ defmodule Fastrepl.ThreadManager do
       github_issue_comment_id: comment_id
     }
 
-    repository = %Repository{}
-
     state =
       Map.new()
       |> Map.put(:self, self())
@@ -65,7 +63,6 @@ defmodule Fastrepl.ThreadManager do
       |> Map.put(:github_token, token)
       |> Map.put(:session, session)
       |> Map.put(:thread_id, thread_id)
-      |> Map.put(:repository, repository)
 
     send(state.self, :prepare_repo)
     {:ok, state}
@@ -83,7 +80,9 @@ defmodule Fastrepl.ThreadManager do
   end
 
   @impl true
-  def handle_call({:file, path}, from, state) do
+  def handle_call({:file, path}, _from, state) do
+    {repo, file} = FS.Repository.add_file!(state.repository, path)
+    {:reply, file, state |> Map.put(:repository, repo)}
   end
 
   @impl true
@@ -91,17 +90,18 @@ defmodule Fastrepl.ThreadManager do
     Task.Supervisor.start_child(Fastrepl.TaskSupervisor, fn ->
       send(state.self, {:update, :status, :clone_1})
 
-      {:ok, root_path} =
-        FS.clone(
+      {:ok, repository} =
+        FS.Repository.from(
           state.session.ticket.github_repo_full_name,
           state.session.ticket.github_repo_sha,
           state.github_token
         )
 
+      send(state.self, {:update, :repository, repository})
       send(state.self, {:update, :status, :index_2})
 
       ctx =
-        root_path
+        repository.root_path
         |> Retrieval.Context.from()
         |> Retrieval.Context.add_tools([
           Retrieval.Tool.SemanticSearch,
@@ -141,6 +141,9 @@ defmodule Fastrepl.ThreadManager do
         :status ->
           sync_with_views(state, %{status: value})
           state |> update_in([:session, Access.key(:status)], fn _ -> value end)
+
+        :repository ->
+          state |> Map.put(:repository, value)
 
         :retrieval_ctx ->
           state |> Map.put(:retrieval_ctx, value)
