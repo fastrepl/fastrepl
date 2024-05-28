@@ -8,7 +8,9 @@
 </script>
 
 <div class="flex flex-col">
-  <span class="text-xs rounded-t-lg bg-gray-200 py-1 px-2"> changes </span>
+  <span class="text-xs rounded-t-lg bg-gray-200 py-1 px-2 font-semibold">
+    changes
+  </span>
 
   <div
     class={clsx([
