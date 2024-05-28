@@ -143,11 +143,8 @@ end
 if config_env() == :prod do
   config :opentelemetry_exporter,
     otlp_protocol: :http_protobuf,
-    otlp_endpoint: "https://api.honeycomb.io:443",
-    otlp_headers: [
-      {"x-honeycomb-team", System.fetch_env!("HONEYCOMB_TEAM")},
-      {"x-honeycomb-dataset", "fastrepl"}
-    ]
+    otlp_endpoint: System.fetch_env!("OTEL_COLLECTOR_URL"),
+    otlp_headers: [{"Authorization", "Bearer #{System.fetch_env!("OTEL_COLLECTOR_URL_AUTH")}"}]
 end
 
 config :stripity_stripe, api_key: System.get_env("STRIPE_SECRET_KEY")
