@@ -174,7 +174,7 @@ defmodule Fastrepl.FSTest do
         current_files: [
           %FS.File{
             path: "b.py",
-            content: "\n1\n2\n3\n13\n14\n15\n16\n17\n18\n19\n20"
+            content: "1\n2\n3\n13\n14\n15\n16\n17\n18\n19\n20"
           },
           %FS.File{
             path: "a.py",

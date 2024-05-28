@@ -4,7 +4,6 @@ defmodule Fastrepl.AccountsTest do
   import Fastrepl.UsersFixtures
 
   alias Fastrepl.Accounts
-  alias Fastrepl.Accounts.Account
 
   describe "accounts" do
     test "create_account/2" do
@@ -49,7 +48,7 @@ defmodule Fastrepl.AccountsTest do
       {:ok, account} = Accounts.create_account(user_1, %{name: "personal"})
 
       assert Accounts.list_members(account) |> length() == 1
-      {:ok, member} = Accounts.add_member(account, user_2)
+      {:ok, _member} = Accounts.add_member(account, user_2)
       assert Accounts.list_members(account) |> length() == 2
     end
   end
