@@ -1,17 +1,36 @@
 defmodule Fastrepl.FS.Patch do
-  @derive {Jason.Encoder, only: [:path, :content]}
-  defstruct [:status, :path, :content]
+  use Ecto.Schema
+  import Ecto.Changeset
 
   alias __MODULE__
   alias Fastrepl.FS.File
   alias Fastrepl.FS.Repository
   alias Fastrepl.Native.CodeUtils
+  alias Fastrepl.Sessions.Session
 
   @type t :: %Patch{
           status: :added | :modified | :removed,
           path: String.t(),
           content: String.t()
         }
+
+  @derive {Jason.Encoder, only: [:path, :content]}
+  schema "patches" do
+    field :status, Ecto.Enum, values: [:added, :modified, :removed], virtual: true
+    field :path, :string
+    field :content, :string
+
+    belongs_to :session, Session
+
+    timestamps(type: :utc_datetime)
+  end
+
+  def changeset(%Session{} = ticket, attrs) do
+    ticket
+    |> cast(attrs, [:status, :path, :content])
+    |> validate_required([:status, :path, :content])
+    |> assoc_constraint(:session)
+  end
 
   @spec from(Repository.t()) :: [t]
   def from(%Repository{} = repo) do
