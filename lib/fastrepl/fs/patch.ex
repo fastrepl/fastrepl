@@ -25,8 +25,8 @@ defmodule Fastrepl.FS.Patch do
     timestamps(type: :utc_datetime)
   end
 
-  def changeset(%Session{} = ticket, attrs) do
-    ticket
+  def changeset(%Patch{} = patch, attrs) do
+    patch
     |> cast(attrs, [:status, :path, :content])
     |> validate_required([:status, :path, :content])
     |> assoc_constraint(:session)
