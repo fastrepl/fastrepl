@@ -9,7 +9,7 @@ defmodule Fastrepl.ThreadManager do
   alias Fastrepl.Sessions.Ticket
   alias Fastrepl.Sessions.Session
   alias Fastrepl.Sessions.Comment
-  alias Fastrepl.FS
+  alias Fastrepl.SemanticFunction.Modify
 
   def start_link(%{account_id: account_id, thread_id: thread_id} = args) do
     GenServer.start_link(__MODULE__, args, name: via_registry(thread_id, account_id))
@@ -55,7 +55,8 @@ defmodule Fastrepl.ThreadManager do
       ticket: ticket,
       display_id: thread_id,
       github_issue_comment_id: comment_id,
-      comments: []
+      comments: [],
+      patches: []
     }
 
     state =
@@ -73,10 +74,11 @@ defmodule Fastrepl.ThreadManager do
   @impl true
   def handle_call(:init_state, _from, state) do
     init_state = %{
+      status: state.session.status,
       paths: state.repository.paths,
       files: state.repository.original_files,
       comments: state.session.comments,
-      status: state.session.status,
+      patches: state.session.patches,
       github_issue: state.session.ticket.github_issue,
       github_repo: state.session.ticket.github_repo
     }
@@ -118,6 +120,19 @@ defmodule Fastrepl.ThreadManager do
     Task.Supervisor.start_child(Fastrepl.TaskSupervisor, fn ->
       send(state.self, {:update, :status, :execute_4})
 
+      result = Modify.run(state.repository, Enum.at(state.session.comments, 0))
+
+      case result do
+        {:ok, mut} ->
+          repo = FS.Mutation.apply(state.repository, mut)
+          patches = FS.Patch.from(repo)
+          send(state.self, {:update, :patches, patches})
+          send(state.self, {:update, :repository, repo})
+
+        error ->
+          IO.inspect(error)
+      end
+
       Process.sleep(2000)
       send(state.self, {:update, :status, :start_3})
     end)
@@ -137,6 +152,7 @@ defmodule Fastrepl.ThreadManager do
           state.github_token
         )
 
+      sync_with_views(state, %{paths: repository.paths})
       send(state.self, {:update, :repository, repository})
       send(state.self, {:update, :status, :index_2})
 
@@ -185,8 +201,12 @@ defmodule Fastrepl.ThreadManager do
 
         :repository ->
           state
-          |> sync_with_views(%{paths: value.paths})
           |> Map.put(:repository, value)
+
+        :patches ->
+          state
+          |> sync_with_views(%{patches: value})
+          |> update_in([:session, Access.key(:patches)], fn _ -> value end)
 
         :retrieval_ctx ->
           state |> Map.put(:retrieval_ctx, value)

@@ -1,5 +1,6 @@
 defmodule Fastrepl.FS.Patch do
-  defstruct [:status, :content, :path]
+  @derive {Jason.Encoder, only: [:path, :content]}
+  defstruct [:status, :path, :content]
 
   alias __MODULE__
   alias Fastrepl.FS.File
@@ -8,8 +9,8 @@ defmodule Fastrepl.FS.Patch do
 
   @type t :: %Patch{
           status: :added | :modified | :removed,
-          content: String.t(),
-          path: String.t()
+          path: String.t(),
+          content: String.t()
         }
 
   @spec from(Repository.t()) :: [t]

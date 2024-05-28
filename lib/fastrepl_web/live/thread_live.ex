@@ -35,7 +35,7 @@ defmodule FastreplWeb.ThreadLive do
               paths: @paths,
               files: @files,
               comments: @comments,
-              diffs: [],
+              diffs: @patches,
               messages: [],
               executing: @status == :execute_4
             }
@@ -64,7 +64,8 @@ defmodule FastreplWeb.ThreadLive do
           thread_id: thread_id,
           paths: [],
           files: [],
-          comments: []
+          comments: [],
+          patches: []
         }
 
         state = Map.merge(default_state, existing_state)

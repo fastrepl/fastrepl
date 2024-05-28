@@ -70,13 +70,19 @@
   <Pane defaultSize={50} order={2} minSize={10} class="relative">
     {#if showDiffs}
       <DiffViewer {diffs} />
-    {:else}
+    {:else if currentFile}
       <FileViewer
         file={currentFile}
         {currentSelection}
         {handleChangeSelection}
         {handleAddComment}
       />
+    {:else}
+      <div
+        class="flex flex-col items-center justify-center h-full border border-gray-200 rounded-lg"
+      >
+        <div class="text-sm text-gray-500">No file selected.</div>
+      </div>
     {/if}
   </Pane>
   <PaneResizer class="w-2" />

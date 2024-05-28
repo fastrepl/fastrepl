@@ -5,6 +5,7 @@ defmodule Fastrepl.Sessions.Session do
   alias __MODULE__
   alias Fastrepl.Sessions.Ticket
   alias Fastrepl.Sessions.Comment
+  alias Fastrepl.FS.Patch
 
   @type t :: %Session{}
 
@@ -15,6 +16,7 @@ defmodule Fastrepl.Sessions.Session do
 
     has_one :ticket, Ticket
     has_many :comments, Comment
+    has_many :patches, Patch
 
     timestamps(type: :utc_datetime)
   end

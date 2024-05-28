@@ -12,7 +12,7 @@
 
   <div
     class={clsx([
-      "h-[calc(100vh-90px)] overflow-y-auto scrollbar-hide bg-gray-50 relative",
+      "h-[calc(100vh-115px)] overflow-y-auto scrollbar-hide bg-gray-50 relative",
       "border-b border-x border-gray-200 rounded-b-lg",
     ])}
   >
