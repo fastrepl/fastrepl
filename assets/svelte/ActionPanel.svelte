@@ -28,6 +28,28 @@
   const handleSubmitChat = () => {};
   const handleResetReferences = () => {};
   const handleDeleteReference = () => {};
+
+  export let handleClickCreatePR: () => Promise<any>;
+  export let handleClickDownloadPatch: () => Promise<any>;
+
+  let isLoadingCreatePR = false;
+  let isLoadingDownloadPatch = false;
+
+  const wrappedhandleClickCreatePR = async () => {
+    isLoadingCreatePR = true;
+    const url = await handleClickCreatePR();
+    isLoadingCreatePR = false;
+
+    window.open(url, "_blank");
+  };
+
+  const wrappedhandleClickDownloadPatch = async () => {
+    isLoadingDownloadPatch = true;
+    const url = await handleClickDownloadPatch();
+    isLoadingDownloadPatch = false;
+
+    window.open(url, "_blank");
+  };
 </script>
 
 <div class="h-[calc(100vh-90px)] border border-gray-200 rounded-lg">
@@ -66,6 +88,42 @@
           handleClickComment={() => {}}
           handleUpdateComments={() => {}}
         />
+
+        {#if diffs.length > 0 && showDiffs}
+          <div
+            in:fly={{ duration: 300, x: 30 }}
+            out:fly={{ duration: 300, x: -30 }}
+            class="flex flex-row items-center justify-center gap-2"
+          >
+            <button
+              type="button"
+              disabled={isLoadingCreatePR}
+              on:click={wrappedhandleClickCreatePR}
+              class={clsx([
+                "relative",
+                "flex flex-row items-center justify-center gap-2",
+                "bg-gray-800 hover:bg-gray-900 text-white",
+                "py-1.5 rounded-md w-full",
+                "disabled:opacity-70",
+              ])}
+            >
+              <span>Create PR</span>
+            </button>
+            <button
+              type="button"
+              disabled={isLoadingDownloadPatch}
+              on:click={wrappedhandleClickDownloadPatch}
+              class={clsx([
+                "flex flex-row items-center justify-center gap-2",
+                "bg-gray-800 hover:bg-gray-900 text-white",
+                "py-1.5 rounded-md w-full",
+                "disabled:opacity-70",
+              ])}
+            >
+              <span>Download Git Patch</span>
+            </button>
+          </div>
+        {/if}
 
         {#if diffs.length > 0}
           <button

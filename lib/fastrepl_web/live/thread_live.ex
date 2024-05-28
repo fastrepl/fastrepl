@@ -88,6 +88,18 @@ defmodule FastreplWeb.ThreadLive do
     {:noreply, socket}
   end
 
+  def handle_event("patch:download", %{}, socket) do
+    Process.sleep(2000)
+    url = "https://github.com/fastrepl/fastrepl/pull/1"
+    {:reply, %{url: url}, socket}
+  end
+
+  def handle_event("pr:create", %{}, socket) do
+    Process.sleep(2000)
+    url = "https://github.com/fastrepl/fastrepl/pull/1"
+    {:reply, %{url: url}, socket}
+  end
+
   def handle_info({:sync, state}, socket) do
     {:noreply, socket |> assign(state)}
   end

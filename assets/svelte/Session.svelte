@@ -51,6 +51,22 @@
   const handleClickExecute = () => {
     live.pushEvent("execute", {});
   };
+
+  const handleClickCreatePR = () => {
+    return new Promise((resolve, reject) => {
+      live.pushEvent("pr:create", {}, ({ url }) => {
+        resolve(url);
+      });
+    });
+  };
+
+  const handleClickDownloadPatch = () => {
+    return new Promise((resolve, reject) => {
+      live.pushEvent("patch:download", {}, ({ url }) => {
+        resolve(url);
+      });
+    });
+  };
 </script>
 
 <PaneGroup direction="horizontal">
@@ -64,6 +80,8 @@
       {messages}
       {handleClickExecute}
       {executing}
+      {handleClickCreatePR}
+      {handleClickDownloadPatch}
     />
   </Pane>
   <PaneResizer class="w-2" />
