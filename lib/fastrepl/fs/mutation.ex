@@ -57,7 +57,10 @@ defmodule Fastrepl.FS.Mutation do
       |> Enum.slice(line_end - 1, length(lines) - line_end + 1)
       |> Enum.join("\n")
 
-    content = Enum.join([left, "\n", mutation.data, "\n", right])
+    content =
+      [left, mutation.data, right]
+      |> Enum.reject(&(&1 == ""))
+      |> Enum.join("\n")
 
     current_files =
       repo.current_files
