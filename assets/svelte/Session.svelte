@@ -16,7 +16,6 @@
   export let diffs: Diff[] = [];
   export let files: File[] = [];
   export let comments: Comment[] = [];
-  export let messages: Message[] = [];
   export let executing: boolean;
 
   let showDiffs = false;
@@ -67,21 +66,32 @@
       });
     });
   };
+
+  const handleClickComment = (comment: Comment) => {
+    const file = files.find((f) => f.path === comment.file_path);
+    if (file) {
+      currentFile = file;
+    }
+  };
+
+  const handleUpdateComments = (comments: Comment[]) => {
+    live.pushEvent("comments:update", { comments });
+  };
 </script>
 
 <PaneGroup direction="horizontal">
   <Pane defaultSize={34} minSize={10} order={1}>
     <ActionPanel
-      {paths}
       {diffs}
       {showDiffs}
       {handleToggleShowDiffs}
       {comments}
-      {messages}
       {handleClickExecute}
       {executing}
       {handleClickCreatePR}
       {handleClickDownloadPatch}
+      {handleClickComment}
+      {handleUpdateComments}
     />
   </Pane>
   <PaneResizer class="w-2" />

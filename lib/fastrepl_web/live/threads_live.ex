@@ -8,7 +8,7 @@ defmodule FastreplWeb.ThreadsLive do
     <div class="px-[15px] py-[20px]">
       <h2 class="text-xl font-semibold">Threads</h2>
 
-      <ul class="mt-8 max-w-[400px]">
+      <ul class="flex flex-col gap-1 mt-8 max-w-[400px]">
         <%= for {id, _pid} <- @threads do %>
           <li>
             <.thread_list_item id={id} />

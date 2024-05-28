@@ -117,6 +117,24 @@ defmodule Fastrepl.ThreadManager do
   end
 
   @impl true
+  def handle_call({:comments_update, comments}, _from, state) do
+    comments =
+      comments
+      |> Enum.map(fn comment ->
+        comment
+        |> Map.new(fn {k, v} -> {String.to_atom(k), v} end)
+        |> then(&struct(Comment, &1))
+      end)
+
+    state =
+      state
+      |> sync_with_views(%{comments: comments})
+      |> update_in([:session, Access.key(:comments)], fn _ -> comments end)
+
+    {:reply, :ok, state}
+  end
+
+  @impl true
   def handle_call(:pr_create, _from, state) do
     issue_number = state.session.ticket.github_issue_number
     repo_full_name = state.session.ticket.github_repo.full_name

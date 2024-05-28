@@ -5,32 +5,26 @@
   import { clsx } from "clsx";
   import { Tabs } from "bits-ui";
 
-  import type { Diff, Message, Comment } from "$lib/interfaces";
+  import type { Diff, Comment } from "$lib/interfaces";
 
   import Comments from "$components/Comments.svelte";
-  import ChatEditor from "$components/ChatEditor.svelte";
-  import Messages from "$components/Messages.svelte";
 
-  const TABS = ["Overview", "Chat"];
+  const TABS = ["Controls"];
   let currentTab: (typeof TABS)[number] = TABS[0];
 
   export let showDiffs = false;
   export let handleToggleShowDiffs: () => void;
 
-  export let paths: string[] = [];
   export let diffs: Diff[] = [];
   export let comments: Comment[] = [];
-  export let messages: Message[] = [];
   export let handleClickExecute: () => void;
   export let executing: boolean;
 
-  const references = [];
-  const handleSubmitChat = () => {};
-  const handleResetReferences = () => {};
-  const handleDeleteReference = () => {};
-
   export let handleClickCreatePR: () => Promise<any>;
   export let handleClickDownloadPatch: () => Promise<any>;
+
+  export let handleClickComment: (comment: Comment) => void;
+  export let handleUpdateComments: (comments: Comment[]) => void;
 
   let isLoadingCreatePR = false;
   let isLoadingDownloadPatch = false;
@@ -69,24 +63,14 @@
       >
         {TABS[0]}
       </Tabs.Trigger>
-      <Tabs.Trigger
-        value={TABS[1]}
-        class={clsx([
-          "data-[state=active]:font-semibold",
-          "data-[state=active]:border-b-2 border-b-gray-500",
-          "data-[state=inactive]:opacity-40 mx-1.5 py-0.5",
-        ])}
-      >
-        {TABS[1]}
-      </Tabs.Trigger>
     </Tabs.List>
     <Tabs.Content value={TABS[0]} class="bg-gray-50 p-4 h-full">
       <div class="flex flex-col gap-2 h-full text-sm">
         <Comments
           items={comments}
           wipPaths={[]}
-          handleClickComment={() => {}}
-          handleUpdateComments={() => {}}
+          {handleClickComment}
+          {handleUpdateComments}
         />
 
         {#if diffs.length > 0 && showDiffs}
@@ -165,25 +149,6 @@
             {/if}
           </button>
         {/if}
-      </div>
-    </Tabs.Content>
-    <Tabs.Content value={TABS[1]} class="bg-gray-50 h-full relative p-4">
-      <Messages {messages} />
-      <div
-        class={clsx([
-          "w-full px-3",
-          "absolute bottom-1 left-0",
-          "flex flex-col gap-2",
-        ])}
-      >
-        <ChatEditor
-          {paths}
-          {references}
-          {handleResetReferences}
-          {handleDeleteReference}
-          handleSubmit={handleSubmitChat}
-          placeholder="Ask anything about making changes to the codebase..."
-        />
       </div>
     </Tabs.Content>
   </Tabs.Root>

@@ -36,7 +36,6 @@ defmodule FastreplWeb.ThreadLive do
               files: @files,
               comments: @comments,
               diffs: @patches,
-              messages: [],
               executing: @status == :execute_4
             }
           }
@@ -96,6 +95,11 @@ defmodule FastreplWeb.ThreadLive do
     url = FastreplWeb.Endpoint.url() <> "/patch/view/#{id}"
 
     {:reply, %{url: url}, socket}
+  end
+
+  def handle_event("comments:update", %{"comments" => comments}, socket) do
+    :ok = GenServer.call(socket.assigns.manager_pid, {:comments_update, comments})
+    {:noreply, socket}
   end
 
   def handle_event("pr:create", %{}, socket) do
