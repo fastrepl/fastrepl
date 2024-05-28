@@ -18,7 +18,7 @@ defmodule Fastrepl.FS.Repository do
       {:ok, root_path} ->
         paths =
           root_path
-          |> FS.list_informative_files()
+          |> FS.list_files()
           |> Enum.map(&Path.relative_to(&1, root_path))
 
         {:ok, %Repository{root_path: root_path, paths: paths}}

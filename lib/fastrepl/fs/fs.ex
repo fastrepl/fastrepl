@@ -19,6 +19,19 @@ defmodule Fastrepl.FS do
     end
   end
 
+  def list_files(root) do
+    is_hidden = &String.starts_with?(Path.basename(&1), ".")
+
+    walk_dir(root, fn
+      {:dir, path} ->
+        path = Path.relative_to(path, root)
+        not is_hidden.(path)
+
+      {:file, _} ->
+        true
+    end)
+  end
+
   def list_informative_files(root) do
     is_hidden = &String.starts_with?(Path.basename(&1), ".")
     is_banned_dir = &(Path.basename(&1) in ["node_modules", "dist", "venv", "_next"])
