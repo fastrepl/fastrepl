@@ -10,6 +10,7 @@ defmodule Fastrepl.ThreadManager do
   alias Fastrepl.Sessions.Session
   alias Fastrepl.Sessions.Comment
   alias Fastrepl.SemanticFunction.Modify
+  alias Fastrepl.SemanticFunction.PPWriter
 
   def start_link(%{account_id: account_id, thread_id: thread_id} = args) do
     GenServer.start_link(__MODULE__, args, name: via_registry(thread_id, account_id))
@@ -63,9 +64,9 @@ defmodule Fastrepl.ThreadManager do
       Map.new()
       |> Map.put(:self, self())
       |> Map.put(:account_id, account_id)
-      |> Map.put(:github_token, token)
       |> Map.put(:session, session)
       |> Map.put(:thread_id, thread_id)
+      |> Map.put(:installation_id, installation_id)
 
     send(state.self, :prepare_repo)
     {:ok, state}
@@ -116,6 +117,35 @@ defmodule Fastrepl.ThreadManager do
   end
 
   @impl true
+  def handle_call(:pr_create, _from, state) do
+    issue_number = state.session.ticket.github_issue_number
+    repo_full_name = state.session.ticket.github_repo.full_name
+    token = Github.get_installation_token!(state.installation_id)
+
+    {:ok, pr_title} = PPWriter.run(state.session.patches)
+
+    result =
+      Github.create_fastrepl_pr(
+        state.session.ticket.github_repo,
+        %{
+          title: pr_title,
+          body:
+            "Resolves ##{issue_number}.\n\n_This PR is created with [Fastrepl](https://github.com/fastrepl/fastrepl)._\n",
+          files: state.repository.current_files,
+          auth: token
+        }
+      )
+
+    reply =
+      case result do
+        {:ok, pr_number} -> {:ok, "https://github.com/#{repo_full_name}/pull/#{pr_number}"}
+        _ -> {:error, "error"}
+      end
+
+    {:reply, reply, state}
+  end
+
+  @impl true
   def handle_call(:execute, _from, state) do
     Task.Supervisor.start_child(Fastrepl.TaskSupervisor, fn ->
       send(state.self, {:update, :status, :execute_4})
@@ -149,7 +179,7 @@ defmodule Fastrepl.ThreadManager do
         FS.Repository.from(
           state.session.ticket.github_repo_full_name,
           state.session.ticket.github_repo_sha,
-          state.github_token
+          Github.get_installation_token!(state.installation_id)
         )
 
       sync_with_views(state, %{paths: repository.paths})

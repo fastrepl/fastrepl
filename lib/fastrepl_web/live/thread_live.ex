@@ -99,9 +99,13 @@ defmodule FastreplWeb.ThreadLive do
   end
 
   def handle_event("pr:create", %{}, socket) do
-    Process.sleep(2000)
-    url = "https://github.com/fastrepl/fastrepl/pull/1"
-    {:reply, %{url: url}, socket}
+    reply =
+      case GenServer.call(socket.assigns.manager_pid, :pr_create, 12 * 1000) do
+        {:ok, url} -> %{url: url}
+        _ -> %{url: ""}
+      end
+
+    {:reply, reply, socket}
   end
 
   def handle_info({:sync, state}, socket) do

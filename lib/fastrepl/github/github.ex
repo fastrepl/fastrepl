@@ -95,7 +95,7 @@ defmodule Fastrepl.Github do
              %{labels: ["fastrepl"]},
              auth: auth
            ) do
-      :ok
+      {:ok, pr_number}
     else
       {:error, error} -> {:error, error}
     end
