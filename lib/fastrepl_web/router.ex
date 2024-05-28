@@ -22,12 +22,14 @@ defmodule FastreplWeb.Router do
     plug :put_secure_browser_headers
   end
 
-  pipeline :api do
-    plug :accepts, ["json"]
+  scope "/" do
+    get "/patch/:id", FastreplWeb.GitPatchController, :api
   end
 
   scope "/" do
     pipe_through [:browser]
+
+    get "/patch/view/:id", FastreplWeb.GitPatchController, :view
 
     get "/login", FastreplWeb.AuthController, :login
     get "/logout", FastreplWeb.AuthController, :logout

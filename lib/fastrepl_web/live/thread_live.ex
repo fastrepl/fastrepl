@@ -89,8 +89,12 @@ defmodule FastreplWeb.ThreadLive do
   end
 
   def handle_event("patch:download", %{}, socket) do
-    Process.sleep(2000)
-    url = "https://github.com/fastrepl/fastrepl/pull/1"
+    id = Nanoid.generate()
+    patch = socket.assigns.patches |> Enum.map(& &1.content) |> Enum.join("\n")
+
+    :ok = Fastrepl.Temp.set(id, patch)
+    url = FastreplWeb.Endpoint.url() <> "/patch/view/#{id}"
+
     {:reply, %{url: url}, socket}
   end
 

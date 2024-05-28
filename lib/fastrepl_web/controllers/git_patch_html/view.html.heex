@@ -1,0 +1,27 @@
+<script src="https://unpkg.com/clipboard@2/dist/clipboard.min.js">
+</script>
+
+<script>
+  new ClipboardJS('#trigger');
+</script>
+
+<div class="flex h-screen">
+  <div class="flex flex-col items-center m-auto">
+    <span class="text-sm text-gray-500 mb-4">
+      Link expires in 100 seconds.
+    </span>
+
+    <div class="flex flex-row gap-2">
+      <span id="target" class="px-1 py-0.5 border rounded-md bg-gray-100">
+        <%= @command %>
+      </span>
+
+      <button id="trigger" data-clipboard-target="#target">
+        <span
+          class="hero-clipboard w-4 h-4 text-gray-600 hover:text-black"
+          alt="Copy to clipboard"
+        />
+      </button>
+    </div>
+  </div>
+</div>
