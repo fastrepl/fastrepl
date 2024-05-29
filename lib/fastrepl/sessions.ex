@@ -98,8 +98,8 @@ defmodule Fastrepl.Sessions do
     end
   end
 
-  def create_patch(attrs) do
-    %Patch{}
+  def create_patch(%Patch{} = patch, attrs \\ %{}) do
+    patch
     |> Patch.changeset(attrs)
     |> Repo.insert()
   end

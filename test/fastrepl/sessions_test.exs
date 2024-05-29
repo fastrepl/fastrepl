@@ -1,4 +1,5 @@
 defmodule Fastrepl.SessionsTest do
+  alias Fastrepl.FS.Patch
   use Fastrepl.DataCase
 
   import Fastrepl.UsersFixtures
@@ -153,6 +154,34 @@ defmodule Fastrepl.SessionsTest do
       assert session
              |> Sessions.list_comments()
              |> get_in([Access.at(0), Access.key(:content)]) == "updated"
+    end
+  end
+
+  describe "patch" do
+    test "create_patch/2" do
+      account = user_fixture() |> account_fixture(%{name: "personal"})
+
+      {:ok, ticket} =
+        Sessions.ticket_from(%{
+          github_repo_full_name: "fastrepl/fastrepl",
+          github_issue_number: 1
+        })
+
+      {:ok, session} =
+        Sessions.session_from(
+          ticket,
+          %{account_id: account.id, display_id: "123"}
+        )
+
+      {:ok, patch} =
+        Sessions.create_patch(%Patch{
+          status: :added,
+          path: "a.py",
+          content: "original",
+          session_id: session.id
+        })
+
+      assert patch.status == :added
     end
   end
 end
