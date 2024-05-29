@@ -15,7 +15,11 @@ defmodule Fastrepl.ThreadManager do
   end
 
   @impl true
-  def init(%{account_id: account_id, thread_id: thread_id, ticket: %Ticket{} = ticket}) do
+  def init(%{
+        ticket: %Ticket{type: :github} = ticket,
+        account_id: account_id,
+        thread_id: thread_id
+      }) do
     Process.flag(:trap_exit, true)
 
     with %Github.App{} = app <-

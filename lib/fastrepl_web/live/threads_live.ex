@@ -6,7 +6,10 @@ defmodule FastreplWeb.ThreadsLive do
   def render(assigns) do
     ~H"""
     <div class="px-[15px] py-[20px]">
-      <h2 class="text-xl font-semibold">Sessions</h2>
+      <div class="flex flex-row items-center gap-2">
+        <h2 class="text-xl font-semibold">Sessions</h2>
+        <.svelte name="TicketEditor" socket={@socket} ssr={false} props={%{open: true}} />
+      </div>
 
       <ul class="flex flex-col gap-1 mt-8 max-w-[400px]">
         <%= for session <- @sessions do %>
