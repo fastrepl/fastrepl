@@ -50,4 +50,30 @@ defmodule FastreplWeb.SessionComponents do
     </div>
     """
   end
+
+  attr :display_id, :string
+  attr :github_issue_number, :integer
+  attr :github_repo_full_name, :string
+
+  def session_list_item(assigns) do
+    ~H"""
+    <div class="flex items-center gap-2 border rounded-md shadow-md text-sm">
+      <img
+        src={"//ui-avatars.com/api/?name=#{@github_repo_full_name}&background=f0e9e9&font-size=0.35"}
+        class="h-8 w-8 rounded flex-shrink-0"
+      />
+      <div class="flex items-center w-full">
+        <.link
+          href={"https://github.com/#{@github_repo_full_name}/issues/#{@github_issue_number}"}
+          class="hover:font-semibold"
+        >
+          <%= "#{@github_repo_full_name} ##{@github_issue_number}" %>
+        </.link>
+        <.link navigate={"/thread/#{@display_id}"} class="hover:font-semibold ml-auto mr-2">
+          <span class="hero-arrow-right-solid w-4 h-4 text-gray-600 hover:text-black" />
+        </.link>
+      </div>
+    </div>
+    """
+  end
 end

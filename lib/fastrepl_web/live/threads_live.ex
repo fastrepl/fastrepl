@@ -1,17 +1,21 @@
 defmodule FastreplWeb.ThreadsLive do
   use FastreplWeb, :live_view
 
-  import FastreplWeb.ThreadComponents, only: [thread_list_item: 1]
+  import FastreplWeb.SessionComponents, only: [session_list_item: 1]
 
   def render(assigns) do
     ~H"""
     <div class="px-[15px] py-[20px]">
-      <h2 class="text-xl font-semibold">Threads</h2>
+      <h2 class="text-xl font-semibold">Sessions</h2>
 
       <ul class="flex flex-col gap-1 mt-8 max-w-[400px]">
-        <%= for {id, _pid} <- @threads do %>
+        <%= for session <- @sessions do %>
           <li>
-            <.thread_list_item id={id} />
+            <.session_list_item
+              display_id={session.display_id}
+              github_issue_number={session.github_issue_number}
+              github_repo_full_name={session.github_repo_full_name}
+            />
           </li>
         <% end %>
       </ul>
@@ -20,15 +24,23 @@ defmodule FastreplWeb.ThreadsLive do
   end
 
   def mount(_params, _session, socket) do
-    threads = [] ++ list_active_threads(socket.assigns.current_account.id)
+    sessions =
+      socket.assigns.current_account
+      |> Fastrepl.Sessions.list_sessions(limit: 30)
+      |> Enum.map(fn session ->
+        %{
+          display_id: session.display_id,
+          github_issue_number: session.ticket.github_issue_number,
+          github_repo_full_name: session.ticket.github_repo_full_name
+        }
+      end)
 
-    socket = socket |> assign(:threads, threads)
-    {:ok, socket}
+    {:ok, socket |> assign(:sessions, sessions)}
   end
 
-  defp list_active_threads(account_id) do
-    Registry.select(Application.fetch_env!(:fastrepl, :thread_manager_registry), [
-      {{:"$1", :"$2", %{account_id: account_id}}, [], [{{:"$1", :"$2"}}]}
-    ])
-  end
+  # defp list_active_threads(account_id) do
+  #   Registry.select(Application.fetch_env!(:fastrepl, :thread_manager_registry), [
+  #     {{:"$1", :"$2", %{account_id: account_id}}, [], [{{:"$1", :"$2"}}]}
+  #   ])
+  # end
 end

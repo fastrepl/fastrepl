@@ -8,8 +8,23 @@ defmodule Fastrepl.Sessions do
   alias Fastrepl.Sessions.Comment
   alias Fastrepl.Sessions.Session
 
-  def list_sessions(%Account{} = account) do
-    Repo.all(from s in Session, where: s.account_id == ^account.id)
+  def list_sessions(%Account{} = account, opts \\ []) do
+    limit = Keyword.get(opts, :limit, nil)
+
+    query =
+      from s in Session,
+        where: s.account_id == ^account.id,
+        preload: [:ticket],
+        order_by: [desc: s.inserted_at]
+
+    query =
+      if limit do
+        from q in query, limit: ^limit
+      else
+        query
+      end
+
+    Repo.all(query)
   end
 
   def list_comments(%Session{} = session) do
