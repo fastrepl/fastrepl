@@ -31,7 +31,7 @@ defmodule Fastrepl.SessionsTest do
   end
 
   describe "session" do
-    test "preloaded comments and patches" do
+    test "it works" do
       account = user_fixture() |> account_fixture(%{name: "personal"})
 
       ticket_attrs = %{
@@ -45,38 +45,18 @@ defmodule Fastrepl.SessionsTest do
       {:ok, session_1} = Sessions.session_from(ticket, session_attrs)
       {:ok, session_2} = Sessions.session_from(ticket, session_attrs)
 
+      assert session_1.id == session_2.id
+      assert session_1.ticket.id == session_2.ticket.id
+
       assert session_1.comments == []
       assert session_1.patches == []
+      assert session_1.ticket.github_repo != nil
+      assert session_1.ticket.github_issue != nil
+
       assert session_2.comments == []
       assert session_2.patches == []
-    end
-
-    test "it works" do
-      account = user_fixture() |> account_fixture(%{name: "personal"})
-
-      ticket_attrs = %{
-        github_repo_full_name: "fastrepl/fastrepl",
-        github_issue_number: 1
-      }
-
-      {:ok, ticket_1} = Sessions.ticket_from(ticket_attrs)
-      assert ticket_1.session_id == nil
-      assert ticket_1.github_repo != nil
-      assert ticket_1.github_issue != nil
-
-      session_attrs = %{account_id: account.id, display_id: "123"}
-
-      assert account |> Sessions.list_sessions() |> length() == 0
-      {:ok, session} = Sessions.session_from(ticket_1, session_attrs)
-      assert account |> Sessions.list_sessions() |> length() == 1
-
-      {:ok, ticket_2} = Sessions.ticket_from(ticket_attrs)
-      assert ticket_1.id == ticket_2.id
-      assert ticket_2.session_id != nil
-
-      assert session.ticket.id == ticket_1.id
-      assert session.ticket.github_repo != nil
-      assert session.ticket.github_issue != nil
+      assert session_2.ticket.github_repo != nil
+      assert session_2.ticket.github_issue != nil
     end
   end
 

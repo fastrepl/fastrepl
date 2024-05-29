@@ -56,7 +56,11 @@ defmodule Fastrepl.Sessions do
         |> Repo.insert()
 
       session ->
-        session = session |> Repo.preload([:comments, :patches])
+        session =
+          session
+          |> Repo.preload([:comments, :patches])
+          |> Map.put(:ticket, ticket)
+
         {:ok, session}
     end
   end
