@@ -7,6 +7,12 @@ defmodule Fastrepl.Application do
 
   @impl true
   def start(_type, _args) do
+    if System.get_env("SENTRY_DSN") do
+      :logger.add_handler(:sentry_handler, Sentry.LoggerHandler, %{
+        config: %{metadata: [:file, :line]}
+      })
+    end
+
     children = [
       GitHub.Auth.Cache,
       {Task.Supervisor, name: Fastrepl.TaskSupervisor},

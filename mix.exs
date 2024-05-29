@@ -100,7 +100,8 @@ defmodule Fastrepl.MixProject do
       {:jose, "~> 1.11"},
       {:absinthe_client,
        git: "https://github.com/CargoSense/absinthe_client.git",
-       rev: "6c941127e8f20375c93a8561a9df66eadc6f026e"}
+       rev: "6c941127e8f20375c93a8561a9df66eadc6f026e"},
+      {:sentry, "~> 10.2.0"}
     ]
   end
 

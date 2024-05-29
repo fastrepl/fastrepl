@@ -145,6 +145,14 @@ if config_env() == :prod do
     otlp_protocol: :http_protobuf,
     otlp_endpoint: System.fetch_env!("OTEL_COLLECTOR_URL"),
     otlp_headers: [{"Authorization", "Bearer #{System.fetch_env!("OTEL_COLLECTOR_URL_AUTH")}"}]
+
+  if System.get_env("SENTRY_DSN") do
+    config :sentry,
+      dsn: System.fetch_env!("SENTRY_DSN"),
+      environment_name: :prod,
+      enable_source_code_context: true,
+      root_source_code_paths: [File.cwd!()]
+  end
 end
 
 config :stripity_stripe, api_key: System.get_env("STRIPE_SECRET_KEY")
