@@ -7,7 +7,6 @@ defmodule Fastrepl.ThreadManager do
   alias Fastrepl.Retrieval
   alias Fastrepl.Sessions
   alias Fastrepl.Sessions.Ticket
-  alias Fastrepl.Sessions.Comment
   alias Fastrepl.SemanticFunction.Modify
   alias Fastrepl.SemanticFunction.PPWriter
 
@@ -22,12 +21,11 @@ defmodule Fastrepl.ThreadManager do
     with %Github.App{} = app <-
            Github.find_app(account_id, ticket.github_repo_full_name),
          {:ok, session} <-
-           Sessions.session_from(ticket, %{account_id: account_id, display_id: thread_id}) do
-      send(self(), :prepare_repo)
-
+           Sessions.session_from(ticket, %{account_id: account_id, display_id: thread_id}),
+         token = Github.get_installation_token!(app.installation_id),
+         {:ok, repository} =
+           FS.Repository.from(ticket.github_repo_full_name, ticket.base_commit_sha, token) do
       if session.status == :init_0 do
-        token = Github.get_installation_token!(app.installation_id)
-
         {:ok, %{id: _comment_id}} =
           Github.Issue.Comment.create(
             ticket.github_repo_full_name,
@@ -41,6 +39,8 @@ defmodule Fastrepl.ThreadManager do
           )
       end
 
+      send(self(), {:indexing, repository.root_path})
+
       state =
         Map.new()
         |> Map.put(:self, self())
@@ -48,6 +48,7 @@ defmodule Fastrepl.ThreadManager do
         |> Map.put(:session, session)
         |> Map.put(:thread_id, thread_id)
         |> Map.put(:installation_id, app.installation_id)
+        |> Map.put(:repository, repository)
 
       {:ok, state}
     else
@@ -85,7 +86,9 @@ defmodule Fastrepl.ThreadManager do
 
   @impl true
   def handle_call({:comment_add, attrs}, _from, state) do
-    comment = Sessions.create_comment(attrs)
+    attrs = attrs |> Map.put("session_id", state.session.id)
+    {:ok, comment} = Sessions.create_comment(attrs)
+
     new_comments = [comment | state.session.comments]
 
     state =
@@ -100,10 +103,10 @@ defmodule Fastrepl.ThreadManager do
   def handle_call({:comments_update, comments}, _from, state) do
     comments =
       comments
-      |> Enum.map(fn comment ->
+      |> Enum.map(fn attrs ->
+        attrs = attrs |> Map.put("session_id", state.session.id)
+        {:ok, comment} = Sessions.create_comment(attrs)
         comment
-        |> Map.new(fn {k, v} -> {String.to_atom(k), v} end)
-        |> then(&struct(Comment, &1))
       end)
 
     state =
@@ -169,23 +172,12 @@ defmodule Fastrepl.ThreadManager do
   end
 
   @impl true
-  def handle_info(:prepare_repo, state) do
+  def handle_info({:indexing, repo_root_path}, state) do
     Task.Supervisor.start_child(Fastrepl.TaskSupervisor, fn ->
-      send(state.self, {:update, :status, :clone_1})
-
-      {:ok, repository} =
-        FS.Repository.from(
-          state.session.ticket.github_repo_full_name,
-          state.session.ticket.base_commit_sha,
-          Github.get_installation_token!(state.installation_id)
-        )
-
-      sync_with_views(state, %{paths: repository.paths})
-      send(state.self, {:update, :repository, repository})
       send(state.self, {:update, :status, :index_2})
 
       ctx =
-        repository.root_path
+        repo_root_path
         |> Retrieval.Context.from()
         |> Retrieval.Context.add_tools([
           Retrieval.Tool.SemanticSearch,
@@ -226,10 +218,6 @@ defmodule Fastrepl.ThreadManager do
           state
           |> sync_with_views(%{status: value})
           |> update_in([:session, Access.key(:status)], fn _ -> value end)
-
-        :repository ->
-          state
-          |> Map.put(:repository, value)
 
         :patches ->
           state

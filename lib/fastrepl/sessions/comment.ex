@@ -14,7 +14,7 @@ defmodule Fastrepl.Sessions.Comment do
 
   @fields [:file_path, :line_start, :line_end, :content, :session_id]
 
-  @derive {Jason.Encoder, only: [:file_path, :line_start, :line_end, :content]}
+  @derive {Jason.Encoder, only: [:id, :file_path, :line_start, :line_end, :content]}
   schema "comments" do
     field :file_path, :string
     field :line_start, :integer

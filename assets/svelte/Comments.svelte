@@ -25,13 +25,13 @@
     .reduce(
       (acc, comment) => {
         acc[comment.file_path] = acc[comment.file_path] || [];
-        acc[comment.file_path].push({ id: nanoid(), ...comment });
+        acc[comment.file_path].push(comment);
         return acc;
       },
-      {} as Record<string, (Comment & { id: string })[]>,
+      {} as Record<string, Comment[]>,
     );
 
-  let editingComment: (Comment & { id: string }) | null = null;
+  let editingComment: Comment | null = null;
 
   $: if (
     editingComment &&
@@ -96,7 +96,7 @@
       out:fly={{ duration: 300, x: -30 }}
       class="pl-4 mt-1 flex flex-col gap-2 text-sm text-gray-700"
     >
-      {#each comments as comment (`${comment.file_path}-${comment.content}`)}
+      {#each comments as comment (comment.id)}
         <div
           in:fly={{ duration: 300, x: 30 }}
           out:fly={{ duration: 300, x: -30 }}
@@ -127,7 +127,6 @@
               on:blur={(e) => handleEditComment(comment.id, e.target["value"])}
               on:keydown={(e) => {
                 if (e.key === "Enter") {
-                  console.log(e.target);
                   handleEditComment(comment.id, e.target["value"]);
                 }
               }}

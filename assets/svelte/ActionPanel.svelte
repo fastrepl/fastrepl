@@ -91,7 +91,7 @@
                 "disabled:opacity-70",
               ])}
             >
-              <span>Create PR</span>
+              <span class="text-nowrap px-2"> Create PR</span>
             </button>
             <button
               type="button"
@@ -104,7 +104,7 @@
                 "disabled:opacity-70",
               ])}
             >
-              <span>Download Git Patch</span>
+              <span class="text-nowrap px-2"> Download Git Patch</span>
             </button>
           </div>
         {/if}
