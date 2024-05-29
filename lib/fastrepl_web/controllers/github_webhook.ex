@@ -91,7 +91,7 @@ defmodule FastreplWeb.GithubWebhookHandler do
           )
 
         case action do
-          action when action in ["opened", "labeled"] ->
+          action when action in ["labeled"] ->
             if has_fastrepl_label?(labels) do
               start_thread_manager(%{
                 account_id: app.account_id,
