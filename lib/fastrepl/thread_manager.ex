@@ -1,14 +1,12 @@
 defmodule Fastrepl.ThreadManager do
   use GenServer, restart: :transient
   use Tracing
-  require Logger
 
   alias Fastrepl.FS
   alias Fastrepl.Github
   alias Fastrepl.Retrieval
+  alias Fastrepl.Sessions
   alias Fastrepl.Sessions.Ticket
-  alias Fastrepl.Sessions.Session
-  alias Fastrepl.Sessions.Comment
   alias Fastrepl.SemanticFunction.Modify
   alias Fastrepl.SemanticFunction.PPWriter
 
@@ -17,59 +15,46 @@ defmodule Fastrepl.ThreadManager do
   end
 
   @impl true
-  def init(%{
-        account_id: account_id,
-        thread_id: thread_id,
-        installation_id: installation_id,
-        repo_full_name: repo_full_name,
-        issue_number: issue_number
-      }) do
+  def init(%{account_id: account_id, thread_id: thread_id, ticket: %Ticket{} = ticket}) do
     Process.flag(:trap_exit, true)
 
-    token = Github.get_installation_token!(installation_id)
-    repo = Github.Repo.from!(repo_full_name, auth: token)
-    issue = Github.Issue.from!(repo_full_name, issue_number, auth: token)
+    with %Github.App{} = app <-
+           Github.find_app(account_id, ticket.github_repo_full_name),
+         {:ok, session} <-
+           Sessions.session_from(ticket, %{account_id: account_id, display_id: thread_id}),
+         token = Github.get_installation_token!(app.installation_id),
+         {:ok, repository} =
+           FS.Repository.from(ticket.github_repo_full_name, ticket.base_commit_sha, token) do
+      if session.status == :init do
+        {:ok, %{id: _comment_id}} =
+          Github.Issue.Comment.create(
+            ticket.github_repo_full_name,
+            ticket.github_issue_number,
+            """
+            We have just started processing your issue.
 
-    {:ok, %{id: comment_id}} =
-      Github.Issue.Comment.create(
-        repo_full_name,
-        issue_number,
-        """
-        We have just started processing your issue.
+            You can check the progress here: #{FastreplWeb.Endpoint.url()}/thread/#{thread_id}
+            """,
+            auth: token
+          )
+      end
 
-        You can check the progress here: #{FastreplWeb.Endpoint.url()}/thread/#{thread_id}
-        """,
-        auth: token
-      )
+      send(self(), {:indexing, repository.root_path})
 
-    ticket = %Ticket{
-      type: :github,
-      github_repo_full_name: repo_full_name,
-      github_repo_sha: repo.default_branch_head,
-      github_issue_number: issue_number,
-      github_repo: repo,
-      github_issue: issue
-    }
+      state =
+        Map.new()
+        |> Map.put(:self, self())
+        |> Map.put(:account_id, account_id)
+        |> Map.put(:session, session)
+        |> Map.put(:thread_id, thread_id)
+        |> Map.put(:installation_id, app.installation_id)
+        |> Map.put(:repository, repository)
 
-    session = %Session{
-      status: :init_0,
-      ticket: ticket,
-      display_id: thread_id,
-      github_issue_comment_id: comment_id,
-      comments: [],
-      patches: []
-    }
-
-    state =
-      Map.new()
-      |> Map.put(:self, self())
-      |> Map.put(:account_id, account_id)
-      |> Map.put(:session, session)
-      |> Map.put(:thread_id, thread_id)
-      |> Map.put(:installation_id, installation_id)
-
-    send(state.self, :prepare_repo)
-    {:ok, state}
+      {:ok, state}
+    else
+      {:error, error} ->
+        {:stop, error}
+    end
   end
 
   @impl true
@@ -100,36 +85,62 @@ defmodule Fastrepl.ThreadManager do
   end
 
   @impl true
-  def handle_call({:comment_add, comment}, _from, state) do
-    comment =
+  def handle_call({:comments_create, [comment]}, _from, state) do
+    {:ok, created} =
       comment
-      |> Map.new(fn {k, v} -> {String.to_atom(k), v} end)
-      |> then(&struct(Comment, &1))
+      |> Map.put("session_id", state.session.id)
+      |> Sessions.create_comment()
 
-    new_comments = [comment | state.session.comments]
+    next_comments = [created | state.session.comments]
 
     state =
       state
-      |> sync_with_views(%{comments: new_comments})
-      |> update_in([:session, Access.key(:comments)], fn _ -> new_comments end)
+      |> sync_with_views(%{comments: next_comments})
+      |> update_in([:session, Access.key(:comments)], fn _ -> next_comments end)
 
     {:reply, :ok, state}
   end
 
   @impl true
-  def handle_call({:comments_update, comments}, _from, state) do
-    comments =
-      comments
-      |> Enum.map(fn comment ->
-        comment
-        |> Map.new(fn {k, v} -> {String.to_atom(k), v} end)
-        |> then(&struct(Comment, &1))
-      end)
+  def handle_call({:comments_delete, comments}, _from, state) do
+    comments
+    |> Enum.each(fn attrs ->
+      attrs
+      |> Map.put("session_id", state.session.id)
+      |> Sessions.delete_comment()
+    end)
+
+    next_comments =
+      state.session.comments
+      |> Enum.reject(fn %{id: id} -> id in Enum.map(comments, & &1["id"]) end)
 
     state =
       state
-      |> sync_with_views(%{comments: comments})
-      |> update_in([:session, Access.key(:comments)], fn _ -> comments end)
+      |> sync_with_views(%{comments: next_comments})
+      |> update_in([:session, Access.key(:comments)], fn _ -> next_comments end)
+
+    {:reply, :ok, state}
+  end
+
+  @impl true
+  def handle_call({:comments_update, [%{"id" => id} = attrs]}, _from, state) do
+    i = Enum.find_index(state.session.comments, &(&1.id == id))
+
+    state =
+      if i do
+        {:ok, updated} =
+          state.session.comments
+          |> Enum.at(i)
+          |> Sessions.update_comment(attrs)
+
+        next_comments = List.replace_at(state.session.comments, i, updated)
+
+        state
+        |> sync_with_views(%{comments: next_comments})
+        |> update_in([:session, Access.key(:comments)], fn _ -> next_comments end)
+      else
+        state
+      end
 
     {:reply, :ok, state}
   end
@@ -166,7 +177,7 @@ defmodule Fastrepl.ThreadManager do
   @impl true
   def handle_call(:execute, _from, state) do
     Task.Supervisor.start_child(Fastrepl.TaskSupervisor, fn ->
-      send(state.self, {:update, :status, :execute_4})
+      send(state.self, {:update, :status, :run})
 
       result = Modify.run(state.repository, Enum.at(state.session.comments, 0))
 
@@ -174,38 +185,27 @@ defmodule Fastrepl.ThreadManager do
         {:ok, mut} ->
           repo = FS.Mutation.apply(state.repository, mut)
           patches = FS.Patch.from(repo)
+
           send(state.self, {:update, :patches, patches})
           send(state.self, {:update, :repository, repo})
+
+          patches |> Enum.each(&Sessions.create_patch/1)
 
         error ->
           IO.inspect(error)
       end
 
-      Process.sleep(2000)
-      send(state.self, {:update, :status, :start_3})
+      send(state.self, {:update, :status, :idle})
     end)
 
     {:reply, :ok, state}
   end
 
   @impl true
-  def handle_info(:prepare_repo, state) do
+  def handle_info({:indexing, repo_root_path}, state) do
     Task.Supervisor.start_child(Fastrepl.TaskSupervisor, fn ->
-      send(state.self, {:update, :status, :clone_1})
-
-      {:ok, repository} =
-        FS.Repository.from(
-          state.session.ticket.github_repo_full_name,
-          state.session.ticket.github_repo_sha,
-          Github.get_installation_token!(state.installation_id)
-        )
-
-      sync_with_views(state, %{paths: repository.paths})
-      send(state.self, {:update, :repository, repository})
-      send(state.self, {:update, :status, :index_2})
-
       ctx =
-        repository.root_path
+        repo_root_path
         |> Retrieval.Context.from()
         |> Retrieval.Context.add_tools([
           Retrieval.Tool.SemanticSearch,
@@ -215,7 +215,7 @@ defmodule Fastrepl.ThreadManager do
       send(state.self, {:update, :retrieval_ctx, ctx})
       precompute_embeddings(ctx.chunks)
 
-      send(state.self, {:update, :status, :start_3})
+      send(state.self, {:update, :status, :idle})
       send(state.self, :retrieval)
     end)
 
@@ -247,10 +247,6 @@ defmodule Fastrepl.ThreadManager do
           |> sync_with_views(%{status: value})
           |> update_in([:session, Access.key(:status)], fn _ -> value end)
 
-        :repository ->
-          state
-          |> Map.put(:repository, value)
-
         :patches ->
           state
           |> sync_with_views(%{patches: value})
@@ -276,6 +272,8 @@ defmodule Fastrepl.ThreadManager do
     if state[:thread_id] do
       Registry.unregister(registry_module(), state.thread_id)
     end
+
+    Sessions.update_session(state.session, %{status: state.session.status})
 
     :ok
   end

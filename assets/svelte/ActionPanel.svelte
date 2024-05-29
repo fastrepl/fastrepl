@@ -24,6 +24,7 @@
   export let handleClickDownloadPatch: () => Promise<any>;
 
   export let handleClickComment: (comment: Comment) => void;
+  export let handleDeleteComments: (comments: Comment[]) => void;
   export let handleUpdateComments: (comments: Comment[]) => void;
 
   let isLoadingCreatePR = false;
@@ -70,6 +71,7 @@
           items={comments}
           wipPaths={[]}
           {handleClickComment}
+          {handleDeleteComments}
           {handleUpdateComments}
         />
 
@@ -91,7 +93,7 @@
                 "disabled:opacity-70",
               ])}
             >
-              <span>Create PR</span>
+              <span class="text-nowrap px-2"> Create PR</span>
             </button>
             <button
               type="button"
@@ -104,7 +106,7 @@
                 "disabled:opacity-70",
               ])}
             >
-              <span>Download Git Patch</span>
+              <span class="text-nowrap px-2"> Download Git Patch</span>
             </button>
           </div>
         {/if}

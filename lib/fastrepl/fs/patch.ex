@@ -16,7 +16,7 @@ defmodule Fastrepl.FS.Patch do
 
   @derive {Jason.Encoder, only: [:path, :content]}
   schema "patches" do
-    field :status, Ecto.Enum, values: [:added, :modified, :removed], virtual: true
+    field :status, Ecto.Enum, values: [:added, :modified, :removed]
     field :path, :string
     field :content, :string
 
@@ -27,9 +27,8 @@ defmodule Fastrepl.FS.Patch do
 
   def changeset(%Patch{} = patch, attrs) do
     patch
-    |> cast(attrs, [:status, :path, :content])
-    |> validate_required([:status, :path, :content])
-    |> assoc_constraint(:session)
+    |> cast(attrs, [:status, :path, :content, :session_id])
+    |> validate_required([:status, :path, :content, :session_id])
   end
 
   @spec from(Repository.t()) :: [t]

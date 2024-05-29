@@ -9,16 +9,16 @@ defmodule Fastrepl.Sessions.Ticket do
 
   # when ticket is created from github issue
   @github_fields [
-    :github_issue_number,
+    :base_commit_sha,
     :github_repo_full_name,
-    :github_repo_sha
+    :github_issue_number
   ]
 
   # when ticket is created internally or from web app
   @fastrepl_fields [
-    :fastrepl_issue_content,
+    :base_commit_sha,
     :github_repo_full_name,
-    :github_repo_sha
+    :fastrepl_issue_content
   ]
 
   schema "tickets" do
@@ -26,8 +26,8 @@ defmodule Fastrepl.Sessions.Ticket do
     field :github_repo, :map, virtual: true
     field :github_issue, :map, virtual: true
 
+    field :base_commit_sha, :string
     field :github_repo_full_name, :string
-    field :github_repo_sha, :string
     field :github_issue_number, :integer
 
     field :fastrepl_issue_content, :string

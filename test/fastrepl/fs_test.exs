@@ -111,11 +111,11 @@ defmodule Fastrepl.FSTest do
 
       count =
         root
-        |> FS.search_paths("thread")
+        |> FS.search_paths("session")
         |> Enum.map(&Path.relative_to(&1, root))
         |> Enum.count()
 
-      assert count > 3
+      assert count > 1
     end
   end
 

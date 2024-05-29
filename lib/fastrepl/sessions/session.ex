@@ -6,14 +6,21 @@ defmodule Fastrepl.Sessions.Session do
   alias Fastrepl.Sessions.Ticket
   alias Fastrepl.Sessions.Comment
   alias Fastrepl.FS.Patch
+  alias Fastrepl.Accounts.Account
 
-  @type t :: %Session{}
+  @type t :: %Session{
+          status: :init | :run | :idle | :done,
+          display_id: String.t(),
+          ticket: Ticket.t(),
+          comments: [Comment.t()],
+          patches: [Patch.t()]
+        }
 
-  schema "tickets" do
-    field :status, Ecto.Enum, values: [:foo, :bar, :baz]
+  schema "sessions" do
+    field :status, Ecto.Enum, values: [:init, :run, :idle, :done], default: :init
     field :display_id, :string
-    field :github_issue_comment_id, :integer
 
+    belongs_to :account, Account
     has_one :ticket, Ticket
     has_many :comments, Comment
     has_many :patches, Patch
@@ -21,10 +28,10 @@ defmodule Fastrepl.Sessions.Session do
     timestamps(type: :utc_datetime)
   end
 
-  def changeset(%Session{} = ticket, attrs) do
-    ticket
-    |> cast(attrs, [])
-    |> validate_required([])
-    |> assoc_constraint(:session)
+  def changeset(%Session{} = session, attrs) do
+    session
+    |> cast(attrs, [:account_id, :status, :display_id])
+    |> validate_required([:account_id, :display_id])
+    |> assoc_constraint(:account)
   end
 end

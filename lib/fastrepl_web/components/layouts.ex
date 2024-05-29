@@ -27,7 +27,7 @@ defmodule FastreplWeb.Layouts do
               >
                 <span class="hero-cog-6-tooth-solid w-4 h-4" />
 
-                <span class="invisible absolute start-full top-1/2 ms-4 -translate-y-1/2 rounded bg-gray-900 px-2 py-1.5 text-xs font-medium text-white group-hover:visible">
+                <span class="z-50 invisible absolute start-full top-1/2 ms-4 -translate-y-1/2 rounded bg-gray-900 px-2 py-1.5 text-xs font-medium text-white group-hover:visible">
                   Settings
                 </span>
               </.link>
@@ -44,8 +44,8 @@ defmodule FastreplWeb.Layouts do
                 >
                   <span class="hero-queue-list-solid w-4 h-4" />
 
-                  <span class="invisible absolute start-full top-1/2 ms-4 -translate-y-1/2 rounded bg-gray-900 px-2 py-1.5 text-xs font-medium text-white group-hover:visible">
-                    Threads
+                  <span class="z-50 invisible absolute start-full top-1/2 ms-4 -translate-y-1/2 rounded bg-gray-900 px-2 py-1.5 text-xs font-medium text-white group-hover:visible">
+                    Sessions
                   </span>
                 </.link>
               </li>
@@ -60,7 +60,7 @@ defmodule FastreplWeb.Layouts do
                 >
                   <span class="hero-chat-bubble-left-right-solid w-4 h-4" />
 
-                  <span class="invisible absolute start-full top-1/2 ms-4 -translate-y-1/2 rounded bg-gray-900 px-2 py-1.5 text-xs font-medium text-white group-hover:visible">
+                  <span class="z-50 invisible absolute start-full top-1/2 ms-4 -translate-y-1/2 rounded bg-gray-900 px-2 py-1.5 text-xs font-medium text-white group-hover:visible">
                     Chats
                   </span>
                 </.link>

@@ -3,7 +3,6 @@
   import { Circle } from "svelte-loading-spinners";
 
   import { clsx } from "clsx";
-  import { nanoid } from "nanoid";
 
   import type { Comment } from "$lib/interfaces";
 
@@ -11,8 +10,10 @@
 
   export let items: Comment[] = [];
   export let wipPaths: string[] = [];
+
   export let handleClickComment: (comment: Comment) => void;
   export let handleUpdateComments: (comments: Comment[]) => void;
+  export let handleDeleteComments: (comments: Comment[]) => void;
 
   $: map = items
     .sort((a, b) => {
@@ -25,13 +26,13 @@
     .reduce(
       (acc, comment) => {
         acc[comment.file_path] = acc[comment.file_path] || [];
-        acc[comment.file_path].push({ id: nanoid(), ...comment });
+        acc[comment.file_path].push(comment);
         return acc;
       },
-      {} as Record<string, (Comment & { id: string })[]>,
+      {} as Record<string, Comment[]>,
     );
 
-  let editingComment: (Comment & { id: string }) | null = null;
+  let editingComment: Comment | null = null;
 
   $: if (
     editingComment &&
@@ -43,36 +44,22 @@
   }
 
   const handleDeleteFile = (filePath: string) => {
-    const newComments = items.filter((item) => item.file_path !== filePath);
-    handleUpdateComments(newComments);
+    const targets = items.filter((item) => item.file_path === filePath);
+    handleDeleteComments(targets);
   };
 
-  const handleDeleteComment = (commentId: string) => {
-    const newComments = Object.entries(map)
-      .map(([_, comments]) =>
-        comments.filter((comment) => comment.id !== commentId),
-      )
-      .flat();
-
-    handleUpdateComments(newComments);
-  };
-
-  const handleEditComment = (commentId: string, content: string) => {
+  const handleEditCommentContent = (commentId: number, content: string) => {
     editingComment = null;
 
     if (!content) {
       return;
     }
 
-    const newComments = Object.entries(map)
-      .map(([_, comments]) =>
-        comments.map((comment) =>
-          comment.id === commentId ? { ...comment, content } : comment,
-        ),
-      )
-      .flat();
-
-    handleUpdateComments(newComments);
+    const [target] = items.filter((item) => item.id === commentId);
+    if (target) {
+      target.content = content;
+      handleUpdateComments([target]);
+    }
   };
 </script>
 
@@ -96,7 +83,7 @@
       out:fly={{ duration: 300, x: -30 }}
       class="pl-4 mt-1 flex flex-col gap-2 text-sm text-gray-700"
     >
-      {#each comments as comment (`${comment.file_path}-${comment.content}`)}
+      {#each comments as comment (comment.id)}
         <div
           in:fly={{ duration: 300, x: 30 }}
           out:fly={{ duration: 300, x: -30 }}
@@ -124,11 +111,11 @@
                 "border-gray-300 focus:border-gray-300 focus:ring-0",
                 "text-sm resize-y",
               ])}
-              on:blur={(e) => handleEditComment(comment.id, e.target["value"])}
+              on:blur={(e) =>
+                handleEditCommentContent(comment.id, e.target["value"])}
               on:keydown={(e) => {
                 if (e.key === "Enter") {
-                  console.log(e.target);
-                  handleEditComment(comment.id, e.target["value"]);
+                  handleEditCommentContent(comment.id, e.target["value"]);
                 }
               }}
             />
@@ -141,7 +128,7 @@
               {comment.content}
             </button>
             <button
-              on:click={() => handleDeleteComment(comment.id)}
+              on:click={() => handleDeleteComments([comment])}
               class="hidden group-hover:flex text-gray-400 hover:text-gray-700 mt-1"
             >
               <span class="hero-backspace h-4 w-4" />

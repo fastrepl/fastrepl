@@ -14,7 +14,7 @@
   export let file: File;
   export let currentSelection: Selection | null = null;
   export let handleChangeSelection: (s: Selection) => void;
-  export let handleAddComment: (c: Comment) => void;
+  export let handleCreateComments: (comments: Comment[]) => void;
 
   let codeSnippetContainer: HTMLElement;
   let contextMenuInstance: TippyInstance | null = null;
@@ -56,13 +56,14 @@
     contextMenuInstance.hide();
 
     const newComment: Comment = {
+      id: -1,
       file_path: file.path,
       line_start: currentSelection.start,
       line_end: currentSelection.end,
       content: content,
     };
 
-    handleAddComment(newComment);
+    handleCreateComments([newComment]);
   };
 
   const handleContextMenu = (e: MouseEvent) => {

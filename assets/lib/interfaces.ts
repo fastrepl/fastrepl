@@ -1,4 +1,5 @@
 export interface Comment {
+  id: number;
   file_path: string;
   line_start: number;
   line_end: number;

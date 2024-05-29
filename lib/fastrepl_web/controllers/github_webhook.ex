@@ -2,6 +2,7 @@ defmodule FastreplWeb.GithubWebhookHandler do
   require Logger
 
   alias Fastrepl.Github
+  alias Fastrepl.Sessions
 
   # https://docs.github.com/en/webhooks/webhook-events-and-payloads#installation
   def handle_event("installation", payload) do
@@ -72,51 +73,51 @@ defmodule FastreplWeb.GithubWebhookHandler do
     %{
       "action" => action,
       "installation" => %{"id" => installation_id},
-      "issue" => %{"number" => number, "labels" => labels},
+      "issue" => %{"number" => issue_number, "labels" => labels},
       "repository" => %{"full_name" => repo_full_name}
     } = payload
 
-    app = Github.get_app_by_installation_id(installation_id)
+    case Github.get_app_by_installation_id(installation_id) do
+      nil ->
+        {:error, "app not found"}
 
-    args = %{
-      repo_full_name: repo_full_name,
-      thread_id: Nanoid.generate(),
-      issue_number: number,
-      account_id: app.account_id,
-      installation_id: installation_id
-    }
+      app ->
+        auth = Github.get_installation_token!(installation_id)
 
-    if app == nil do
-      {:error, "app not found"}
-    else
-      case action do
-        "opened" ->
-          if Enum.any?(labels, &(&1["name"] == "fastrepl")) do
-            {:ok, _} =
-              DynamicSupervisor.start_child(
-                Fastrepl.ThreadManagerSupervisor,
-                {Fastrepl.ThreadManager, args}
-              )
-          end
+        {:ok, ticket} =
+          Sessions.ticket_from(
+            %{github_repo_full_name: repo_full_name, github_issue_number: issue_number},
+            auth: auth
+          )
 
-        "labeled" ->
-          if Enum.any?(labels, &(&1["name"] == "fastrepl")) do
-            {:ok, _} =
-              DynamicSupervisor.start_child(
-                Fastrepl.ThreadManagerSupervisor,
-                {Fastrepl.ThreadManager, args}
-              )
-          end
+        case action do
+          action when action in ["opened", "labeled"] ->
+            if has_fastrepl_label?(labels) do
+              start_thread_manager(%{
+                account_id: app.account_id,
+                thread_id: Nanoid.generate(),
+                ticket: ticket
+              })
+            end
 
-        _ ->
-          :ok
-      end
-
-      :ok
+          _ ->
+            :ok
+        end
     end
   end
 
   def handle_event(event, _payload) do
     {:error, %{type: :unhandled, event: event}}
+  end
+
+  defp has_fastrepl_label?(labels) do
+    labels |> Enum.any?(&(&1["name"] == "fastrepl"))
+  end
+
+  defp start_thread_manager(args) do
+    DynamicSupervisor.start_child(
+      Fastrepl.ThreadManagerSupervisor,
+      {Fastrepl.ThreadManager, args}
+    )
   end
 end
