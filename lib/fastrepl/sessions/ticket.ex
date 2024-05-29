@@ -22,10 +22,10 @@ defmodule Fastrepl.Sessions.Ticket do
   ]
 
   schema "tickets" do
-    field :type, Ecto.Enum, values: [:github, :fastrepl], virtual: true
     field :github_repo, :map, virtual: true
     field :github_issue, :map, virtual: true
 
+    field :type, Ecto.Enum, values: [:github, :fastrepl]
     field :base_commit_sha, :string
     field :github_repo_full_name, :string
     field :github_issue_number, :integer
@@ -41,13 +41,13 @@ defmodule Fastrepl.Sessions.Ticket do
     ticket
     |> cast(attrs, @github_fields)
     |> validate_required(@github_fields)
-    |> assoc_constraint(:session)
+    |> put_change(:type, :github)
   end
 
   def changeset(%Ticket{} = ticket, %{fastrepl_issue_content: _} = attrs) do
     ticket
     |> cast(attrs, @fastrepl_fields)
     |> validate_required(@fastrepl_fields)
-    |> assoc_constraint(:session)
+    |> put_change(:type, :fastrepl)
   end
 end

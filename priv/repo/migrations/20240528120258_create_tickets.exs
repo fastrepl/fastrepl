@@ -4,6 +4,7 @@ defmodule Fastrepl.Repo.Migrations.CreateTickets do
   def change do
     create table(:tickets) do
       add :session_id, references(:sessions, on_delete: :delete_all)
+      add :type, :string
       add :base_commit_sha, :string
       add :github_repo_full_name, :string
       add :github_issue_number, :integer
