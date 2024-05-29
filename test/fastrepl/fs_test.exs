@@ -120,7 +120,7 @@ defmodule Fastrepl.FSTest do
   end
 
   describe "Repository" do
-    test "it works" do
+    test "Mutation.apply" do
       file = %FS.File{
         path: "a.py",
         content: 1..10 |> Enum.map(&Integer.to_string/1) |> Enum.join("\n")
@@ -184,6 +184,41 @@ defmodule Fastrepl.FSTest do
       }
 
       assert actual == expected
+    end
+
+    test "Repository.apply_patches!/2" do
+      tmp = System.tmp_dir!() |> Path.join(Nanoid.generate())
+      File.mkdir_p!(tmp)
+      File.write!(Path.join(tmp, "a.py"), "1\n2\n3")
+      File.write!(Path.join(tmp, "b.py"), "1\n2\n3")
+      File.write!(Path.join(tmp, "c.py"), "1\n2\n3")
+
+      checkpoint = %FS.Repository{
+        original_files: [
+          %FS.File{path: "a.py", content: "1\n2\n3"},
+          %FS.File{path: "b.py", content: "1\n2\n3"},
+          %FS.File{path: "c.py", content: "1\n2\n3"}
+        ],
+        current_files: [
+          %FS.File{path: "a.py", content: "1\n2\n4"},
+          %FS.File{path: "b.py", content: "0\n2\n3"}
+        ]
+      }
+
+      patches = checkpoint |> FS.Patch.from()
+      assert Enum.count(patches) == 3
+
+      restored =
+        %FS.Repository{root_path: tmp}
+        |> FS.Repository.apply_patches!(patches)
+        |> then(fn repo ->
+          %FS.Repository{
+            original_files: repo.original_files |> Enum.sort_by(& &1.path),
+            current_files: repo.current_files |> Enum.sort_by(& &1.path)
+          }
+        end)
+
+      assert restored == checkpoint
     end
   end
 end
