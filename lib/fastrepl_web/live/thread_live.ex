@@ -6,8 +6,9 @@ defmodule FastreplWeb.ThreadLive do
   def render(assigns) do
     ~H"""
     <div class="bg-gray-50 rounded-md">
-      <%= if assigns[:status] in [:init_0, :clone_1, :index_2] do %>
-        <div class="flex flex-col gap-1 items-center">
+      <%= if assigns[:status] == :init do %>
+        <div class="flex flex-row gap-2 items-center justify-center h-[calc(100vh-90px)]">
+          <span>We are now working on</span>
           <div :if={assigns[:github_issue]}>
             <.github_issue
               name={@github_repo.full_name}
@@ -15,7 +16,7 @@ defmodule FastreplWeb.ThreadLive do
               number={@github_issue.number}
             />
           </div>
-
+          <span>in</span>
           <div :if={assigns[:github_repo]}>
             <.github_repo
               name={@github_repo.full_name}
@@ -23,6 +24,7 @@ defmodule FastreplWeb.ThreadLive do
               description={@github_repo.description}
             />
           </div>
+          <span>...</span>
         </div>
       <% else %>
         <.svelte
@@ -36,7 +38,7 @@ defmodule FastreplWeb.ThreadLive do
               files: @files,
               comments: @comments,
               diffs: @patches,
-              executing: @status == :execute_4
+              executing: @status == :run
             }
           }
         />
@@ -58,7 +60,6 @@ defmodule FastreplWeb.ThreadLive do
         existing_state = GenServer.call(pid, :init_state)
 
         default_state = %{
-          status: :init_0,
           manager_pid: pid,
           thread_id: thread_id,
           paths: [],
