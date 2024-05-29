@@ -24,6 +24,7 @@
   export let handleClickDownloadPatch: () => Promise<any>;
 
   export let handleClickComment: (comment: Comment) => void;
+  export let handleDeleteComments: (comments: Comment[]) => void;
   export let handleUpdateComments: (comments: Comment[]) => void;
 
   let isLoadingCreatePR = false;
@@ -70,6 +71,7 @@
           items={comments}
           wipPaths={[]}
           {handleClickComment}
+          {handleDeleteComments}
           {handleUpdateComments}
         />
 

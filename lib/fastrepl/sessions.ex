@@ -70,4 +70,22 @@ defmodule Fastrepl.Sessions do
     |> Comment.changeset(attrs)
     |> Repo.insert()
   end
+
+  def delete_comment(%{id: id}) do
+    Comment
+    |> Repo.get(id)
+    |> Repo.delete()
+  end
+
+  def delete_comment(%{"id" => id}) do
+    Comment
+    |> Repo.get(id)
+    |> Repo.delete()
+  end
+
+  def update_comment(%Comment{} = comment, attrs) do
+    comment
+    |> Comment.changeset(attrs)
+    |> Repo.update()
+  end
 end

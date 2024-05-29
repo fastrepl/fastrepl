@@ -40,8 +40,8 @@ defmodule Fastrepl.Sessions.Comment do
       line_start < 1 ->
         add_error(changeset, :line_start, "should be greater than 0")
 
-      line_start >= line_end ->
-        add_error(changeset, :line_end, "should be greater than line start")
+      line_start > line_end ->
+        add_error(changeset, :line_end, "should be greater or equal to line start")
 
       true ->
         changeset

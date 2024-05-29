@@ -43,9 +43,6 @@
   const handleChangeSelection = (selection: Selection) => {
     currentSelection = selection;
   };
-  const handleAddComment = (comment: Comment) => {
-    live.pushEvent("comment:add", { comment });
-  };
 
   const handleClickExecute = () => {
     live.pushEvent("execute", {});
@@ -74,6 +71,14 @@
     }
   };
 
+  const handleCreateComments = (comments: Comment[]) => {
+    live.pushEvent("comments:create", { comments });
+  };
+
+  const handleDeleteComments = (comments: Comment[]) => {
+    live.pushEvent("comments:delete", { comments });
+  };
+
   const handleUpdateComments = (comments: Comment[]) => {
     live.pushEvent("comments:update", { comments });
   };
@@ -89,8 +94,9 @@
       {handleClickExecute}
       {executing}
       {handleClickCreatePR}
-      {handleClickDownloadPatch}
       {handleClickComment}
+      {handleClickDownloadPatch}
+      {handleDeleteComments}
       {handleUpdateComments}
     />
   </Pane>
@@ -103,7 +109,7 @@
         file={currentFile}
         {currentSelection}
         {handleChangeSelection}
-        {handleAddComment}
+        {handleCreateComments}
       />
     {:else}
       <div

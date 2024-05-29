@@ -31,7 +31,7 @@ defmodule Fastrepl.SessionsTest do
   end
 
   describe "session" do
-    test "it works" do
+    test "session_from/2" do
       account = user_fixture() |> account_fixture(%{name: "personal"})
 
       ticket_attrs = %{
@@ -61,7 +61,7 @@ defmodule Fastrepl.SessionsTest do
   end
 
   describe "comment" do
-    test "it works" do
+    setup do
       account = user_fixture() |> account_fixture(%{name: "personal"})
 
       {:ok, ticket} =
@@ -76,6 +76,10 @@ defmodule Fastrepl.SessionsTest do
           %{account_id: account.id, display_id: "123"}
         )
 
+      %{ticket: ticket, session: session}
+    end
+
+    test "create_comment/1", %{ticket: ticket, session: session} do
       valid_comment_attrs = %{
         session_id: session.id,
         file_path: "a.py",
@@ -91,6 +95,42 @@ defmodule Fastrepl.SessionsTest do
       Sessions.create_comment(valid_comment_attrs |> Map.pop(:content) |> elem(1))
 
       assert session |> Sessions.list_comments() |> length() == 0 + (3 - 2)
+    end
+
+    test "delete_comment/1", %{ticket: ticket, session: session} do
+      valid_comment_attrs = %{
+        session_id: session.id,
+        file_path: "a.py",
+        line_start: 1,
+        line_end: 2,
+        content: "remove this"
+      }
+
+      assert session |> Sessions.list_comments() |> length() == 0
+      {:ok, %{id: comment_id}} = Sessions.create_comment(valid_comment_attrs)
+      assert session |> Sessions.list_comments() |> length() == 1
+      Sessions.delete_comment(%{"id" => comment_id})
+      assert session |> Sessions.list_comments() |> length() == 0
+    end
+
+    test "update_comment/2", %{ticket: ticket, session: session} do
+      valid_comment_attrs = %{
+        session_id: session.id,
+        file_path: "a.py",
+        line_start: 1,
+        line_end: 2,
+        content: "original"
+      }
+
+      assert session |> Sessions.list_comments() |> length() == 0
+      {:ok, comment} = Sessions.create_comment(valid_comment_attrs)
+      assert session |> Sessions.list_comments() |> length() == 1
+      Sessions.update_comment(comment, %{content: "updated"})
+      assert session |> Sessions.list_comments() |> length() == 1
+
+      assert session
+             |> Sessions.list_comments()
+             |> get_in([Access.at(0), Access.key(:content)]) == "updated"
     end
   end
 end

@@ -97,6 +97,16 @@ defmodule FastreplWeb.ThreadLive do
     {:reply, %{url: url}, socket}
   end
 
+  def handle_event("comments:create", %{"comments" => comments}, socket) do
+    :ok = GenServer.call(socket.assigns.manager_pid, {:comments_create, comments})
+    {:noreply, socket}
+  end
+
+  def handle_event("comments:delete", %{"comments" => comments}, socket) do
+    :ok = GenServer.call(socket.assigns.manager_pid, {:comments_delete, comments})
+    {:noreply, socket}
+  end
+
   def handle_event("comments:update", %{"comments" => comments}, socket) do
     :ok = GenServer.call(socket.assigns.manager_pid, {:comments_update, comments})
     {:noreply, socket}

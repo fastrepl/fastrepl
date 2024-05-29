@@ -85,34 +85,62 @@ defmodule Fastrepl.ThreadManager do
   end
 
   @impl true
-  def handle_call({:comment_add, attrs}, _from, state) do
-    attrs = attrs |> Map.put("session_id", state.session.id)
-    {:ok, comment} = Sessions.create_comment(attrs)
+  def handle_call({:comments_create, [comment]}, _from, state) do
+    {:ok, created} =
+      comment
+      |> Map.put("session_id", state.session.id)
+      |> Sessions.create_comment()
 
-    new_comments = [comment | state.session.comments]
+    next_comments = [created | state.session.comments]
 
     state =
       state
-      |> sync_with_views(%{comments: new_comments})
-      |> update_in([:session, Access.key(:comments)], fn _ -> new_comments end)
+      |> sync_with_views(%{comments: next_comments})
+      |> update_in([:session, Access.key(:comments)], fn _ -> next_comments end)
 
     {:reply, :ok, state}
   end
 
   @impl true
-  def handle_call({:comments_update, comments}, _from, state) do
-    comments =
-      comments
-      |> Enum.map(fn attrs ->
-        attrs = attrs |> Map.put("session_id", state.session.id)
-        {:ok, comment} = Sessions.create_comment(attrs)
-        comment
-      end)
+  def handle_call({:comments_delete, comments}, _from, state) do
+    comments
+    |> Enum.each(fn attrs ->
+      attrs
+      |> Map.put("session_id", state.session.id)
+      |> Sessions.delete_comment()
+    end)
+
+    next_comments =
+      state.session.comments
+      |> Enum.reject(fn %{id: id} -> id in Enum.map(comments, & &1["id"]) end)
 
     state =
       state
-      |> sync_with_views(%{comments: comments})
-      |> update_in([:session, Access.key(:comments)], fn _ -> comments end)
+      |> sync_with_views(%{comments: next_comments})
+      |> update_in([:session, Access.key(:comments)], fn _ -> next_comments end)
+
+    {:reply, :ok, state}
+  end
+
+  @impl true
+  def handle_call({:comments_update, [%{"id" => id} = attrs]}, _from, state) do
+    i = Enum.find_index(state.session.comments, &(&1.id == id))
+
+    state =
+      if i do
+        {:ok, updated} =
+          state.session.comments
+          |> Enum.at(i)
+          |> Sessions.update_comment(attrs)
+
+        next_comments = List.replace_at(state.session.comments, i, updated)
+
+        state
+        |> sync_with_views(%{comments: next_comments})
+        |> update_in([:session, Access.key(:comments)], fn _ -> next_comments end)
+      else
+        state
+      end
 
     {:reply, :ok, state}
   end
