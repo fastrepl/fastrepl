@@ -1,13 +1,12 @@
 defmodule Fastrepl.ThreadManager do
   use GenServer, restart: :transient
   use Tracing
-  require Logger
 
   alias Fastrepl.FS
   alias Fastrepl.Github
   alias Fastrepl.Retrieval
+  alias Fastrepl.Sessions
   alias Fastrepl.Sessions.Ticket
-  alias Fastrepl.Sessions.Session
   alias Fastrepl.Sessions.Comment
   alias Fastrepl.SemanticFunction.Modify
   alias Fastrepl.SemanticFunction.PPWriter
@@ -17,59 +16,44 @@ defmodule Fastrepl.ThreadManager do
   end
 
   @impl true
-  def init(%{
-        account_id: account_id,
-        thread_id: thread_id,
-        installation_id: installation_id,
-        repo_full_name: repo_full_name,
-        issue_number: issue_number
-      }) do
+  def init(%{account_id: account_id, thread_id: thread_id, ticket: %Ticket{} = ticket}) do
     Process.flag(:trap_exit, true)
 
-    token = Github.get_installation_token!(installation_id)
-    repo = Github.Repo.from!(repo_full_name, auth: token)
-    issue = Github.Issue.from!(repo_full_name, issue_number, auth: token)
+    with %Github.App{} = app <-
+           Github.find_app(account_id, ticket.github_repo_full_name),
+         {:ok, session} <-
+           Sessions.session_from(ticket, %{account_id: account_id, display_id: thread_id}) do
+      send(self(), :prepare_repo)
 
-    {:ok, %{id: comment_id}} =
-      Github.Issue.Comment.create(
-        repo_full_name,
-        issue_number,
-        """
-        We have just started processing your issue.
+      if session.status == :init_0 do
+        token = Github.get_installation_token!(app.installation_id)
 
-        You can check the progress here: #{FastreplWeb.Endpoint.url()}/thread/#{thread_id}
-        """,
-        auth: token
-      )
+        {:ok, %{id: _comment_id}} =
+          Github.Issue.Comment.create(
+            ticket.github_repo_full_name,
+            ticket.github_issue_number,
+            """
+            We have just started processing your issue.
 
-    ticket = %Ticket{
-      type: :github,
-      github_repo_full_name: repo_full_name,
-      github_repo_sha: repo.default_branch_head,
-      github_issue_number: issue_number,
-      github_repo: repo,
-      github_issue: issue
-    }
+            You can check the progress here: #{FastreplWeb.Endpoint.url()}/thread/#{thread_id}
+            """,
+            auth: token
+          )
+      end
 
-    session = %Session{
-      status: :init_0,
-      ticket: ticket,
-      display_id: thread_id,
-      github_issue_comment_id: comment_id,
-      comments: [],
-      patches: []
-    }
+      state =
+        Map.new()
+        |> Map.put(:self, self())
+        |> Map.put(:account_id, account_id)
+        |> Map.put(:session, session)
+        |> Map.put(:thread_id, thread_id)
+        |> Map.put(:installation_id, app.installation_id)
 
-    state =
-      Map.new()
-      |> Map.put(:self, self())
-      |> Map.put(:account_id, account_id)
-      |> Map.put(:session, session)
-      |> Map.put(:thread_id, thread_id)
-      |> Map.put(:installation_id, installation_id)
-
-    send(state.self, :prepare_repo)
-    {:ok, state}
+      {:ok, state}
+    else
+      {:error, error} ->
+        {:stop, error}
+    end
   end
 
   @impl true
@@ -100,12 +84,8 @@ defmodule Fastrepl.ThreadManager do
   end
 
   @impl true
-  def handle_call({:comment_add, comment}, _from, state) do
-    comment =
-      comment
-      |> Map.new(fn {k, v} -> {String.to_atom(k), v} end)
-      |> then(&struct(Comment, &1))
-
+  def handle_call({:comment_add, attrs}, _from, state) do
+    comment = Sessions.create_comment(attrs)
     new_comments = [comment | state.session.comments]
 
     state =
@@ -196,7 +176,7 @@ defmodule Fastrepl.ThreadManager do
       {:ok, repository} =
         FS.Repository.from(
           state.session.ticket.github_repo_full_name,
-          state.session.ticket.github_repo_sha,
+          state.session.ticket.base_commit_sha,
           Github.get_installation_token!(state.installation_id)
         )
 
