@@ -3,7 +3,9 @@ defmodule Fastrepl.Sessions do
   alias Fastrepl.Repo
 
   alias Fastrepl.Github
+  alias Fastrepl.FS.Patch
   alias Fastrepl.Accounts.Account
+
   alias Fastrepl.Sessions.Ticket
   alias Fastrepl.Sessions.Comment
   alias Fastrepl.Sessions.Session
@@ -78,6 +80,28 @@ defmodule Fastrepl.Sessions do
 
         {:ok, session}
     end
+  end
+
+  def find_session(attrs) do
+    Session |> Repo.get_by(attrs)
+  end
+
+  def update_session(%Session{} = session, attrs) do
+    case Repo.get_by(Session, id: session.id) do
+      nil ->
+        {:error, "not found"}
+
+      session ->
+        session
+        |> Session.changeset(attrs)
+        |> Repo.update()
+    end
+  end
+
+  def create_patch(attrs) do
+    %Patch{}
+    |> Patch.changeset(attrs)
+    |> Repo.insert()
   end
 
   def create_comment(attrs \\ %{}) do

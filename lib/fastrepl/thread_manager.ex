@@ -25,7 +25,7 @@ defmodule Fastrepl.ThreadManager do
          token = Github.get_installation_token!(app.installation_id),
          {:ok, repository} =
            FS.Repository.from(ticket.github_repo_full_name, ticket.base_commit_sha, token) do
-      if session.status == :init_0 do
+      if session.status == :init do
         {:ok, %{id: _comment_id}} =
           Github.Issue.Comment.create(
             ticket.github_repo_full_name,
@@ -177,7 +177,7 @@ defmodule Fastrepl.ThreadManager do
   @impl true
   def handle_call(:execute, _from, state) do
     Task.Supervisor.start_child(Fastrepl.TaskSupervisor, fn ->
-      send(state.self, {:update, :status, :execute_4})
+      send(state.self, {:update, :status, :run})
 
       result = Modify.run(state.repository, Enum.at(state.session.comments, 0))
 
@@ -185,15 +185,17 @@ defmodule Fastrepl.ThreadManager do
         {:ok, mut} ->
           repo = FS.Mutation.apply(state.repository, mut)
           patches = FS.Patch.from(repo)
+
           send(state.self, {:update, :patches, patches})
           send(state.self, {:update, :repository, repo})
+
+          patches |> Enum.each(&Sessions.create_patch/1)
 
         error ->
           IO.inspect(error)
       end
 
-      Process.sleep(2000)
-      send(state.self, {:update, :status, :start_3})
+      send(state.self, {:update, :status, :idle})
     end)
 
     {:reply, :ok, state}
@@ -202,8 +204,6 @@ defmodule Fastrepl.ThreadManager do
   @impl true
   def handle_info({:indexing, repo_root_path}, state) do
     Task.Supervisor.start_child(Fastrepl.TaskSupervisor, fn ->
-      send(state.self, {:update, :status, :index_2})
-
       ctx =
         repo_root_path
         |> Retrieval.Context.from()
@@ -215,7 +215,7 @@ defmodule Fastrepl.ThreadManager do
       send(state.self, {:update, :retrieval_ctx, ctx})
       precompute_embeddings(ctx.chunks)
 
-      send(state.self, {:update, :status, :start_3})
+      send(state.self, {:update, :status, :idle})
       send(state.self, :retrieval)
     end)
 
@@ -272,6 +272,8 @@ defmodule Fastrepl.ThreadManager do
     if state[:thread_id] do
       Registry.unregister(registry_module(), state.thread_id)
     end
+
+    Sessions.update_session(state.session, %{status: state.session.status})
 
     :ok
   end

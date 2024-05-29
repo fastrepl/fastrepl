@@ -58,6 +58,28 @@ defmodule Fastrepl.SessionsTest do
       assert session_2.ticket.github_repo != nil
       assert session_2.ticket.github_issue != nil
     end
+
+    test "update_session/2" do
+      account = user_fixture() |> account_fixture(%{name: "personal"})
+
+      {:ok, ticket} =
+        Sessions.ticket_from(%{
+          github_repo_full_name: "fastrepl/fastrepl",
+          github_issue_number: 1
+        })
+
+      {:ok, session} =
+        Sessions.session_from(
+          ticket,
+          %{account_id: account.id, display_id: "123"}
+        )
+
+      assert session.status == :init
+
+      session = session |> Map.put(:status, :run)
+      {:ok, updated_session} = Sessions.update_session(session, %{status: :run})
+      assert updated_session.status == :run
+    end
   end
 
   describe "comment" do
@@ -79,7 +101,7 @@ defmodule Fastrepl.SessionsTest do
       %{ticket: ticket, session: session}
     end
 
-    test "create_comment/1", %{ticket: ticket, session: session} do
+    test "create_comment/1", %{session: session} do
       valid_comment_attrs = %{
         session_id: session.id,
         file_path: "a.py",
@@ -97,7 +119,7 @@ defmodule Fastrepl.SessionsTest do
       assert session |> Sessions.list_comments() |> length() == 0 + (3 - 2)
     end
 
-    test "delete_comment/1", %{ticket: ticket, session: session} do
+    test "delete_comment/1", %{session: session} do
       valid_comment_attrs = %{
         session_id: session.id,
         file_path: "a.py",
@@ -113,7 +135,7 @@ defmodule Fastrepl.SessionsTest do
       assert session |> Sessions.list_comments() |> length() == 0
     end
 
-    test "update_comment/2", %{ticket: ticket, session: session} do
+    test "update_comment/2", %{session: session} do
       valid_comment_attrs = %{
         session_id: session.id,
         file_path: "a.py",

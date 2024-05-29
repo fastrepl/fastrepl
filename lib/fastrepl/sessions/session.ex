@@ -9,7 +9,7 @@ defmodule Fastrepl.Sessions.Session do
   alias Fastrepl.Accounts.Account
 
   @type t :: %Session{
-          status: :init_0 | :clone_1 | :index_2 | :start_3 | :execute_4,
+          status: :init | :run | :idle | :done,
           display_id: String.t(),
           ticket: Ticket.t(),
           comments: [Comment.t()],
@@ -17,10 +17,7 @@ defmodule Fastrepl.Sessions.Session do
         }
 
   schema "sessions" do
-    field :status, Ecto.Enum,
-      values: [:init_0, :clone_1, :index_2, :start_3, :execute_4],
-      default: :init_0
-
+    field :status, Ecto.Enum, values: [:init, :run, :idle, :done], default: :init
     field :display_id, :string
 
     belongs_to :account, Account
