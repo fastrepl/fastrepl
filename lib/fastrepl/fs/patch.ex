@@ -57,6 +57,7 @@ defmodule Fastrepl.FS.Patch do
         new_file = repo.current_files |> Enum.find(&(&1.path == path))
         {old_file, new_file}
       end)
+      |> Enum.filter(fn {old_file, new_file} -> old_file.content != new_file.content end)
       |> Enum.map(fn {old_file, new_file} -> new(:modified, old_file, new_file) end)
 
     added ++ removed ++ modifed

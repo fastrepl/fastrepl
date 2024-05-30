@@ -18,6 +18,6 @@
       "border-b border-x border-gray-200 rounded-b-lg",
     ])}
   >
-    <CodeDiff content={diffs.map((diff) => diff.content).join("\n")} />
+    <CodeDiff content={diffs.map((diff) => diff.content).join("\n\n")} />
   </div>
 </div>
