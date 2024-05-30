@@ -281,7 +281,7 @@ defmodule Fastrepl.ThreadManager do
       |> CommentWriter.run(state.session.ticket.github_issue)
       |> List.flatten()
       |> Enum.map(&Map.put(&1, :session_id, state.session.id))
-      |> Enum.map(&Sessions.create_comment(%Comment{}, &1))
+      |> Enum.map(&Sessions.create_comment(&1, %{}))
       |> Enum.map(fn {:ok, comment} -> comment end)
 
     session = state.session |> Map.put(:comments, comments)
