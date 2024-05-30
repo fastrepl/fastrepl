@@ -99,8 +99,7 @@ defmodule Fastrepl.ThreadManager do
       files: state.repository.original_files,
       comments: state.session.comments,
       patches: state.session.patches,
-      github_issue: state.session.ticket.github_issue,
-      github_repo: state.session.ticket.github_repo
+      ticket: state.session.ticket
     }
 
     {:reply, init_state, state}

@@ -21,6 +21,7 @@ defmodule Fastrepl.Sessions.Ticket do
     :fastrepl_issue_content
   ]
 
+  @derive {Jason.Encoder, only: [:github_repo, :github_issue]}
   schema "tickets" do
     field :github_repo, :map, virtual: true
     field :github_issue, :map, virtual: true

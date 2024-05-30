@@ -9,22 +9,20 @@ defmodule FastreplWeb.ThreadLive do
       <%= if assigns[:status] == :init do %>
         <div class="flex flex-row gap-2 items-center justify-center h-[calc(100vh-90px)]">
           <span>We are now working on</span>
-          <div :if={assigns[:github_issue]}>
+          <div :if={assigns[:ticket]}>
             <.github_issue
-              name={@github_repo.full_name}
-              title={@github_issue.title}
-              number={@github_issue.number}
+              name={@ticket.github_repo.full_name}
+              title={@ticket.github_issue.title}
+              number={@ticket.github_issue.number}
             />
-          </div>
-          <span>in</span>
-          <div :if={assigns[:github_repo]}>
+            <span>in</span>
             <.github_repo
-              name={@github_repo.full_name}
-              sha={@github_repo.default_branch_head}
-              description={@github_repo.description}
+              name={@ticket.github_repo.full_name}
+              sha={@ticket.github_repo.default_branch_head}
+              description={@ticket.github_repo.description}
             />
+            <span>...</span>
           </div>
-          <span>...</span>
         </div>
       <% else %>
         <.svelte
@@ -33,7 +31,7 @@ defmodule FastreplWeb.ThreadLive do
           ssr={false}
           props={
             %{
-              repoFullName: @github_repo.full_name,
+              repoFullName: @ticket.github_repo.full_name,
               paths: @paths,
               files: @files,
               comments: @comments,

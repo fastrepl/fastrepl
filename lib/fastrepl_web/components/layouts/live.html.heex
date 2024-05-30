@@ -5,6 +5,18 @@
         Fastrepl
       </.link>
     </div>
+
+    <%= if assigns[:ticket] do %>
+      <div class="flex items-center gap-2 px-1 py-0.5 border rounded-md text-sm text-gray-500 hover:text-black">
+        <.link
+          target="_blank"
+          href={"https://github.com/#{@ticket.github_repo.full_name}/issues/#{@ticket.github_issue.number}"}
+        >
+          <%= "#{@ticket.github_repo.full_name} ##{@ticket.github_issue.number}" %>
+        </.link>
+      </div>
+    <% end %>
+
     <div class="flex items-center gap-4 font-semibold leading-6 text-zinc-900">
       <.link href="https://fastrepl.com" class="hover:text-zinc-700">
         Docs
@@ -24,7 +36,7 @@
 </header>
 
 <div class="flex">
-  <FastreplWeb.Layouts.side_menu active_tab={@active_tab} />
+  <FastreplWeb.Layouts.side_menu active_tab={@active_tab} test={assigns[:test]} />
   <main class="flex-1 overflow-auto px-4 py-4 sm:px-6 lg:px-8">
     <.flash_group flash={@flash} />
     <div><%= @inner_content %></div>
