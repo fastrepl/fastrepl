@@ -157,6 +157,12 @@ defmodule Fastrepl.ThreadManager do
 
     {:ok, pr_title} = PPWriter.run(state.session.patches)
 
+    patch_paths = state.session.patches |> Enum.map(& &1.path)
+
+    files =
+      state.repository.current_files
+      |> Enum.filter(fn file -> file.path in patch_paths end)
+
     result =
       Github.create_fastrepl_pr(
         state.session.ticket.github_repo,
@@ -164,7 +170,7 @@ defmodule Fastrepl.ThreadManager do
           title: pr_title,
           body:
             "Resolves ##{issue_number}.\n\n_This PR is created with [Fastrepl](https://github.com/fastrepl/fastrepl)._\n",
-          files: state.repository.current_files,
+          files: files,
           auth: token
         }
       )
