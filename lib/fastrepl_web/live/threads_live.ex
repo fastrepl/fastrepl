@@ -8,7 +8,7 @@ defmodule FastreplWeb.ThreadsLive do
     <div class="px-[15px] py-[20px]">
       <div class="flex flex-row items-center gap-2">
         <h2 class="text-xl font-semibold">Sessions</h2>
-        <.svelte name="TicketEditor" socket={@socket} ssr={false} props={%{open: true}} />
+        <.svelte name="TicketEditor" socket={@socket} ssr={false} />
       </div>
 
       <ul class="flex flex-col gap-1 mt-8 max-w-[400px]">
@@ -46,6 +46,10 @@ defmodule FastreplWeb.ThreadsLive do
       |> Enum.reject(&is_nil/1)
 
     {:ok, socket |> assign(:sessions, sessions)}
+  end
+
+  def handle_event("issue:submit", %{"content" => _content}, socket) do
+    {:noreply, socket}
   end
 
   # defp list_active_threads(account_id) do

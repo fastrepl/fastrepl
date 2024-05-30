@@ -1,9 +1,19 @@
 <script lang="ts">
   import { fade } from "svelte/transition";
   import { Dialog } from "bits-ui";
+
+  export let live: any;
+  let content = "";
+  let open = false;
+
+  const handleSubmit = () => {
+    live.pushEvent("issue:submit", { content });
+    content = "";
+    open = false;
+  };
 </script>
 
-<Dialog.Root>
+<Dialog.Root bind:open>
   <Dialog.Trigger>
     <span class="hero-plus-solid w-4 h-4 text-gray-700 hover:text-black" />
   </Dialog.Trigger>
@@ -18,12 +28,16 @@
     >
       <div class="flex flex-col">
         <textarea
+          bind:value={content}
           class="w-[500px] h-[200px] border border-gray-300 rounded-t-lg"
           placeholder="Write a issue..."
         />
-        <button class="w-full bg-black text-white text-sm py-2 rounded-b-lg"
-          >Submit</button
+        <button
+          on:click={handleSubmit}
+          class="w-full bg-black text-white text-sm py-2 rounded-b-lg"
         >
+          Submit
+        </button>
       </div>
     </Dialog.Content>
   </Dialog.Portal>
