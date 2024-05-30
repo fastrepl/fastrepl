@@ -44,7 +44,6 @@ defmodule Fastrepl.FS do
 
     is_banned_extension =
       &(Path.extname(&1) in [
-          "",
           ".lock",
           ".pyc",
           ".ipynb",

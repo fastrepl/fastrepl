@@ -88,7 +88,7 @@ defmodule FastreplWeb.ThreadLive do
 
   def handle_event("file:add", %{"path" => path}, socket) do
     file = GenServer.call(socket.assigns.manager_pid, {:file_add, path})
-    {:reply, file, socket}
+    {:reply, %{file: file}, socket}
   end
 
   def handle_event("execute", %{}, socket) do
