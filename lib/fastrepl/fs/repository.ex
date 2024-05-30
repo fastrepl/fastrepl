@@ -63,9 +63,11 @@ defmodule Fastrepl.FS.Repository do
     current_files = [file | repo.current_files]
     original_files = [file | repo.original_files]
 
-    {
-      %Repository{repo | current_files: current_files, original_files: original_files},
-      file
-    }
+    %Repository{repo | current_files: current_files, original_files: original_files}
+  end
+
+  def find_file(repo, file_path) do
+    repo.original_files
+    |> Enum.find(fn file -> file.path == file_path end)
   end
 end

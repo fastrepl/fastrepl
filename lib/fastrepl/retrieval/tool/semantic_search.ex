@@ -11,7 +11,7 @@ defmodule Fastrepl.Retrieval.Tool.SemanticSearch do
     Tracing.span %{}, "semantic_search" do
       results =
         Vectordb.query(query, ctx.chunks, top_k: 5, threshold: 0.3)
-        |> Enum.map(&Result.from!(&1))
+        |> Enum.map(&Result.from!(ctx.repo_root_path, &1))
 
       Tracing.set_attribute("query", query)
       Tracing.set_attribute("results_size", length(results))

@@ -108,7 +108,8 @@ defmodule Fastrepl.ThreadManager do
 
   @impl true
   def handle_call({:file_add, path}, _from, state) do
-    {repo, file} = FS.Repository.add_file!(state.repository, path)
+    repo = FS.Repository.add_file!(state.repository, path)
+    file = FS.Repository.find_file(repo, path)
 
     state =
       state
@@ -284,10 +285,17 @@ defmodule Fastrepl.ThreadManager do
       |> Enum.map(&Sessions.create_comment(&1, %{}))
       |> Enum.map(fn {:ok, comment} -> comment end)
 
+    repo =
+      comments
+      |> Enum.reduce(state.repository, fn comment, repo ->
+        FS.Repository.add_file!(repo, comment.file_path)
+      end)
+
     session = state.session |> Map.put(:comments, comments)
     sync_with_views(state, %{comments: comments})
+    sync_with_views(state, %{files: repo.original_files})
 
-    {:noreply, state |> Map.put(:session, session)}
+    {:noreply, state |> Map.put(:session, session) |> Map.put(:repository, repo)}
   end
 
   @impl true
