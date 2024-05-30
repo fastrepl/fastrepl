@@ -54,7 +54,11 @@
     class="max-h-[300px] overflow-y-auto border border-gray-400 rounded-lg p-2 bg-gray-800"
   >
     {#if query.length !== 0 && matches.length === 0}
-      <span class="text-sm text-gray-300">No mathing results</span>
+      <span class="px-2 text-sm text-gray-300">No mathing results</span>
+    {/if}
+
+    {#if query.length === 0 && matches.length === 0}
+      <span class="px-2 text-sm text-gray-300"> No new files to open. </span>
     {/if}
 
     {#each matches as match, index}
