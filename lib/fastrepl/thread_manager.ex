@@ -15,6 +15,34 @@ defmodule Fastrepl.ThreadManager do
   end
 
   @impl true
+  def init(%{account_id: account_id, thread_id: thread_id}) do
+    session = Sessions.session_from(%{account_id: account_id, display_id: thread_id})
+    app = Github.find_app(account_id, session.ticket.github_repo_full_name)
+    token = Github.get_installation_token!(app.installation_id)
+
+    ticket = session.ticket |> Sessions.enrich_ticket(auth: token)
+    session = session |> Map.put(:ticket, ticket)
+
+    {:ok, repository} =
+      FS.Repository.from(
+        session.ticket.github_repo_full_name,
+        session.ticket.base_commit_sha,
+        token
+      )
+
+    state =
+      Map.new()
+      |> Map.put(:self, self())
+      |> Map.put(:account_id, account_id)
+      |> Map.put(:session, session)
+      |> Map.put(:thread_id, thread_id)
+      |> Map.put(:installation_id, app.installation_id)
+      |> Map.put(:repository, repository)
+
+    {:ok, state}
+  end
+
+  @impl true
   def init(%{
         ticket: %Ticket{type: :github} = ticket,
         account_id: account_id,

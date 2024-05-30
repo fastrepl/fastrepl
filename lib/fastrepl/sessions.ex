@@ -62,6 +62,24 @@ defmodule Fastrepl.Sessions do
     end
   end
 
+  def enrich_ticket(ticket, opts \\ [])
+
+  def enrich_ticket(%Ticket{type: :github} = ticket, opts) do
+    %{
+      github_repo_full_name: repo_name,
+      github_issue_number: issue_number
+    } = ticket
+
+    with {:ok, repo} <- Github.Repo.from(repo_name, opts),
+         {:ok, issue} <- Github.Issue.from(repo_name, issue_number, opts) do
+      %Ticket{ticket | github_repo: repo, github_issue: issue}
+    else
+      _ -> ticket
+    end
+  end
+
+  def enrich_ticket(ticket, _opts), do: ticket
+
   def session_from(%Ticket{} = ticket, attrs) do
     case Session |> Repo.get_by(attrs) do
       nil ->
@@ -79,6 +97,13 @@ defmodule Fastrepl.Sessions do
           |> Map.put(:ticket, ticket)
 
         {:ok, session}
+    end
+  end
+
+  def session_from(%{account_id: account_id, display_id: display_id}) do
+    case Session |> Repo.get_by(account_id: account_id, display_id: display_id) do
+      nil -> nil
+      session -> session |> Repo.preload([:ticket, :comments, :patches])
     end
   end
 

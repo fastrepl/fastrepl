@@ -60,6 +60,33 @@ defmodule Fastrepl.SessionsTest do
       assert session_2.ticket.github_issue != nil
     end
 
+    test "session_from/1" do
+      account = user_fixture() |> account_fixture(%{name: "personal"})
+
+      ticket_attrs = %{
+        github_repo_full_name: "fastrepl/fastrepl",
+        github_issue_number: 1
+      }
+
+      session_attrs = %{account_id: account.id, display_id: "123"}
+
+      {:ok, ticket} = Sessions.ticket_from(ticket_attrs)
+      {:ok, session_1} = Sessions.session_from(ticket, session_attrs)
+
+      session_2 = Sessions.session_from(%{account_id: account.id, display_id: "123"})
+      assert session_1.id == session_2.id
+
+      assert session_1.ticket.github_repo != nil
+      assert session_1.ticket.github_issue != nil
+
+      assert session_2.ticket.github_repo == nil
+      assert session_2.ticket.github_issue == nil
+
+      session_2 = session_2 |> Map.update!(:ticket, &Sessions.enrich_ticket(&1))
+      assert session_2.ticket.github_repo != nil
+      assert session_2.ticket.github_issue != nil
+    end
+
     test "update_session/2" do
       account = user_fixture() |> account_fixture(%{name: "personal"})
 

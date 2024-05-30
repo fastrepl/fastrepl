@@ -52,7 +52,10 @@ defmodule FastreplWeb.ThreadLive do
       Phoenix.PubSub.subscribe(Fastrepl.PubSub, "thread:#{thread_id}")
     end
 
-    case find_existing_manager(thread_id) do
+    case find_or_start_manager(%{
+           account_id: socket.assigns.current_account.id,
+           thread_id: thread_id
+         }) do
       nil ->
         {:ok, socket |> redirect(to: "/threads")}
 
@@ -127,6 +130,10 @@ defmodule FastreplWeb.ThreadLive do
     {:noreply, socket |> assign(state)}
   end
 
+  defp find_or_start_manager(%{account_id: _, thread_id: thread_id} = args) do
+    find_existing_manager(thread_id) || start_new_manager(args)
+  end
+
   defp find_existing_manager(thread_id) do
     registry = Application.fetch_env!(:fastrepl, :thread_manager_registry)
 
@@ -134,5 +141,12 @@ defmodule FastreplWeb.ThreadLive do
       [{pid, _value}] when is_pid(pid) -> pid
       [] -> nil
     end
+  end
+
+  defp start_new_manager(args) do
+    DynamicSupervisor.start_child(
+      Fastrepl.ThreadManagerSupervisor,
+      {Fastrepl.ThreadManager, args}
+    )
   end
 end
