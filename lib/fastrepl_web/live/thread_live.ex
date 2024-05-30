@@ -57,7 +57,12 @@ defmodule FastreplWeb.ThreadLive do
            thread_id: thread_id
          }) do
       nil ->
-        {:ok, socket |> redirect(to: "/threads")}
+        socket =
+          socket
+          |> put_flash(:error, "Failed to start session.")
+          |> redirect(to: "/threads")
+
+        {:ok, socket}
 
       pid ->
         existing_state = GenServer.call(pid, :init_state)
@@ -144,9 +149,15 @@ defmodule FastreplWeb.ThreadLive do
   end
 
   defp start_new_manager(args) do
-    DynamicSupervisor.start_child(
-      Fastrepl.ThreadManagerSupervisor,
-      {Fastrepl.ThreadManager, args}
-    )
+    result =
+      DynamicSupervisor.start_child(
+        Fastrepl.ThreadManagerSupervisor,
+        {Fastrepl.ThreadManager, args}
+      )
+
+    case result do
+      {:ok, pid} -> pid
+      _ -> nil
+    end
   end
 end
