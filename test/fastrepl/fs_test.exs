@@ -109,13 +109,12 @@ defmodule Fastrepl.FSTest do
     test "simple" do
       root = Application.fetch_env!(:fastrepl, :root) |> Path.join("/lib")
 
-      count =
+      results =
         root
         |> FS.search_paths("session")
         |> Enum.map(&Path.relative_to(&1, root))
-        |> Enum.count()
 
-      assert count > 1
+      assert Enum.count(results) > 1
     end
   end
 

@@ -5,7 +5,6 @@ defmodule Fastrepl.Retrieval.Result do
   alias Fastrepl.Retrieval.Chunker.Chunk
 
   @type t :: %Result{
-          # absolute path
           file_path: String.t(),
           file_content: String.t(),
           spans: [{pos_integer(), pos_integer()}]
@@ -13,8 +12,8 @@ defmodule Fastrepl.Retrieval.Result do
 
   @buffer_size 10
 
-  def from!(%Chunk{file_path: file_path, span: {line_start, line_end}}) do
-    file_content = File.read!(file_path)
+  def from!(root_path, %Chunk{file_path: file_path, span: {line_start, line_end}}) do
+    file_content = Path.join(root_path, file_path) |> File.read!()
     max_line = file_content |> String.split("\n") |> length
 
     %Result{
@@ -24,25 +23,20 @@ defmodule Fastrepl.Retrieval.Result do
     }
   end
 
-  def from!(path) do
-    file_content = File.read!(path)
-    max_line = file_content |> String.split("\n") |> length
+  def from!(root_path, file_path, lines \\ nil) do
+    file_content = Path.join(root_path, file_path) |> File.read!()
+    max_line = file_content |> String.split("\n") |> length()
+
+    spans =
+      case lines do
+        nil -> [{1, max_line}]
+        _ -> lines |> Enum.map(&{max(1, &1 - @buffer_size), min(&1 + @buffer_size, max_line)})
+      end
 
     %Result{
-      file_path: path,
+      file_path: file_path,
       file_content: file_content,
-      spans: [{1, max_line}]
-    }
-  end
-
-  def from!(path, lines) do
-    file_content = File.read!(path)
-    max_line = file_content |> String.split("\n") |> length
-
-    %Result{
-      file_path: path,
-      file_content: file_content,
-      spans: lines |> Enum.map(&{max(1, &1 - @buffer_size), min(&1 + @buffer_size, max_line)})
+      spans: spans
     }
   end
 

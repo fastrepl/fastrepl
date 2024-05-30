@@ -9,7 +9,7 @@ defmodule Fastrepl.Retrieval.Tool.LookupFile do
   def run(%Context{repo_root_path: root_path}, %{"path" => path}) do
     Tracing.span %{}, name() do
       [
-        Result.from!(Path.join(root_path, path))
+        Result.from!(root_path, path)
       ]
     end
   end

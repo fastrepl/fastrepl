@@ -15,23 +15,32 @@ defmodule Fastrepl.Retrieval.Context do
         }
 
   def from(repo_root_path) do
-    informative_files = FS.list_informative_files(repo_root_path)
+    absoulte_paths = repo_root_path |> FS.list_informative_files()
+    relative_paths = absoulte_paths |> Enum.map(&Path.relative_to(&1, repo_root_path))
+
+    chunks =
+      absoulte_paths
+      |> Stream.map(fn path ->
+        case File.read(path) do
+          {:ok, content} -> {Path.relative_to(path, repo_root_path), content}
+          _ -> nil
+        end
+      end)
+      |> Stream.reject(&is_nil/1)
+      |> Stream.flat_map(fn {path, content} -> Chunker.chunk_code(path, content) end)
+      |> Enum.to_list()
 
     tree =
-      informative_files
-      |> Enum.map(&Path.relative_to(&1, repo_root_path))
+      relative_paths
       |> FS.Tree.build()
       |> FS.Tree.render()
 
-    paths =
-      informative_files
-      |> Enum.map(&Path.relative_to(&1, repo_root_path))
-
-    chunks =
-      informative_files
-      |> Enum.flat_map(&Chunker.chunk_file/1)
-
-    %Context{repo_root_path: repo_root_path, paths: paths, chunks: chunks, tree: tree}
+    %Context{
+      repo_root_path: repo_root_path,
+      paths: relative_paths,
+      chunks: chunks,
+      tree: tree
+    }
   end
 
   def add_tool(ctx, tool) do

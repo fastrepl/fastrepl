@@ -2,6 +2,7 @@ defmodule Fastrepl.RetrievalTest do
   use ExUnit.Case, async: true
 
   alias Fastrepl.Retrieval
+  alias Fastrepl.FS
 
   describe "Result.fuse/1" do
     test "1" do
@@ -178,5 +179,13 @@ defmodule Fastrepl.RetrievalTest do
       match = Retrieval.CodeBlock.find(String.trim(query), String.trim(code))
       assert match == nil
     end
+  end
+
+  test "Context.from/1" do
+    {:ok, root_dir} = FS.clone("BerriAI/litellm", "3167bee25aaae02f166c5048931d752580e10042")
+    context = Retrieval.Context.from(root_dir)
+
+    assert context.chunks |> Enum.count() > 100
+    assert context.paths |> Enum.count() > 100
   end
 end

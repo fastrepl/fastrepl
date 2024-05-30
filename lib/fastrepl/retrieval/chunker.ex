@@ -4,7 +4,6 @@ defmodule Fastrepl.Retrieval.Chunker.Chunk do
   alias __MODULE__
 
   @type t :: %Chunk{
-          # absolute path
           file_path: String.t(),
           content: String.t(),
           span: {pos_integer(), pos_integer()}
@@ -30,16 +29,14 @@ defmodule Fastrepl.Retrieval.Chunker do
   def version(), do: CodeUtils.chunker_version()
 
   def chunk_code(path, code) do
-    CodeUtils.chunk_code(path, code)
-  end
-
-  def chunk_file(path) do
-    code = File.read!(path)
-
     if String.valid?(code) do
-      chunk_code(path, code)
+      CodeUtils.chunk_code(path, code)
     else
       []
     end
+  end
+
+  def chunk_file!(path) do
+    chunk_code(path, File.read!(path))
   end
 end

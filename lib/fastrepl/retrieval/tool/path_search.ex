@@ -12,7 +12,7 @@ defmodule Fastrepl.Retrieval.Tool.PathSearch do
       results =
         ctx.repo_root_path
         |> FS.search_paths(query)
-        |> Enum.map(&Result.from!(&1))
+        |> Enum.map(&Result.from!(ctx.repo_root_path, &1))
 
       Tracing.set_attribute("query", query)
       Tracing.set_attribute("results_size", length(results))

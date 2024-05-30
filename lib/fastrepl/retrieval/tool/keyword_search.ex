@@ -18,7 +18,7 @@ defmodule Fastrepl.Retrieval.Tool.KeywordSearch do
 
           if Enum.empty?(lines),
             do: nil,
-            else: Result.from!(path, lines)
+            else: Result.from!(root_path, Path.relative_to(path, root_path), lines)
         end)
         |> Enum.reject(&is_nil/1)
 
