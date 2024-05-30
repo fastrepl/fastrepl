@@ -5,7 +5,12 @@ defmodule Fastrepl.FS do
   alias Fastrepl.Native.CodeUtils
 
   def clone(repo_full_name, commit_sha, auth_token \\ nil) do
-    clone_url = Github.URL.clone_with_token(repo_full_name, auth_token)
+    clone_url =
+      case auth_token do
+        nil -> Github.URL.clone_without_token(repo_full_name)
+        _ -> Github.URL.clone_with_token(repo_full_name, auth_token)
+      end
+
     repo_id = String.replace(repo_full_name, "/", "-")
 
     dir =
