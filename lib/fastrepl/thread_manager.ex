@@ -193,7 +193,9 @@ defmodule Fastrepl.ThreadManager do
           send(state.self, {:update, :patches, patches})
           send(state.self, {:update, :repository, repo})
 
-          patches |> Enum.each(&Sessions.create_patch/1)
+          patches
+          |> Enum.map(fn patch -> Map.put(patch, :session_id, state.session.id) end)
+          |> Enum.each(&Sessions.create_patch/1)
 
         error ->
           IO.inspect(error)
@@ -250,6 +252,10 @@ defmodule Fastrepl.ThreadManager do
           state
           |> sync_with_views(%{status: value})
           |> update_in([:session, Access.key(:status)], fn _ -> value end)
+
+        :repository ->
+          state
+          |> Map.put(:repository, value)
 
         :patches ->
           state

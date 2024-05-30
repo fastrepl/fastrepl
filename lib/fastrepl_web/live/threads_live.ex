@@ -31,12 +31,17 @@ defmodule FastreplWeb.ThreadsLive do
       socket.assigns.current_account
       |> Fastrepl.Sessions.list_sessions(limit: 30)
       |> Enum.map(fn session ->
-        %{
-          display_id: session.display_id,
-          github_issue_number: session.ticket.github_issue_number,
-          github_repo_full_name: session.ticket.github_repo_full_name
-        }
+        if session.ticket == nil do
+          nil
+        else
+          %{
+            display_id: session.display_id,
+            github_issue_number: session.ticket.github_issue_number,
+            github_repo_full_name: session.ticket.github_repo_full_name
+          }
+        end
       end)
+      |> Enum.reject(&is_nil/1)
 
     {:ok, socket |> assign(:sessions, sessions)}
   end
