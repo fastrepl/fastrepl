@@ -36,7 +36,13 @@ defmodule Fastrepl.Application do
 
     children =
       if Application.get_env(:fastrepl, :env) != :test do
-        [{Redix, {Application.fetch_env!(:fastrepl, :redis_url), [name: :redix]}}] ++ children
+        [
+          {Redix,
+           {
+             Application.fetch_env!(:fastrepl, :redis_url),
+             [name: :redix, socket_opts: [:inet6]]
+           }}
+        ] ++ children
       else
         children
       end
