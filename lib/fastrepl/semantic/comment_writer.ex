@@ -5,6 +5,7 @@ defmodule Fastrepl.SemanticFunction.CommentWriter do
   alias Fastrepl.Sessions.Comment
   alias Fastrepl.Github.Issue
 
+  # TODO: render from issue
   @spec run([Result.t()], Issue.t()) :: [Comment.t()]
   def run(results, issue) do
     goal = """
@@ -21,12 +22,12 @@ defmodule Fastrepl.SemanticFunction.CommentWriter do
     result =
       Fastrepl.AI.chat(
         %{
-          model: "gpt-4o",
+          model: "claude-3-sonnet",
           stream: false,
           temperature: 0,
           messages: messages(goal, snippets),
           tools: [modify_tool_schema()],
-          tool_choice: "auto"
+          tool_choice: "required"
         },
         otel_attrs: %{module: __MODULE__}
       )

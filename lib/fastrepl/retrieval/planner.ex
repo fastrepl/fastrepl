@@ -27,6 +27,9 @@ defmodule Fastrepl.Retrieval.Planner do
 
         Based on the issue above, use tools to retrieve code snippets that are useful to understand or solve the issue.
         Use as many tools as needed.
+
+        For your reference, here is the codebase tree:
+        #{ctx.tree}
         """
       }
     ]

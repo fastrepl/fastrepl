@@ -129,8 +129,8 @@ defmodule Fastrepl.Sessions do
     |> Repo.insert()
   end
 
-  def create_comment(attrs \\ %{}) do
-    %Comment{}
+  def create_comment(%Comment{} = comment, attrs \\ %{}) do
+    comment
     |> Comment.changeset(attrs)
     |> Repo.insert()
   end

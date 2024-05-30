@@ -8,6 +8,7 @@ defmodule Fastrepl.SessionsTest do
   alias Fastrepl.Repo
   alias Fastrepl.Sessions
   alias Fastrepl.Sessions.Ticket
+  alias Fastrepl.Sessions.Comment
 
   describe "ticket" do
     test "it works" do
@@ -140,10 +141,26 @@ defmodule Fastrepl.SessionsTest do
 
       assert session |> Sessions.list_comments() |> length() == 0
 
-      Sessions.create_comment(valid_comment_attrs)
-      Sessions.create_comment(valid_comment_attrs |> Map.pop(:session_id) |> elem(1))
-      Sessions.create_comment(valid_comment_attrs |> Map.pop(:content) |> elem(1))
+      Sessions.create_comment(%Comment{}, valid_comment_attrs)
+      Sessions.create_comment(%Comment{}, valid_comment_attrs |> Map.pop(:session_id) |> elem(1))
+      Sessions.create_comment(%Comment{}, valid_comment_attrs |> Map.pop(:content) |> elem(1))
 
+      assert session |> Sessions.list_comments() |> length() == 0 + (3 - 2)
+    end
+
+    test "create_comment/2", %{session: session} do
+      valid_comment_attrs = %{
+        session_id: session.id,
+        file_path: "a.py",
+        line_start: 1,
+        line_end: 2,
+        content: "remove this"
+      }
+
+      assert session |> Sessions.list_comments() |> length() == 0
+      Sessions.create_comment(%Comment{}, valid_comment_attrs)
+      Sessions.create_comment(%Comment{}, valid_comment_attrs |> Map.pop(:session_id) |> elem(1))
+      Sessions.create_comment(%Comment{}, valid_comment_attrs |> Map.pop(:content) |> elem(1))
       assert session |> Sessions.list_comments() |> length() == 0 + (3 - 2)
     end
 
@@ -157,7 +174,7 @@ defmodule Fastrepl.SessionsTest do
       }
 
       assert session |> Sessions.list_comments() |> length() == 0
-      {:ok, %{id: comment_id}} = Sessions.create_comment(valid_comment_attrs)
+      {:ok, %{id: comment_id}} = Sessions.create_comment(%Comment{}, valid_comment_attrs)
       assert session |> Sessions.list_comments() |> length() == 1
       Sessions.delete_comment(%{"id" => comment_id})
       assert session |> Sessions.list_comments() |> length() == 0
@@ -173,7 +190,7 @@ defmodule Fastrepl.SessionsTest do
       }
 
       assert session |> Sessions.list_comments() |> length() == 0
-      {:ok, comment} = Sessions.create_comment(valid_comment_attrs)
+      {:ok, comment} = Sessions.create_comment(%Comment{}, valid_comment_attrs)
       assert session |> Sessions.list_comments() |> length() == 1
       Sessions.update_comment(comment, %{content: "updated"})
       assert session |> Sessions.list_comments() |> length() == 1

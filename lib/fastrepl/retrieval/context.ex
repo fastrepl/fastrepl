@@ -1,5 +1,5 @@
 defmodule Fastrepl.Retrieval.Context do
-  defstruct repo_root_path: nil, paths: [], chunks: [], tools: []
+  defstruct repo_root_path: nil, paths: [], chunks: [], tools: [], tree: nil
 
   alias __MODULE__
   alias Fastrepl.FS
@@ -10,11 +10,18 @@ defmodule Fastrepl.Retrieval.Context do
           repo_root_path: String.t(),
           paths: [String.t()],
           chunks: [Chunk.t()],
-          tools: [module()]
+          tools: [module()],
+          tree: String.t()
         }
 
   def from(repo_root_path) do
     informative_files = FS.list_informative_files(repo_root_path)
+
+    tree =
+      informative_files
+      |> Enum.map(&Path.relative_to(&1, repo_root_path))
+      |> FS.Tree.build()
+      |> FS.Tree.render()
 
     paths =
       informative_files
@@ -24,7 +31,7 @@ defmodule Fastrepl.Retrieval.Context do
       informative_files
       |> Enum.flat_map(&Chunker.chunk_file/1)
 
-    %Context{repo_root_path: repo_root_path, paths: paths, chunks: chunks}
+    %Context{repo_root_path: repo_root_path, paths: paths, chunks: chunks, tree: tree}
   end
 
   def add_tool(ctx, tool) do
