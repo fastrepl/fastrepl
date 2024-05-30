@@ -15,6 +15,7 @@ defmodule FastreplWeb.ThreadsLive do
         <%= for session <- @sessions do %>
           <li>
             <.session_list_item
+              status={session.status}
               display_id={session.display_id}
               github_issue_number={session.github_issue_number}
               github_repo_full_name={session.github_repo_full_name}
@@ -35,6 +36,7 @@ defmodule FastreplWeb.ThreadsLive do
           nil
         else
           %{
+            status: session.status,
             display_id: session.display_id,
             github_issue_number: session.ticket.github_issue_number,
             github_repo_full_name: session.ticket.github_repo_full_name
