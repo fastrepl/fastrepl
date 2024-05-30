@@ -51,7 +51,7 @@ defmodule Fastrepl.Retrieval.Planner do
                 messages: messages,
                 temperature: 0.5,
                 tools: Enum.map(tools, & &1.schema()),
-                tool_choice: "required"
+                tool_choice: "auto"
               },
               otel_attrs: %{model: model}
             )

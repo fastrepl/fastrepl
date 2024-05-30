@@ -26,7 +26,7 @@ defmodule Fastrepl.SemanticFunction.CommentWriter do
           temperature: 0,
           messages: messages(goal, snippets),
           tools: [modify_tool_schema()],
-          tool_choice: "required"
+          tool_choice: "auto"
         },
         otel_attrs: %{module: __MODULE__}
       )

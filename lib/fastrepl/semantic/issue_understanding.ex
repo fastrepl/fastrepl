@@ -29,7 +29,7 @@ defmodule Fastrepl.SemanticFunction.IssueUnderstanding do
           model: "gpt-3.5-turbo",
           messages: messages,
           tools: [summarize_tool_schema()],
-          tool_choice: "required"
+          tool_choice: "auto"
         },
         otel_attrs: %{module: __MODULE__}
       )
