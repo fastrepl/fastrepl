@@ -111,6 +111,9 @@ defmodule Fastrepl.PullRequest.Summary do
             Ideally, there should be no `#### Minor Changes` section. But sometimes, PR contains some changes that are not related to the main purpose of the PR.
             If that change is not small enough to ignore, place it at `#### Major Changes` section.
 
+            For both `#### Major Changes` and `#### Minor Changes`, try to merge multiple commits into one change if they are related.
+            For example, if one commit create module calling OpenAI, and other commit change model name gpt-3.5-turbo to gpt-4, it should be merged into one change.
+
             At the high level, it should look like this:
 
             ### Description
@@ -173,6 +176,17 @@ defmodule Fastrepl.PullRequest.Summary do
 
           Keep in mind that although it is best practice to have single main change in a PR, often it contains lots of small, unrelated changes.'
           Your job is to identify only the core changes, and restate it in a concise sentences. With your input, I will later summarize the changes in the PR while classifying them into `Major Changes` and `Minor Changes`.
+
+          For example, your response should look like this:
+
+          Core changes are:
+          - Updated config.ex for Oban
+          - Added Oban worker in Fastrepl.PullRequest.Summary
+          - Updated github webhook handler for pull_request event
+
+          Unrelated changes are:
+          - Added fallback in webhook handler
+          - Updated CodeDiff.svelte
           """
         },
         %{
