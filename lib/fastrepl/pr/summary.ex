@@ -152,16 +152,24 @@ defmodule Fastrepl.PullRequest.Summary do
             The user will provide you a information about the pull request. You should summarize the pull request and its changes.
 
             Your response should be valid, rich markdown that Github supports. Use backticks(``) for variable, filenames, package name, etc.
-            Only use `### Description` and `#### Changes` sections. ``### Description` should be one-liner describing "What" the PR is about.
-            ``#### Changes` should be a list of descriptions of each main change. Each item in list should be very concise and short, and should not have child list.
+
+            Only use `### Description`, `#### Major Changes`, and OPTIONALLY `#### Minor Changes` sections.
+            ``### Description` should be one-liner describing "What" the PR is about.
+            `#### Major Changes` should be a list of descriptions of each main change. Each item in list should be very concise and short, and should not have child list.
+
+            Ideally, there should be no `#### Minor Changes` section. But sometimes, PR contains some changes that are not related to the main purpose of the PR.
+            If that change is not small enough to ignore, place it at `#### Major Changes` section.
 
             At the high level, it should look like this:
 
             ### Description
             This PR ~
 
-            #### Changes
-            - Updated ~
+            #### Major Changes
+            - Added ~
+
+            #### Minor Changes
+            - Modified ~
             """
           },
           %{
