@@ -34,6 +34,9 @@ defmodule FastreplWeb.GithubWebhookHandler do
 
       "deleted" ->
         Github.delete_app_by_installation_id(installation_id)
+
+      _ ->
+        :ok
     end
   end
 
