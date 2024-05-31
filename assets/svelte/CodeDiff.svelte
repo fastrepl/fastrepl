@@ -17,6 +17,27 @@
     diff2htmlUi.draw();
     diff2htmlUi.highlightCode();
   }
+
+  const handleMouseUp = (_e: MouseEvent) => {
+    const selection = document.getSelection();
+
+    const getLineNumber = (n: Node) => {
+      try {
+        const tr = n.parentElement.closest("tr");
+        const [td, _] = tr.querySelectorAll("td");
+        const left = td.querySelector("div.line-num1").textContent;
+        const right = td.querySelector("div.line-num2").textContent;
+        return [left, right];
+      } catch (_) {
+        return null;
+      }
+    };
+
+    const _ = [
+      getLineNumber(selection.anchorNode),
+      getLineNumber(selection.focusNode),
+    ];
+  };
 </script>
 
 <svelte:head>
@@ -39,4 +60,5 @@
   </style>
 </svelte:head>
 
-<div bind:this={element} />
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<div bind:this={element} on:mouseup={handleMouseUp} />
