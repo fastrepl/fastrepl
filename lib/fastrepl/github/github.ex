@@ -52,14 +52,22 @@ defmodule Fastrepl.Github do
     |> Enum.flat_map(& &1.repo_full_names)
   end
 
-  def get_installation_token!(installation_id) do
-    {:ok, %{token: token}} =
+  def get_installation_token(installation_id) do
+    result =
       GitHub.Apps.create_installation_access_token(
         installation_id,
         %{},
         auth: GitHub.app(:fastrepl)
       )
 
+    case result do
+      {:ok, %{token: token}} -> {:ok, token}
+      others -> {:error, others}
+    end
+  end
+
+  def get_installation_token!(installation_id) do
+    {:ok, token} = get_installation_token(installation_id)
     token
   end
 
