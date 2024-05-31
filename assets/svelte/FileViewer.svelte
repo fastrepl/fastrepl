@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, afterUpdate } from "svelte";
 
   import { clsx } from "clsx";
   import tippy, { type Instance as TippyInstance } from "tippy.js";
@@ -18,6 +18,14 @@
 
   let codeSnippetContainer: HTMLElement;
   let contextMenuInstance: TippyInstance | null = null;
+
+  afterUpdate(() => {
+    if (file && currentSelection) {
+      const { start } = currentSelection;
+      const el = codeSnippetContainer.getElementsByTagName("tr")[start];
+      el?.scrollIntoView({ behavior: "smooth" });
+    }
+  });
 
   $: {
     const createCodeActionList = (target: Element) => {

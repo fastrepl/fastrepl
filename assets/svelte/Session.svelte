@@ -66,8 +66,10 @@
 
   const handleClickComment = (comment: Comment) => {
     const file = files.find((f) => f.path === comment.file_path);
+
     if (file) {
       currentFile = file;
+      currentSelection = { start: comment.line_start, end: comment.line_end };
     }
   };
 
