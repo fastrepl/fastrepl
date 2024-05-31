@@ -106,6 +106,30 @@ defmodule FastreplWeb.GithubWebhookHandler do
     end
   end
 
+  # https://docs.github.com/en/webhooks/webhook-events-and-payloads#pull_request
+  def handle_event("pull_request", payload) do
+    %{
+      "action" => action,
+      "installation" => %{"id" => installation_id},
+      "pull_request" => %{"number" => issue_number},
+      "repository" => %{"full_name" => repo_full_name}
+    } = payload
+
+    case action do
+      action when action in ["opened", "synchronize"] ->
+        %{
+          "github_repo_full_name" => repo_full_name,
+          "github_issue_number" => issue_number,
+          "installation_id" => installation_id
+        }
+        |> Fastrepl.PullRequest.Summary.new(schedule_in: 60 * 3)
+        |> Oban.insert()
+
+      _ ->
+        :ok
+    end
+  end
+
   def handle_event(event, _payload) do
     {:error, %{type: :unhandled, event: event}}
   end

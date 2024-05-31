@@ -74,7 +74,8 @@ config :ueberauth, Ueberauth,
 
 config :fastrepl, Oban,
   engine: Oban.Engines.Basic,
-  queues: [default: 10],
+  plugins: [{Oban.Plugins.Pruner, max_age: 60 * 60 * 24 * 2}],
+  queues: [default: 50, pr: 20],
   repo: Fastrepl.Repo
 
 config :fastrepl, :env, Mix.env()
