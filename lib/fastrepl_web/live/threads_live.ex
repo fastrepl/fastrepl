@@ -51,10 +51,4 @@ defmodule FastreplWeb.ThreadsLive do
   def handle_event("issue:submit", %{"content" => _content}, socket) do
     {:noreply, socket}
   end
-
-  # defp list_active_threads(account_id) do
-  #   Registry.select(Application.fetch_env!(:fastrepl, :thread_manager_registry), [
-  #     {{:"$1", :"$2", %{account_id: account_id}}, [], [{{:"$1", :"$2"}}]}
-  #   ])
-  # end
 end
