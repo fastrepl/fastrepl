@@ -3,7 +3,7 @@ defmodule FastreplWeb.Auth do
   alias Fastrepl.Accounts
   import Phoenix.Component, only: [assign_new: 3]
 
-  @default_account_name "Personal"
+  @default_account_name "Default"
 
   @spec on_mount(term, map, map, Socket.t()) :: {:cont | :halt, Socket.t()}
   def on_mount(:fetch_or_create_account, _params, _session, socket) do
