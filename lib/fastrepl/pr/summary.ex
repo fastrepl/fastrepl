@@ -34,7 +34,8 @@ defmodule Fastrepl.PullRequest.Summary do
     with {:ok, token} <- Fastrepl.Github.get_installation_token(installation_id),
          {:ok, pr} <- get_pr(owner, repo, github_issue_number, token),
          {:ok, commits} <- get_commits(owner, repo, github_issue_number, token),
-         {:ok, comment} <- write_comment(pr, commits) do
+         {:ok, thought} <- understand_pr(pr, commits),
+         {:ok, comment} <- write_comment(pr, commits, thought) do
       updated_pr_body =
         case Regex.run(@summary_regex, pr.body) do
           nil -> pr.body <> "\n\n" <> comment
@@ -88,57 +89,7 @@ defmodule Fastrepl.PullRequest.Summary do
     end
   end
 
-  defp write_comment(pr, commits) do
-    user_content = """
-    Here's the information about the pull request:
-
-    <pr_title>
-    #{pr.title}
-    </pr_title>
-
-    <pr_body>
-    #{pr.body}
-    </pr_body>
-    """
-
-    user_content =
-      commits
-      |> Enum.reduce(user_content, fn %{message: message, files: files}, acc ->
-        files_rendered =
-          files
-          |> Enum.map(fn %{filename: filename, patch: patch} ->
-            """
-            <commit_file>
-            <commit_file_name>
-            #{filename}
-            </commit_file_name>
-
-            <commit_file_patch>
-            #{patch}
-            </commit_file_patch>
-            </commit_file>
-            """
-            |> String.trim()
-          end)
-          |> Enum.join("\n")
-
-        commit_rendered =
-          """
-          <commit>
-          <commit_message>
-          #{message}
-          </commit_message>
-
-          <commit_files>
-          #{files_rendered}
-          </commit_files>
-          </commit>
-          """
-          |> String.trim()
-
-        acc <> "\n\n" <> commit_rendered
-      end)
-
+  defp write_comment(pr, commits, thought) do
     result =
       Fastrepl.AI.chat(%{
         model: "gpt-4o",
@@ -149,7 +100,7 @@ defmodule Fastrepl.PullRequest.Summary do
             role: "system",
             content: """
             You are a senior software engineer with extensive experience in leading open source projects.
-            The user will provide you a information about the pull request. You should summarize the pull request and its changes.
+            The user will provide you a information about the pull request. You should summarize the pull request and its changes, while respecting the initial thought.
 
             Your response should be valid, rich markdown that Github supports. Use backticks(``) for variable, filenames, package name, etc.
 
@@ -174,7 +125,14 @@ defmodule Fastrepl.PullRequest.Summary do
           },
           %{
             role: "user",
-            content: user_content
+            content: """
+            Here's the information about the pull request:
+
+            #{render_pr_with_commits(pr, commits)}
+
+            This is initial thought about the pull request:
+            #{thought}
+            """
           }
         ]
       })
@@ -198,5 +156,84 @@ defmodule Fastrepl.PullRequest.Summary do
       {:error, error} ->
         {:error, error}
     end
+  end
+
+  def understand_pr(pr, commits) do
+    Fastrepl.AI.chat(%{
+      model: "gpt-4o",
+      stream: false,
+      temperature: 0.2,
+      messages: [
+        %{
+          role: "system",
+          content: """
+          You are a senior software engineer with extensive experience in software development.
+
+          When user provide you a information about the pull request, think step by step, and come up with the main points of the pull request.
+
+          Keep in mind that although it is best practice to have single main change in a PR, often it contains lots of small, unrelated changes.'
+          Your job is to identify only the core changes, and restate it in a concise sentences. With your input, I will later summarize the changes in the PR while classifying them into `Major Changes` and `Minor Changes`.
+          """
+        },
+        %{
+          role: "user",
+          content: """
+          Here's the information about the pull request:
+
+          #{render_pr_with_commits(pr, commits)}
+          """
+        }
+      ]
+    })
+  end
+
+  defp render_pr_with_commits(pr, commits) do
+    rendered = """
+    <pr_title>
+    #{pr.title}
+    </pr_title>
+
+    <pr_body>
+    #{pr.body}
+    </pr_body>
+    """
+
+    rendered =
+      commits
+      |> Enum.reduce(rendered, fn %{message: message, files: files}, acc ->
+        files_rendered =
+          files
+          |> Enum.map(fn %{filename: filename, patch: patch} ->
+            """
+            <commit_file>
+            <commit_file_name>
+            #{filename}
+            </commit_file_name>
+
+            <commit_file_patch>
+            #{patch}
+            </commit_file_patch>
+            </commit_file>
+            """
+          end)
+          |> Enum.join("\n")
+
+        commit_rendered =
+          """
+          <commit>
+          <commit_message>
+          #{message}
+          </commit_message>
+
+          <commit_files>
+          #{files_rendered}
+          </commit_files>
+          </commit>
+          """
+
+        acc <> "\n\n" <> commit_rendered
+      end)
+
+    rendered
   end
 end
