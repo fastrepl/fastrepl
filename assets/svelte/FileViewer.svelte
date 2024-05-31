@@ -13,6 +13,7 @@
 
   export let file: File;
   export let currentSelection: Selection | null = null;
+  export let commentSelections: Selection[] = [];
   export let handleChangeSelection: (s: Selection) => void;
   export let handleCreateComments: (comments: Comment[]) => void;
 
@@ -22,8 +23,19 @@
   afterUpdate(() => {
     if (file && currentSelection) {
       const { start } = currentSelection;
-      const el = codeSnippetContainer.getElementsByTagName("tr")[start];
-      el?.scrollIntoView({ behavior: "smooth" });
+      const target = codeSnippetContainer.getElementsByTagName("tr")[start];
+
+      if (target) {
+        const containerBound = codeSnippetContainer.getBoundingClientRect();
+        const targetBound = target.getBoundingClientRect();
+
+        if (
+          targetBound.top < containerBound.top ||
+          targetBound.bottom > containerBound.bottom
+        ) {
+          target.scrollIntoView({ behavior: "smooth" });
+        }
+      }
     }
   });
 
@@ -180,7 +192,7 @@
   >
     <HighlightedCode
       code={file.content}
-      selections={[currentSelection].filter(Boolean)}
+      selections={[...commentSelections, currentSelection].filter(Boolean)}
     />
   </div>
 </div>
