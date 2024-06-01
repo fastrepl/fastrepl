@@ -248,8 +248,6 @@ defmodule Fastrepl.SessionManager do
           send(state.self, {:update, :execution_done, nil})
         end)
 
-      IO.inspect(result)
-
       case result do
         {:ok, pid} -> {:reply, :ok, state |> Map.put(:execution_pid, pid)}
         {:error, _} -> {:reply, :error, state}

@@ -87,7 +87,7 @@ defmodule Fastrepl.RetrievalTest do
     test "full code match" do
       query = """
       function hello() {
-        console.log("hello");
+        console.log("!");
       }
       """
 
@@ -112,7 +112,7 @@ defmodule Fastrepl.RetrievalTest do
     test "full code almost match" do
       query = """
       const hello = () => {
-            console.log(" !");
+            console.log(" hi");
       }
       """
 

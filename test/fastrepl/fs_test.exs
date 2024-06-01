@@ -119,7 +119,7 @@ defmodule Fastrepl.FSTest do
   end
 
   describe "Repository" do
-    test "Mutation.apply" do
+    test "Mutation.apply/2 list" do
       file = %FS.File{
         path: "a.py",
         content: 1..10 |> Enum.map(&Integer.to_string/1) |> Enum.join("\n")
@@ -183,6 +183,98 @@ defmodule Fastrepl.FSTest do
       }
 
       assert actual == expected
+    end
+
+    test "apply modification in the middle of the file" do
+      file = %FS.File{
+        path: "a.py",
+        content: 1..10 |> Enum.map(&Integer.to_string/1) |> Enum.join("\n")
+      }
+
+      repo =
+        %FS.Repository{original_files: [file], current_files: [file]}
+        |> FS.Mutation.apply(
+          FS.Mutation.new(:modify, %{target_path: "a.py", target_section: "2\n3", data: "4\n5"})
+        )
+
+      assert repo.original_files == [file]
+
+      assert repo.current_files == [
+               %FS.File{
+                 path: "a.py",
+                 content: "1\n4\n5\n4\n5\n6\n7\n8\n9\n10"
+               }
+             ]
+    end
+
+    test "apply modification in the start of the file" do
+      file = %FS.File{
+        path: "a.py",
+        content: 1..10 |> Enum.map(&Integer.to_string/1) |> Enum.join("\n")
+      }
+
+      repo =
+        %FS.Repository{original_files: [file], current_files: [file]}
+        |> FS.Mutation.apply(
+          FS.Mutation.new(:modify, %{target_path: "a.py", target_section: "1\n2", data: "4\n5"})
+        )
+
+      assert repo.original_files == [file]
+
+      assert repo.current_files == [
+               %FS.File{
+                 path: "a.py",
+                 content: "4\n5\n3\n4\n5\n6\n7\n8\n9\n10"
+               }
+             ]
+    end
+
+    test "apply modification in the end of the file" do
+      file = %FS.File{
+        path: "a.py",
+        content: 1..10 |> Enum.map(&Integer.to_string/1) |> Enum.join("\n")
+      }
+
+      repo =
+        %FS.Repository{original_files: [file], current_files: [file]}
+        |> FS.Mutation.apply(
+          FS.Mutation.new(:modify, %{target_path: "a.py", target_section: "9\n10", data: "4\n5"})
+        )
+
+      assert repo.original_files == [file]
+
+      assert repo.current_files == [
+               %FS.File{
+                 path: "a.py",
+                 content: "1\n2\n3\n4\n5\n6\n7\n8\n4\n5"
+               }
+             ]
+    end
+
+    test "apply modification to entire file" do
+      file = %FS.File{
+        path: "a.py",
+        content: 1..4 |> Enum.map(&Integer.to_string/1) |> Enum.join("\n")
+      }
+
+      repo =
+        %FS.Repository{original_files: [file], current_files: [file]}
+        |> FS.Mutation.apply(
+          FS.Mutation.new(:modify, %{
+            target_path: "a.py",
+            target_section: "1\n2\n3\n4",
+            data: "4\n5"
+          })
+        )
+
+      assert repo.original_files == [file]
+
+      assert repo.current_files == [
+               %FS.File{
+                 path: "a.py",
+                 content: "4\n5"
+               }
+             ]
     end
 
     test "Repository.apply_patches!/2" do
