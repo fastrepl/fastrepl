@@ -12,8 +12,8 @@ defmodule FastreplWeb.Nav do
         FastreplWeb.SettingsLive -> :settings
         FastreplWeb.ChatsLive -> :chats
         FastreplWeb.ChatLive -> :chats
-        FastreplWeb.ThreadsLive -> :threads
-        FastreplWeb.ThreadLive -> :threads
+        FastreplWeb.SessionsLive -> :sessions
+        FastreplWeb.SessionLive -> :sessions
         _ -> nil
       end
 

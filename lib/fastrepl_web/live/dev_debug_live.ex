@@ -30,9 +30,9 @@ defmodule FastreplWeb.DevDebugLive do
     """
   end
 
-  def mount(%{"id" => thread_id}, _session, socket) do
+  def mount(%{"id" => session_id}, _session, socket) do
     if connected?(socket) do
-      Phoenix.PubSub.subscribe(Fastrepl.PubSub, "thread:debug:#{thread_id}")
+      Phoenix.PubSub.subscribe(Fastrepl.PubSub, "session:debug:#{session_id}")
     end
 
     {:ok, socket |> assign(events: [])}

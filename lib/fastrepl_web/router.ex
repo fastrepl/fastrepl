@@ -51,8 +51,8 @@ defmodule FastreplWeb.Router do
         FastreplWeb.Nav
       ] do
       live "/", FastreplWeb.MainLive, :none
-      live "/threads", FastreplWeb.ThreadsLive, :none
-      live "/thread/:id", FastreplWeb.ThreadLive, :none
+      live "/sessions", FastreplWeb.SessionsLive, :none
+      live "/session/:id", FastreplWeb.SessionLive, :none
       live "/chats", FastreplWeb.ChatsLive, :none
       live "/chat/:id", FastreplWeb.ChatLive, :none
       live "/settings", FastreplWeb.SettingsLive, :none

@@ -16,13 +16,13 @@ alias Fastrepl.Sessions.Comment
 
 defmodule DEV do
   def list_session() do
-    Registry.select(Application.fetch_env!(:fastrepl, :thread_manager_registry), [
+    Registry.select(Application.fetch_env!(:fastrepl, :session_manager_registry), [
       {{:"$1", :"$2", :_}, [], [{{:"$1", :"$2"}}]}
     ])
   end
 
   def list_session(account_id) do
-    Registry.select(Application.fetch_env!(:fastrepl, :thread_manager_registry), [
+    Registry.select(Application.fetch_env!(:fastrepl, :session_manager_registry), [
       {{:"$1", :"$2", %{account_id: account_id}}, [], [{{:"$1", :"$2"}}]}
     ])
   end

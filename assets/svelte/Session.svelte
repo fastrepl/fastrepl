@@ -109,10 +109,10 @@
     {:else if currentFile}
       <FileViewer
         file={currentFile}
-        commentSelections={comments
+        {currentSelection}
+        additionalSelections={comments
           .filter((c) => c.file_path === currentFile.path)
           .map((c) => ({ start: c.line_start, end: c.line_end }))}
-        {currentSelection}
         {handleChangeSelection}
         {handleCreateComments}
       />

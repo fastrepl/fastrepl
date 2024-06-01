@@ -1,4 +1,4 @@
-defmodule FastreplWeb.ThreadLive do
+defmodule FastreplWeb.SessionLive do
   use FastreplWeb, :live_view
 
   import FastreplWeb.SessionComponents, only: [github_issue: 1, github_repo: 1]
@@ -45,20 +45,20 @@ defmodule FastreplWeb.ThreadLive do
     """
   end
 
-  def mount(%{"id" => thread_id}, _session, socket) do
+  def mount(%{"id" => session_id}, _session, socket) do
     if connected?(socket) do
-      Phoenix.PubSub.subscribe(Fastrepl.PubSub, "thread:#{thread_id}")
+      Phoenix.PubSub.subscribe(Fastrepl.PubSub, "session:#{session_id}")
     end
 
     case find_or_start_manager(%{
            account_id: socket.assigns.current_account.id,
-           thread_id: thread_id
+           session_id: session_id
          }) do
       nil ->
         socket =
           socket
           |> put_flash(:error, "Failed to start session.")
-          |> redirect(to: "/threads")
+          |> redirect(to: "/sessions")
 
         {:ok, socket}
 
@@ -67,7 +67,7 @@ defmodule FastreplWeb.ThreadLive do
 
         default_state = %{
           manager_pid: pid,
-          thread_id: thread_id,
+          session_id: session_id,
           paths: [],
           files: [],
           comments: [],
@@ -133,14 +133,14 @@ defmodule FastreplWeb.ThreadLive do
     {:noreply, socket |> assign(state)}
   end
 
-  defp find_or_start_manager(%{account_id: _, thread_id: thread_id} = args) do
-    find_existing_manager(thread_id) || start_new_manager(args)
+  defp find_or_start_manager(%{account_id: _, session_id: session_id} = args) do
+    find_existing_manager(session_id) || start_new_manager(args)
   end
 
-  defp find_existing_manager(thread_id) do
-    registry = Application.fetch_env!(:fastrepl, :thread_manager_registry)
+  defp find_existing_manager(session_id) do
+    registry = Application.fetch_env!(:fastrepl, :session_manager_registry)
 
-    case Registry.lookup(registry, thread_id) do
+    case Registry.lookup(registry, session_id) do
       [{pid, _value}] when is_pid(pid) -> pid
       [] -> nil
     end
@@ -149,8 +149,8 @@ defmodule FastreplWeb.ThreadLive do
   defp start_new_manager(args) do
     result =
       DynamicSupervisor.start_child(
-        Fastrepl.ThreadManagerSupervisor,
-        {Fastrepl.ThreadManager, args}
+        Fastrepl.SessionManagerSupervisor,
+        {Fastrepl.SessionManager, args}
       )
 
     case result do

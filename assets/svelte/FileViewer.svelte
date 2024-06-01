@@ -13,7 +13,7 @@
 
   export let file: File;
   export let currentSelection: Selection | null = null;
-  export let commentSelections: Selection[] = [];
+  export let additionalSelections: Selection[] = [];
   export let handleChangeSelection: (s: Selection) => void;
   export let handleCreateComments: (comments: Comment[]) => void;
 
@@ -192,7 +192,7 @@
   >
     <HighlightedCode
       code={file.content}
-      selections={[...commentSelections, currentSelection].filter(Boolean)}
+      selections={[...additionalSelections, currentSelection].filter(Boolean)}
     />
   </div>
 </div>

@@ -1,4 +1,4 @@
-defmodule FastreplWeb.ThreadsLive do
+defmodule FastreplWeb.SessionsLive do
   use FastreplWeb, :live_view
 
   import FastreplWeb.SessionComponents, only: [session_list_item: 1]

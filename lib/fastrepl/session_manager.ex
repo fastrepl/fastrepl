@@ -1,4 +1,4 @@
-defmodule Fastrepl.ThreadManager do
+defmodule Fastrepl.SessionManager do
   use GenServer, restart: :transient
   use Tracing
 
@@ -12,22 +12,22 @@ defmodule Fastrepl.ThreadManager do
   alias Fastrepl.SemanticFunction.PPWriter
   alias Fastrepl.SemanticFunction.CommentWriter
 
-  def start_link(%{account_id: account_id, thread_id: thread_id} = args) do
-    GenServer.start_link(__MODULE__, args, name: via_registry(thread_id, account_id))
+  def start_link(%{account_id: account_id, session_id: session_id} = args) do
+    GenServer.start_link(__MODULE__, args, name: via_registry(session_id, account_id))
   end
 
   @impl true
   def init(%{
         ticket: %Ticket{type: :github} = ticket,
         account_id: account_id,
-        thread_id: thread_id
+        session_id: session_id
       }) do
     Process.flag(:trap_exit, true)
 
     with %Github.App{} = app <-
            Github.find_app(account_id, ticket.github_repo_full_name),
          {:ok, session} <-
-           Sessions.session_from(ticket, %{account_id: account_id, display_id: thread_id}),
+           Sessions.session_from(ticket, %{account_id: account_id, display_id: session_id}),
          token = Github.get_installation_token!(app.installation_id),
          {:ok, repository} =
            FS.Repository.from(ticket.github_repo_full_name, ticket.base_commit_sha, token) do
@@ -39,7 +39,7 @@ defmodule Fastrepl.ThreadManager do
             """
             We have just started processing your issue.
 
-            You can check the progress here: #{FastreplWeb.Endpoint.url()}/thread/#{thread_id}
+            You can check the progress here: #{FastreplWeb.Endpoint.url()}/session/#{session_id}
             """,
             auth: token
           )
@@ -52,7 +52,7 @@ defmodule Fastrepl.ThreadManager do
         |> Map.put(:self, self())
         |> Map.put(:account_id, account_id)
         |> Map.put(:session, session)
-        |> Map.put(:thread_id, thread_id)
+        |> Map.put(:session_id, session_id)
         |> Map.put(:installation_id, app.installation_id)
         |> Map.put(:repository, repository)
 
@@ -64,8 +64,8 @@ defmodule Fastrepl.ThreadManager do
   end
 
   @impl true
-  def init(%{account_id: account_id, thread_id: thread_id}) do
-    session = Sessions.session_from(%{account_id: account_id, display_id: thread_id})
+  def init(%{account_id: account_id, session_id: session_id}) do
+    session = Sessions.session_from(%{account_id: account_id, display_id: session_id})
     app = Github.find_app(account_id, session.ticket.github_repo_full_name)
     token = Github.get_installation_token!(app.installation_id)
 
@@ -84,7 +84,7 @@ defmodule Fastrepl.ThreadManager do
       |> Map.put(:self, self())
       |> Map.put(:account_id, account_id)
       |> Map.put(:session, session)
-      |> Map.put(:thread_id, thread_id)
+      |> Map.put(:session_id, session_id)
       |> Map.put(:installation_id, app.installation_id)
       |> Map.put(:repository, repository)
 
@@ -248,7 +248,8 @@ defmodule Fastrepl.ThreadManager do
           send(state.self, {:update, :execution_done, nil})
         end)
 
-        IO.inspect(result)
+      IO.inspect(result)
+
       case result do
         {:ok, pid} -> {:reply, :ok, state |> Map.put(:execution_pid, pid)}
         {:error, _} -> {:reply, :error, state}
@@ -350,8 +351,8 @@ defmodule Fastrepl.ThreadManager do
 
   @impl true
   def terminate(_reason, state) do
-    if state[:thread_id] do
-      Registry.unregister(registry_module(), state.thread_id)
+    if state[:session_id] do
+      Registry.unregister(registry_module(), state.session_id)
     end
 
     Sessions.update_session(state.session, %{status: state.session.status})
@@ -370,23 +371,23 @@ defmodule Fastrepl.ThreadManager do
     |> Stream.run()
   end
 
-  defp via_registry(thread_id, account_id) do
-    {:via, Registry, {registry_module(), thread_id, %{account_id: account_id}}}
+  defp via_registry(session_id, account_id) do
+    {:via, Registry, {registry_module(), session_id, %{account_id: account_id}}}
   end
 
   defp registry_module() do
-    Application.fetch_env!(:fastrepl, :thread_manager_registry)
+    Application.fetch_env!(:fastrepl, :session_manager_registry)
   end
 
   defp sync_with_views(state, map) when is_map(map) do
-    broadcast(state.thread_id, map)
+    broadcast(state.session_id, map)
     state
   end
 
-  defp broadcast(thread_id, data) do
+  defp broadcast(session_id, data) do
     Phoenix.PubSub.broadcast(
       Fastrepl.PubSub,
-      "thread:#{thread_id}",
+      "session:#{session_id}",
       {:sync, data}
     )
   end
