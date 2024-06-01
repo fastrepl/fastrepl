@@ -5,7 +5,7 @@ defmodule Fastrepl.SemanticFunction.Modify do
 
   @spec run(Repository.t(), Comment.t()) :: {:ok, Mutation.t()} | {:error, any()}
   def run(repo, comment) do
-    file = repo.current_files |> Enum.find(&(&1.path == comment.file_path))
+    file = repo.original_files |> Enum.find(&(&1.path == comment.file_path))
     target = Fastrepl.String.read_lines!(file.content, {comment.line_start, comment.line_end})
 
     messages = [

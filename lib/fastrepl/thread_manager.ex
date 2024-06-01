@@ -216,31 +216,44 @@ defmodule Fastrepl.ThreadManager do
 
   @impl true
   def handle_call(:execute, _from, state) do
-    Task.Supervisor.start_child(Fastrepl.TaskSupervisor, fn ->
-      send(state.self, {:update, :status, :run})
+    {existing_pid, state} = state |> Map.pop(:execution_pid)
 
-      result = Modify.run(state.repository, Enum.at(state.session.comments, 0))
-
-      case result do
-        {:ok, mut} ->
-          repo = FS.Mutation.apply(state.repository, mut)
-          patches = FS.Patch.from(repo)
-
-          send(state.self, {:update, :patches, patches})
-          send(state.self, {:update, :repository, repo})
-
-          patches
-          |> Enum.map(fn patch -> Map.put(patch, :session_id, state.session.id) end)
-          |> Enum.each(&Sessions.create_patch/1)
-
-        error ->
-          IO.inspect(error)
-      end
-
+    if existing_pid do
+      Process.exit(existing_pid, :kill)
       send(state.self, {:update, :status, :idle})
-    end)
+      {:reply, :ok, state}
+    else
+      result =
+        Task.Supervisor.start_child(Fastrepl.TaskSupervisor, fn ->
+          send(state.self, {:update, :status, :run})
 
-    {:reply, :ok, state}
+          result = Modify.run(state.repository, Enum.at(state.session.comments, 0))
+
+          case result do
+            {:ok, mut} ->
+              repo = FS.Mutation.apply(state.repository, [mut])
+              patches = FS.Patch.from(repo)
+
+              send(state.self, {:update, :patches, patches})
+              send(state.self, {:update, :repository, repo})
+
+              patches
+              |> Enum.map(fn patch -> Map.put(patch, :session_id, state.session.id) end)
+              |> Enum.each(&Sessions.create_patch/1)
+
+            error ->
+              IO.inspect(error)
+          end
+
+          send(state.self, {:update, :execution_done, nil})
+        end)
+
+        IO.inspect(result)
+      case result do
+        {:ok, pid} -> {:reply, :ok, state |> Map.put(:execution_pid, pid)}
+        {:error, _} -> {:reply, :error, state}
+      end
+    end
   end
 
   @impl true
@@ -305,6 +318,12 @@ defmodule Fastrepl.ThreadManager do
           state
           |> sync_with_views(%{status: value})
           |> update_in([:session, Access.key(:status)], fn _ -> value end)
+
+        :execution_done ->
+          state
+          |> Map.put(:execution_pid, nil)
+          |> sync_with_views(%{status: :idle})
+          |> update_in([:session, Access.key(:status)], fn _ -> :idle end)
 
         :repository ->
           state |> Map.put(:repository, value)

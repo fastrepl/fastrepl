@@ -63,7 +63,7 @@ defmodule FastreplWeb.ThreadLive do
         {:ok, socket}
 
       pid ->
-        existing_state = GenServer.call(pid, :init_state)
+        existing_state = GenServer.call(pid, :init_state, 10 * 1000)
 
         default_state = %{
           manager_pid: pid,

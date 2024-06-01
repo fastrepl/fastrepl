@@ -26,6 +26,7 @@ defmodule Fastrepl.FS.Mutation do
   end
 
   def apply(%FS.Repository{} = repo, mutations) when is_list(mutations) do
+    repo = %FS.Repository{repo | current_files: repo.original_files}
     mutations |> Enum.reduce(repo, fn mut, acc -> apply(acc, mut) end)
   end
 

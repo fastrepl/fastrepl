@@ -132,7 +132,6 @@
         {#if comments.length > 0}
           <button
             type="button"
-            disabled={executing}
             in:fly={{ duration: 300, x: 30 }}
             out:fly={{ duration: 300, x: -30 }}
             on:click={handleClickExecute}
@@ -140,7 +139,7 @@
               "flex flex-row items-center justify-center gap-2",
               "py-1.5 rounded-md",
               "bg-gray-800 hover:bg-gray-900 text-white",
-              "disabled:opacity-70",
+              executing ? "opacity-70" : "",
             ])}
           >
             <span>
