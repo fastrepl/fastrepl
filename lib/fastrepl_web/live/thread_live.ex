@@ -98,7 +98,7 @@ defmodule FastreplWeb.ThreadLive do
     id = Nanoid.generate()
     patch = socket.assigns.patches |> Enum.map(& &1.content) |> Enum.join("\n")
 
-    :ok = Fastrepl.Temp.set(id, patch)
+    :ok = Fastrepl.Temp.set(id, patch, ttl: 100)
     url = FastreplWeb.Endpoint.url() <> "/patch/view/#{id}"
 
     {:reply, %{url: url}, socket}

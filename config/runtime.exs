@@ -118,6 +118,9 @@ if config_env() == :prod do
   #     config :swoosh, :api_client, Swoosh.ApiClient.Hackney
   #
   # See https://hexdocs.pm/swoosh/Swoosh.html#module-installation for details.
+  config :fastrepl, Fastrepl.Mailer,
+    adapter: Resend.Swoosh.Adapter,
+    api_key: System.get_env("RESEND_API_KEY")
 
   config :fastrepl, :redis_url, System.get_env("REDIS_URL")
   config :fastrepl, :clone_dir, System.get_env("REPO_DIR")
