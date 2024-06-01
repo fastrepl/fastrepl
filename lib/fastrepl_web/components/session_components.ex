@@ -70,7 +70,7 @@ defmodule FastreplWeb.SessionComponents do
         >
           <%= "#{@github_repo_full_name} ##{@github_issue_number}" %>
         </.link>
-        <.link navigate={"/thread/#{@display_id}"} class="ml-auto mr-2">
+        <.link navigate={"/session/#{@display_id}"} class="ml-auto mr-2">
           <span class="text-xs text-gray-400"><%= @status %></span>
           <span class="hero-arrow-right-solid w-4 h-4 text-gray-600 hover:text-black" />
         </.link>

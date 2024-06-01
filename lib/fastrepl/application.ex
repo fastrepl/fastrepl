@@ -16,9 +16,9 @@ defmodule Fastrepl.Application do
     children = [
       GitHub.Auth.Cache,
       {Task.Supervisor, name: Fastrepl.TaskSupervisor},
-      {DynamicSupervisor, name: Fastrepl.ThreadManagerSupervisor},
+      {DynamicSupervisor, name: Fastrepl.SessionManagerSupervisor},
       {DynamicSupervisor, name: Fastrepl.ChatManagerSupervisor},
-      {Registry, keys: :unique, name: Fastrepl.ThreadManagerRegistry},
+      {Registry, keys: :unique, name: Fastrepl.SessionManagerRegistry},
       {Registry, keys: :unique, name: Fastrepl.ChatManagerRegistry},
       {NodeJS.Supervisor, [path: LiveSvelte.SSR.NodeJS.server_path(), pool_size: 4]},
       FastreplWeb.Telemetry,

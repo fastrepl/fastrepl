@@ -81,7 +81,7 @@ config :fastrepl, Oban,
 config :fastrepl, :env, Mix.env()
 config :fastrepl, :root, File.cwd!()
 
-config :fastrepl, :thread_manager_registry, Fastrepl.ThreadManagerRegistry
+config :fastrepl, :session_manager_registry, Fastrepl.SessionManagerRegistry
 config :fastrepl, :chat_manager_registry, Fastrepl.ChatManagerRegistry
 
 config :fastrepl, :cache, Fastrepl.Cache.Redis

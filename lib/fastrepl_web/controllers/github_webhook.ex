@@ -96,9 +96,9 @@ defmodule FastreplWeb.GithubWebhookHandler do
         case action do
           action when action in ["labeled"] ->
             if has_fastrepl_label?(labels) do
-              start_thread_manager(%{
+              start_session_manager(%{
                 account_id: app.account_id,
-                thread_id: Nanoid.generate(),
+                session_id: Nanoid.generate(),
                 ticket: ticket
               })
             end
@@ -141,10 +141,10 @@ defmodule FastreplWeb.GithubWebhookHandler do
     labels |> Enum.any?(&(&1["name"] == "fastrepl"))
   end
 
-  defp start_thread_manager(args) do
+  defp start_session_manager(args) do
     DynamicSupervisor.start_child(
-      Fastrepl.ThreadManagerSupervisor,
-      {Fastrepl.ThreadManager, args}
+      Fastrepl.SessionManagerSupervisor,
+      {Fastrepl.SessionManager, args}
     )
   end
 end
