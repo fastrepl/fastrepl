@@ -54,6 +54,10 @@ defmodule Fastrepl.Accounts do
   end
 
   def list_members(%Account{} = account) do
-    Repo.all(from m in Member, where: m.account_id == ^account.id)
+    Repo.all(
+      from m in Member,
+        where: m.account_id == ^account.id,
+        preload: [user: [:oauth_logins]]
+    )
   end
 end

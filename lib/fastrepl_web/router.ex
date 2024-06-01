@@ -33,6 +33,7 @@ defmodule FastreplWeb.Router do
 
     get "/login", FastreplWeb.AuthController, :login
     get "/logout", FastreplWeb.AuthController, :logout
+    get "/invite/:key", FastreplWeb.AuthController, :invite
     get "/auth/:provider", Identity.Controller, :oauth_request, as: :identity
     get "/auth/:provider/callback", Identity.Controller, :oauth_callback, as: :identity
   end
