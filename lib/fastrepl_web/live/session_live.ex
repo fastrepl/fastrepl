@@ -9,20 +9,18 @@ defmodule FastreplWeb.SessionLive do
       <%= if assigns[:status] == :init do %>
         <div class="flex flex-row gap-2 items-center justify-center h-[calc(100vh-90px)]">
           <span>We are now working on</span>
-          <div :if={assigns[:ticket]}>
-            <.github_issue
-              name={@ticket.github_repo.full_name}
-              title={@ticket.github_issue.title}
-              number={@ticket.github_issue.number}
-            />
-            <span>in</span>
-            <.github_repo
-              name={@ticket.github_repo.full_name}
-              sha={@ticket.github_repo.default_branch_head}
-              description={@ticket.github_repo.description}
-            />
-            <span>...</span>
-          </div>
+          <.github_issue
+            name={@ticket.github_repo.full_name}
+            title={@ticket.github_issue.title}
+            number={@ticket.github_issue.number}
+          />
+          <span>in</span>
+          <.github_repo
+            name={@ticket.github_repo.full_name}
+            sha={@ticket.github_repo.default_branch_head}
+            description={@ticket.github_repo.description}
+          />
+          <span>...</span>
         </div>
       <% else %>
         <.svelte

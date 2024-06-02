@@ -28,7 +28,7 @@ defmodule Fastrepl.Github.Issue do
          is_pr: String.contains?(issue.html_url, "pull"),
          title: issue.title,
          number: issue.number,
-         body: issue.body,
+         body: issue.body || "",
          url: issue.html_url,
          comments: comments
        }}
