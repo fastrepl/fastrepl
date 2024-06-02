@@ -6,6 +6,9 @@
 
   import type { Comment } from "$lib/interfaces";
 
+  import Span from "$components/Span.svelte";
+  import CommentEditor from "$components/CommentEditor.svelte";
+
   let searching = false;
 
   export let items: Comment[] = [];
@@ -32,25 +35,12 @@
       {} as Record<string, Comment[]>,
     );
 
-  let editingComment: Comment | null = null;
-
-  $: if (
-    editingComment &&
-    map[editingComment.file_path].findIndex(
-      (c) => c.id === editingComment.id,
-    ) === -1
-  ) {
-    editingComment = null;
-  }
-
   const handleDeleteFile = (filePath: string) => {
     const targets = items.filter((item) => item.file_path === filePath);
     handleDeleteComments(targets);
   };
 
   const handleEditCommentContent = (commentId: number, content: string) => {
-    editingComment = null;
-
     if (!content) {
       return;
     }
@@ -81,7 +71,7 @@
     <div
       in:fly={{ duration: 300, x: 30 }}
       out:fly={{ duration: 300, x: -30 }}
-      class="pl-4 mt-1 flex flex-col gap-2 text-sm text-gray-700"
+      class="px-2 mt-1 flex flex-col gap-3 text-sm text-gray-700"
     >
       {#each comments as comment (comment.id)}
         <div
@@ -91,49 +81,29 @@
         >
           <button
             type="button"
-            class={clsx([
-              "px-1 py-0.5 rounded-md",
-              "bg-gray-200 hover:bg-yellow-100",
-              "text-sm w-fit h-[24px] text-nowrap",
-            ])}
             on:click={() => handleClickComment(comment)}
+            class="h-fit"
           >
-            L{comment.line_start}-{comment.line_end}
+            <Span start={comment.line_start} end={comment.line_end} />
           </button>
 
-          {#if editingComment && editingComment.id === comment.id}
-            <!-- svelte-ignore a11y-autofocus -->
-            <textarea
-              autofocus={true}
-              value={comment.content}
-              class={clsx([
-                "py-0.5 px-1 border rounded-md w-full",
-                "border-gray-300 focus:border-gray-300 focus:ring-0",
-                "text-sm resize-y",
-              ])}
-              on:blur={(e) =>
-                handleEditCommentContent(comment.id, e.target["value"])}
-              on:keydown={(e) => {
-                if (e.key === "Enter") {
-                  handleEditCommentContent(comment.id, e.target["value"]);
-                }
-              }}
+          <div class="flex flex-row gap-2 w-full relative pr-1">
+            <CommentEditor
+              content={comment.content}
+              handleChangeContent={(content) =>
+                handleEditCommentContent(comment.id, content)}
             />
-          {:else}
-            <button
-              type="button"
-              on:click={() => (editingComment = comment)}
-              class="truncate px-1"
-            >
-              {comment.content}
-            </button>
             <button
               on:click={() => handleDeleteComments([comment])}
-              class="hidden group-hover:flex text-gray-400 hover:text-gray-700 mt-1"
+              class={clsx([
+                "absolute -right-4",
+                "hidden group-hover:flex",
+                "mt-1 text-gray-400 hover:text-gray-700",
+              ])}
             >
               <span class="hero-backspace h-4 w-4" />
             </button>
-          {/if}
+          </div>
         </div>
       {/each}
 

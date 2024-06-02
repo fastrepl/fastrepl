@@ -9,7 +9,7 @@
 
   import Comments from "$components/Comments.svelte";
 
-  const TABS = ["Controls"];
+  const TABS = ["controls"];
   let currentTab: (typeof TABS)[number] = TABS[0];
 
   export let showDiffs = false;

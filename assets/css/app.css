@@ -23,3 +23,7 @@ details > summary {
 details > summary::-webkit-details-marker {
   display: none;
 }
+
+.tiptap code {
+  background-color: #fef16033 !important;
+}

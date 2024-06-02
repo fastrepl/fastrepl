@@ -1,9 +1,6 @@
 import { Extension } from "@tiptap/core";
 
 export const HandleEnter = () => {
-  // @ts-ignore
-  const [form] = document.getElementsByTagName("form");
-
   return Extension.create({
     addKeyboardShortcuts() {
       return {
