@@ -28,10 +28,16 @@
     currentFile = files[0];
   }
 
+  const removeSelection = () => {
+    document.getSelection().removeAllRanges();
+    currentSelection = null;
+  };
+
   const handleSelectExistingFile = (path: string) => {
     const nextFile = files.find((f) => f.path === path);
     if (nextFile) {
       currentFile = nextFile;
+      removeSelection();
     }
   };
   const handleSelectNewFile = (path: string) => {
