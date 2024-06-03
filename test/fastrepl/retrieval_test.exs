@@ -106,7 +106,7 @@ defmodule Fastrepl.RetrievalTest do
       """
 
       match = Retrieval.CodeBlock.find(String.trim(query), String.trim(code))
-      assert match == {3, 6}
+      assert match == {3, 5}
     end
 
     test "full code almost match" do
@@ -131,7 +131,7 @@ defmodule Fastrepl.RetrievalTest do
       """
 
       match = Retrieval.CodeBlock.find(String.trim(query), String.trim(code))
-      assert match == {3, 6}
+      assert match == {3, 5}
     end
 
     test "handle ellipsis" do
@@ -163,7 +163,7 @@ defmodule Fastrepl.RetrievalTest do
       """
 
       match = Retrieval.CodeBlock.find(String.trim(query), String.trim(code))
-      assert match == {8, 15}
+      assert match == {8, 14}
     end
 
     test "wrong query" do

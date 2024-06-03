@@ -88,6 +88,8 @@ defmodule Fastrepl.FS do
   end
 
   def read_lines!(path, {line_from, line_to}) do
+    line_from = max(1, line_from)
+
     File.stream!(path, :line)
     |> Stream.drop(line_from - 1)
     |> Stream.take(line_to - line_from + 1)

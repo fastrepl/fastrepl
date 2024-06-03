@@ -55,7 +55,7 @@ defmodule Fastrepl.FS.Mutation do
 
     right =
       lines
-      |> Enum.slice(line_end - 1, length(lines) - line_end + 1)
+      |> Enum.slice(line_end, length(lines) - line_end + 1)
       |> Enum.join("\n")
 
     content =

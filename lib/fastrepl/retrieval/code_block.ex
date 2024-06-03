@@ -23,7 +23,7 @@ defmodule Fastrepl.Retrieval.CodeBlock do
 
   defp find_best_overlap(query_lines, [], _, best_index, score) do
     if score > 0.2 do
-      {best_index + 1, best_index + 1 + length(query_lines)}
+      {best_index + 1, best_index + length(query_lines)}
     else
       nil
     end

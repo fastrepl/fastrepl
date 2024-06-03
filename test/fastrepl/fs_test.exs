@@ -97,11 +97,29 @@ defmodule Fastrepl.FSTest do
   end
 
   describe "read_lines!/2" do
-    test "simple" do
+    setup do
       path = System.tmp_dir!() |> Path.join(Nanoid.generate())
-      File.write!(path, 1..100 |> Enum.map(&Integer.to_string/1) |> Enum.join("\n"))
+      content = 1..100 |> Enum.map(&Integer.to_string/1) |> Enum.join("\n")
+      File.write!(path, content)
 
+      %{path: path}
+    end
+
+    test "simple", %{path: path} do
+      assert FS.read_lines!(path, {-2, 2}) == "1\n2\n"
+      assert FS.read_lines!(path, {0, 2}) == "1\n2\n"
+
+      assert FS.read_lines!(path, {0, 0}) == ""
+      assert FS.read_lines!(path, {0, 1}) == "1\n"
+      assert FS.read_lines!(path, {1, 1}) == "1\n"
+      assert FS.read_lines!(path, {100, 100}) == "100"
+      assert FS.read_lines!(path, {110, 110}) == ""
+
+      assert FS.read_lines!(path, {2, 4}) == "2\n3\n4\n"
       assert FS.read_lines!(path, {42, 46}) == "42\n43\n44\n45\n46\n"
+
+      assert FS.read_lines!(path, {98, 100}) == "98\n99\n100"
+      assert FS.read_lines!(path, {98, 110}) == "98\n99\n100"
     end
   end
 
