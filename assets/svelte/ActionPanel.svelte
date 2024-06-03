@@ -3,7 +3,7 @@
   import { Circle } from "svelte-loading-spinners";
 
   import { clsx } from "clsx";
-  import { Tabs } from "bits-ui";
+  import { Tabs, DropdownMenu } from "bits-ui";
 
   import type { Diff, Comment } from "$lib/interfaces";
 
@@ -75,58 +75,75 @@
           {handleUpdateComments}
         />
 
-        {#if diffs.length > 0 && showDiffs}
+        {#if diffs.length > 0}
           <div
             in:fly={{ duration: 300, x: 30 }}
             out:fly={{ duration: 300, x: -30 }}
-            class="flex flex-row items-center justify-center gap-2"
+            class="flex flex-row items-center relative"
           >
             <button
               type="button"
-              disabled={isLoadingCreatePR}
-              on:click={wrappedhandleClickCreatePR}
+              disabled={isLoadingCreatePR || isLoadingDownloadPatch}
+              on:click={() => handleToggleShowDiffs()}
               class={clsx([
-                "relative",
-                "flex flex-row items-center justify-center gap-2",
-                "bg-gray-800 hover:bg-gray-900 text-white",
                 "py-1.5 rounded-md w-full",
-                "disabled:opacity-70",
+                "border border-gray-200 rounded-md",
+                "bg-gray-100 hover:bg-gray-200",
+                "disabled:bg-gray-200",
               ])}
             >
-              <span class="text-nowrap px-2"> Create PR</span>
+              <span>
+                {!showDiffs
+                  ? `Show ${diffs.length} changes`
+                  : isLoadingCreatePR
+                    ? "Creating PR..."
+                    : "Hide changes"}
+              </span>
             </button>
-            <button
-              type="button"
-              disabled={isLoadingDownloadPatch}
-              on:click={wrappedhandleClickDownloadPatch}
-              class={clsx([
-                "flex flex-row items-center justify-center gap-2",
-                "bg-gray-800 hover:bg-gray-900 text-white",
-                "py-1.5 rounded-md w-full",
-                "disabled:opacity-70",
-              ])}
-            >
-              <span class="text-nowrap px-2"> Download Git Patch</span>
-            </button>
-          </div>
-        {/if}
 
-        {#if diffs.length > 0}
-          <button
-            type="button"
-            in:fly={{ duration: 300, x: 30 }}
-            out:fly={{ duration: 300, x: -30 }}
-            on:click={() => handleToggleShowDiffs()}
-            class={clsx([
-              "flex flex-row items-center justify-center gap-2",
-              "py-1.5 rounded-md",
-              "bg-gray-800 hover:bg-gray-900 text-white",
-            ])}
-          >
-            <span>
-              {showDiffs ? "Hide changes" : `Show ${diffs.length} changes`}
-            </span>
-          </button>
+            {#if showDiffs}
+              <DropdownMenu.Root>
+                <DropdownMenu.Trigger class="absolute right-1">
+                  <button
+                    type="button"
+                    class={clsx([
+                      "text-gray-800 hover:text-black",
+                      "px-2 py-1 border-l-[0.5px] border-gray-300",
+                    ])}
+                  >
+                    <span class="hero-chevron-up w-4 h-4" />
+                  </button>
+                </DropdownMenu.Trigger>
+                <DropdownMenu.Content
+                  class="text-sm p-0.5 bg-gray-100 text-black rounded-md border border-gray-300"
+                >
+                  <DropdownMenu.Item
+                    on:click={wrappedhandleClickCreatePR}
+                    class="hover:bg-gray-200 rounded-sm px-2 py-1"
+                  >
+                    Create PR
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Separator
+                    class="bg-gray-300 w-full h-[1px] my-0.5"
+                  />
+                  <DropdownMenu.Item
+                    on:click={wrappedhandleClickDownloadPatch}
+                    class="hover:bg-gray-200 rounded-sm px-2 py-1"
+                  >
+                    Download Patch
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Separator
+                    class="bg-gray-300 w-full h-[1px] my-0.5"
+                  />
+                  <DropdownMenu.Item
+                    class="hover:bg-gray-200 rounded-sm px-2 py-1"
+                  >
+                    Share Comments
+                  </DropdownMenu.Item>
+                </DropdownMenu.Content>
+              </DropdownMenu.Root>
+            {/if}
+          </div>
         {/if}
 
         {#if comments.length > 0}
@@ -142,9 +159,12 @@
               executing ? "opacity-70" : "",
             ])}
           >
-            <span>
-              {executing ? "Making changes" : "Make changes"}
-            </span>
+            {#if executing}
+              <span>Making changes</span>
+            {:else}
+              <span>Make changes</span>
+            {/if}
+
             {#if executing}
               <Circle size="14" color="white" unit="px" duration="2s" />
             {/if}
