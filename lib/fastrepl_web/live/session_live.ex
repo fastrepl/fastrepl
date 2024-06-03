@@ -52,15 +52,7 @@ defmodule FastreplWeb.SessionLive do
            account_id: socket.assigns.current_account.id,
            session_id: session_id
          }) do
-      nil ->
-        socket =
-          socket
-          |> put_flash(:error, "Failed to start session.")
-          |> redirect(to: "/sessions")
-
-        {:ok, socket}
-
-      pid ->
+      {:ok, pid} ->
         existing_state = GenServer.call(pid, :init_state, 10 * 1000)
 
         default_state = %{
@@ -74,6 +66,14 @@ defmodule FastreplWeb.SessionLive do
 
         state = Map.merge(default_state, existing_state)
         {:ok, socket |> assign(state)}
+
+      {:error, _} ->
+        socket =
+          socket
+          |> put_flash(:error, "You don't have access to this session or something went wrong.")
+          |> redirect(to: "/sessions")
+
+        {:ok, socket}
     end
   end
 
@@ -141,15 +141,17 @@ defmodule FastreplWeb.SessionLive do
     {:noreply, socket |> assign(state)}
   end
 
-  defp find_or_start_manager(%{account_id: _, session_id: session_id} = args) do
-    find_existing_manager(session_id) || start_new_manager(args)
+  defp find_or_start_manager(%{account_id: _, session_id: _} = args) do
+    existing = find_existing_manager(args)
+    if existing == nil, do: start_new_manager(args), else: existing
   end
 
-  defp find_existing_manager(session_id) do
+  defp find_existing_manager(%{account_id: account_id, session_id: session_id}) do
     registry = Application.fetch_env!(:fastrepl, :session_manager_registry)
 
     case Registry.lookup(registry, session_id) do
-      [{pid, _value}] when is_pid(pid) -> pid
+      [{pid, %{account_id: ^account_id}}] when is_pid(pid) -> {:ok, pid}
+      [{pid, _value}] when is_pid(pid) -> {:error, :unauthorized}
       [] -> nil
     end
   end
@@ -162,8 +164,8 @@ defmodule FastreplWeb.SessionLive do
       )
 
     case result do
-      {:ok, pid} -> pid
-      _ -> nil
+      {:ok, pid} -> {:ok, pid}
+      {:error, error} -> {:error, error}
     end
   end
 end

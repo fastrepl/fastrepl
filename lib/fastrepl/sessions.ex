@@ -102,8 +102,12 @@ defmodule Fastrepl.Sessions do
 
   def session_from(%{account_id: account_id, display_id: display_id}) do
     case Session |> Repo.get_by(account_id: account_id, display_id: display_id) do
-      nil -> nil
-      session -> session |> Repo.preload([:ticket, :comments, :patches])
+      nil ->
+        {:error, :not_found}
+
+      session ->
+        session = session |> Repo.preload([:ticket, :comments, :patches])
+        {:ok, session}
     end
   end
 

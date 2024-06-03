@@ -74,7 +74,8 @@ defmodule Fastrepl.SessionsTest do
       {:ok, ticket} = Sessions.ticket_from(ticket_attrs)
       {:ok, session_1} = Sessions.session_from(ticket, session_attrs)
 
-      session_2 = Sessions.session_from(%{account_id: account.id, display_id: "123"})
+      {:error, :not_found} = Sessions.session_from(%{account_id: account.id, display_id: "321"})
+      {:ok, session_2} = Sessions.session_from(%{account_id: account.id, display_id: "123"})
       assert session_1.id == session_2.id
 
       assert session_1.ticket.github_repo != nil
