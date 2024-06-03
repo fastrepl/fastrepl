@@ -84,7 +84,7 @@
             <button
               type="button"
               disabled={isLoadingCreatePR || isLoadingDownloadPatch}
-              on:click={() => handleToggleShowDiffs()}
+              on:click={handleToggleShowDiffs}
               class={clsx([
                 "py-1.5 rounded-md w-full",
                 "border border-gray-200 rounded-md",
@@ -121,7 +121,7 @@
                     on:click={wrappedhandleClickCreatePR}
                     class="hover:bg-gray-200 rounded-sm px-2 py-1"
                   >
-                    Create PR
+                    Create pull request
                   </DropdownMenu.Item>
                   <DropdownMenu.Separator
                     class="bg-gray-300 w-full h-[1px] my-0.5"
@@ -130,15 +130,16 @@
                     on:click={wrappedhandleClickDownloadPatch}
                     class="hover:bg-gray-200 rounded-sm px-2 py-1"
                   >
-                    Download Patch
+                    Download patch
                   </DropdownMenu.Item>
                   <DropdownMenu.Separator
                     class="bg-gray-300 w-full h-[1px] my-0.5"
                   />
                   <DropdownMenu.Item
                     class="hover:bg-gray-200 rounded-sm px-2 py-1"
+                    on:click={handleToggleShowDiffs}
                   >
-                    Share Comments
+                    Hide changes
                   </DropdownMenu.Item>
                 </DropdownMenu.Content>
               </DropdownMenu.Root>
@@ -147,28 +148,64 @@
         {/if}
 
         {#if comments.length > 0}
-          <button
-            type="button"
+          <div
+            class="flex flex-row items-center relative"
             in:fly={{ duration: 300, x: 30 }}
             out:fly={{ duration: 300, x: -30 }}
-            on:click={handleClickExecute}
-            class={clsx([
-              "flex flex-row items-center justify-center gap-2",
-              "py-1.5 rounded-md",
-              "bg-gray-800 hover:bg-gray-900 text-white",
-              executing ? "opacity-70" : "",
-            ])}
           >
-            {#if executing}
-              <span>Making changes</span>
-            {:else}
-              <span>Make changes</span>
-            {/if}
+            <button
+              type="button"
+              on:click={handleClickExecute}
+              class={clsx([
+                "flex flex-row items-center justify-center gap-2 w-full",
+                "py-1.5 rounded-md",
+                "bg-gray-800 hover:bg-gray-900 text-white",
+                executing ? "opacity-70" : "",
+              ])}
+            >
+              {#if executing}
+                <span>Making changes</span>
+              {:else}
+                <span>Make changes</span>
+              {/if}
 
-            {#if executing}
-              <Circle size="14" color="white" unit="px" duration="2s" />
-            {/if}
-          </button>
+              {#if executing}
+                <Circle size="14" color="white" unit="px" duration="2s" />
+              {/if}
+            </button>
+
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger class="absolute right-1">
+                <button
+                  type="button"
+                  class={clsx([
+                    "text-gray-200 hover:text-white",
+                    "px-2 py-1 border-l-[0.5px] border-gray-500",
+                  ])}
+                >
+                  <span class="hero-chevron-up w-4 h-4" />
+                </button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Content
+                class="text-sm p-0.5 bg-gray-800 text-white rounded-md border border-gray-400"
+              >
+                <DropdownMenu.Item
+                  class="hover:bg-gray-900 rounded-sm px-2 py-1"
+                >
+                  Share comments
+                </DropdownMenu.Item>
+                <DropdownMenu.Separator
+                  class="bg-gray-600 w-full h-[1px] my-0.5"
+                />
+                <DropdownMenu.Item
+                  on:click={handleClickExecute}
+                  class="hover:bg-gray-900 rounded-sm px-2 py-1"
+                >
+                  Make changes
+                </DropdownMenu.Item>
+              </DropdownMenu.Content>
+            </DropdownMenu.Root>
+          </div>
         {/if}
       </div>
     </Tabs.Content>
