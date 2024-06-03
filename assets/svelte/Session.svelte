@@ -64,6 +64,14 @@
     });
   };
 
+  const handleClickShareComments = () => {
+    return new Promise((resolve, reject) => {
+      live.pushEvent("comments:share", {}, ({ url }) => {
+        resolve(url);
+      });
+    });
+  };
+
   const handleClickComment = (comment: Comment) => {
     const file = files.find((f) => f.path === comment.file_path);
 
@@ -98,6 +106,7 @@
       {handleClickCreatePR}
       {handleClickComment}
       {handleClickDownloadPatch}
+      {handleClickShareComments}
       {handleDeleteComments}
       {handleUpdateComments}
     />

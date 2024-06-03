@@ -40,4 +40,8 @@ defmodule Fastrepl.Github.URL do
     end)
     |> URI.to_string()
   end
+
+  def reference_file(repo_full_name, ref, path, line_start, line_end) do
+    "https://github.com/#{repo_full_name}/blob/#{ref}/#{path}#L#{line_start}-L#{line_end}"
+  end
 end

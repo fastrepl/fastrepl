@@ -102,6 +102,16 @@ defmodule FastreplWeb.SessionLive do
     {:reply, %{url: url}, socket}
   end
 
+  def handle_event("comments:share", %{}, socket) do
+    reply =
+      case GenServer.call(socket.assigns.manager_pid, :comments_share, 12 * 1000) do
+        {:ok, url} -> %{url: url}
+        _ -> %{url: ""}
+      end
+
+    {:reply, reply, socket}
+  end
+
   def handle_event("comments:create", %{"comments" => comments}, socket) do
     :ok = GenServer.call(socket.assigns.manager_pid, {:comments_create, comments})
     {:noreply, socket}

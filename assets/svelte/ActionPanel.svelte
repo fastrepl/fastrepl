@@ -22,6 +22,7 @@
 
   export let handleClickCreatePR: () => Promise<any>;
   export let handleClickDownloadPatch: () => Promise<any>;
+  export let handleClickShareComments: () => Promise<any>;
 
   export let handleClickComment: (comment: Comment) => void;
   export let handleDeleteComments: (comments: Comment[]) => void;
@@ -29,6 +30,7 @@
 
   let isLoadingCreatePR = false;
   let isLoadingDownloadPatch = false;
+  let isSharingComments = false;
 
   const wrappedhandleClickCreatePR = async () => {
     isLoadingCreatePR = true;
@@ -42,6 +44,14 @@
     isLoadingDownloadPatch = true;
     const url = await handleClickDownloadPatch();
     isLoadingDownloadPatch = false;
+
+    window.open(url, "_blank");
+  };
+
+  const wrappedHandleClickShareComments = async () => {
+    isSharingComments = true;
+    const url = await handleClickShareComments();
+    isSharingComments = false;
 
     window.open(url, "_blank");
   };
@@ -167,11 +177,13 @@
             >
               {#if executing}
                 <span>Making changes</span>
+              {:else if isSharingComments}
+                <span>Sharing comments</span>
               {:else}
                 <span>Make changes</span>
               {/if}
 
-              {#if executing}
+              {#if executing || isSharingComments}
                 <Circle size="14" color="white" unit="px" duration="2s" />
               {/if}
             </button>
@@ -192,7 +204,8 @@
                 class="z-50 text-sm p-0.5 bg-gray-800 text-white rounded-md border border-gray-400"
               >
                 <DropdownMenu.Item
-                  class="hover:bg-gray-900 rounded-sm px-2 py-1"
+                  on:click={wrappedHandleClickShareComments}
+                  class="hover:bg-gray-700 rounded-sm px-2 py-1"
                 >
                   Share comments
                 </DropdownMenu.Item>
@@ -201,7 +214,7 @@
                 />
                 <DropdownMenu.Item
                   on:click={handleClickExecute}
-                  class="hover:bg-gray-900 rounded-sm px-2 py-1"
+                  class="hover:bg-gray-700 rounded-sm px-2 py-1"
                 >
                   Make changes
                 </DropdownMenu.Item>
