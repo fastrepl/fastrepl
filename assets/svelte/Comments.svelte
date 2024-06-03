@@ -96,7 +96,7 @@
             <button
               on:click={() => handleDeleteComments([comment])}
               class={clsx([
-                "absolute -right-4",
+                "absolute -right-2",
                 "hidden group-hover:flex",
                 "mt-1 text-gray-400 hover:text-gray-700",
               ])}

@@ -67,13 +67,15 @@
     </Tabs.List>
     <Tabs.Content value={TABS[0]} class="bg-gray-50 p-4 h-full">
       <div class="flex flex-col gap-2 h-full text-sm">
-        <Comments
-          items={comments}
-          wipPaths={[]}
-          {handleClickComment}
-          {handleDeleteComments}
-          {handleUpdateComments}
-        />
+        <div class="h-full overflow-y-hidden hover:overflow-y-auto">
+          <Comments
+            items={comments}
+            wipPaths={[]}
+            {handleClickComment}
+            {handleDeleteComments}
+            {handleUpdateComments}
+          />
+        </div>
 
         {#if diffs.length > 0}
           <div
@@ -115,7 +117,7 @@
                   </button>
                 </DropdownMenu.Trigger>
                 <DropdownMenu.Content
-                  class="text-sm p-0.5 bg-gray-100 text-black rounded-md border border-gray-300"
+                  class="z-50 text-sm p-0.5 bg-gray-100 text-black rounded-md border border-gray-300"
                 >
                   <DropdownMenu.Item
                     on:click={wrappedhandleClickCreatePR}
@@ -187,7 +189,7 @@
                 </button>
               </DropdownMenu.Trigger>
               <DropdownMenu.Content
-                class="text-sm p-0.5 bg-gray-800 text-white rounded-md border border-gray-400"
+                class="z-50 text-sm p-0.5 bg-gray-800 text-white rounded-md border border-gray-400"
               >
                 <DropdownMenu.Item
                   class="hover:bg-gray-900 rounded-sm px-2 py-1"
