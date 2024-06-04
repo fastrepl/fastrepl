@@ -8,13 +8,14 @@ defmodule Fastrepl.ConfigTest do
       config = """
       ---
       version: 1
+      base_branch: main
       """
 
       {:ok, config} = Config.parse(config)
 
       assert config == %Config{
                version: 1,
-               base_branch: nil,
+               base_branch: "main",
                ignored_paths: []
              }
     end
