@@ -3,41 +3,55 @@ defmodule Fastrepl.Config do
   import Ecto.Changeset
 
   alias __MODULE__
-  @type t :: %Config{}
+
+  @type t :: %Config{
+          version: pos_integer(),
+          base_branch: String.t(),
+          ignored_paths: [String.t()]
+        }
 
   @primary_key false
   embedded_schema do
-    field :version, :integer
-    field :issue_delay_seconds, :integer, default: 180
+    field :version, :integer, default: 1
+    field :base_branch, :string
     field :ignored_paths, {:array, :string}, default: []
   end
 
   def parse(str) do
     case YamlElixir.read_from_string(str) do
       {:ok, config} ->
-        cs = changeset(%Config{}, config)
+        try do
+          cs = changeset(%Config{}, config)
 
-        if cs.valid? do
-          {:ok, apply_changes(cs)}
-        else
-          {:error, cs}
+          if cs.valid? do
+            {:ok, apply_changes(cs)}
+          else
+            {:error, cs}
+          end
+        rescue
+          _ -> {:error, :invalid_yaml}
         end
 
-      {:error, error} ->
-        {:error, error}
+      {:error, _} ->
+        {:error, :invalid_yaml}
     end
-  end
-
-  def parse!(str) do
-    {:ok, config} = parse(str)
-    config
   end
 
   def changeset(config, attrs) do
     config
-    |> cast(attrs, [:version, :issue_delay_seconds, :ignored_paths])
-    |> validate_required([:version])
+    |> cast(attrs, [:version, :base_branch, :ignored_paths])
+    |> validate_required([:version, :base_branch])
     |> validate_number(:version, equal_to: 1)
-    |> validate_number(:issue_delay_seconds, greater_than: 0)
+    |> validate_config()
+  end
+
+  defp validate_config(changeset) do
+    version = get_field(changeset, :version)
+    changeset |> validate_fields_by_version(version)
+  end
+
+  defp validate_fields_by_version(changeset, 1) do
+    changeset
+    |> validate_length(:base_branch, min: 1)
   end
 end
