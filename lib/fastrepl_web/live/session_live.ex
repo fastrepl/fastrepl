@@ -6,38 +6,43 @@ defmodule FastreplWeb.SessionLive do
   def render(assigns) do
     ~H"""
     <div class="bg-gray-50 rounded-md">
-      <%= if assigns[:status] == :init do %>
-        <div class="flex flex-row gap-2 items-center justify-center h-[calc(100vh-90px)]">
-          <span>We are now working on</span>
-          <.github_issue
-            name={@ticket.github_repo.full_name}
-            title={@ticket.github_issue.title}
-            number={@ticket.github_issue.number}
-          />
-          <span>in</span>
-          <.github_repo
-            name={@ticket.github_repo.full_name}
-            sha={@ticket.github_repo.default_branch_head}
-            description={@ticket.github_repo.description}
-          />
-          <span>...</span>
-        </div>
-      <% else %>
-        <.svelte
-          name="Session"
-          socket={@socket}
-          ssr={false}
-          props={
-            %{
-              repoFullName: @ticket.github_repo.full_name,
-              paths: @paths,
-              files: @files,
-              comments: @comments,
-              diffs: @patches,
-              executing: @status == :run
+      <%= case assigns[:status] do %>
+        <% :init -> %>
+          <div class="flex flex-row gap-2 items-center justify-center h-[calc(100vh-90px)]">
+            <span>We are now working on</span>
+            <.github_issue
+              name={@ticket.github_repo.full_name}
+              title={@ticket.github_issue.title}
+              number={@ticket.github_issue.number}
+            />
+            <span>in</span>
+            <.github_repo
+              name={@ticket.github_repo.full_name}
+              sha={@ticket.github_repo.default_branch_head}
+              description={@ticket.github_repo.description}
+            />
+            <span>...</span>
+          </div>
+        <% :done -> %>
+          <div class="flex flex-row gap-2 items-center justify-center h-[calc(100vh-90px)]">
+            <span>This session is terminated.</span>
+          </div>
+        <% _ -> %>
+          <.svelte
+            name="Session"
+            socket={@socket}
+            ssr={false}
+            props={
+              %{
+                repoFullName: @ticket.github_repo.full_name,
+                paths: @paths,
+                files: @files,
+                comments: @comments,
+                diffs: @patches,
+                executing: @status == :run
+              }
             }
-          }
-        />
+          />
       <% end %>
     </div>
     """
