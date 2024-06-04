@@ -8,7 +8,7 @@ defmodule Fastrepl.SessionManager do
   alias Fastrepl.Sessions
   alias Fastrepl.Sessions.Ticket
   alias Fastrepl.Sessions.Comment
-  alias Fastrepl.SemanticFunction.Modify
+  alias Fastrepl.SemanticFunction.ApplyComments
   alias Fastrepl.SemanticFunction.PPWriter
   alias Fastrepl.SemanticFunction.CommentWriter
 
@@ -276,23 +276,19 @@ defmodule Fastrepl.SessionManager do
         Task.Supervisor.start_child(Fastrepl.TaskSupervisor, fn ->
           send(state.self, {:update, :status, :run})
 
-          result = Modify.run(state.repository, Enum.at(state.session.comments, 0))
+          repo =
+            state.session.comments
+            |> then(&ApplyComments.run(state.repository, &1))
+            |> then(&FS.Mutation.apply(state.repository, &1))
 
-          case result do
-            {:ok, mut} ->
-              repo = FS.Mutation.apply(state.repository, [mut])
-              patches = FS.Patch.from(repo)
+          patches = FS.Patch.from(repo)
 
-              send(state.self, {:update, :patches, patches})
-              send(state.self, {:update, :repository, repo})
+          send(state.self, {:update, :repository, repo})
+          send(state.self, {:update, :patches, patches})
 
-              patches
-              |> Enum.map(fn patch -> Map.put(patch, :session_id, state.session.id) end)
-              |> Enum.each(&Sessions.create_patch/1)
-
-            error ->
-              IO.inspect(error)
-          end
+          patches
+          |> Enum.map(fn patch -> Map.put(patch, :session_id, state.session.id) end)
+          |> Enum.each(&Sessions.create_patch/1)
 
           send(state.self, {:update, :execution_done, nil})
         end)

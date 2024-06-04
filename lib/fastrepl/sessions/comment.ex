@@ -48,3 +48,14 @@ defmodule Fastrepl.Sessions.Comment do
     end
   end
 end
+
+defimpl String.Chars, for: Fastrepl.Sessions.Comment do
+  def to_string(%Fastrepl.Sessions.Comment{} = comment) do
+    """
+    ```#{comment.file_path}##L#{comment.line_start}-L#{comment.line_end}
+    #{comment.content}
+    ```
+    """
+    |> String.trim()
+  end
+end
