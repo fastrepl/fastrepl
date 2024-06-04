@@ -1,3 +1,4 @@
+use ::glob_match as glob;
 use std::collections::HashMap;
 
 mod chunk;
@@ -20,6 +21,7 @@ rustler::init!(
         chunker_version,
         chunk_code,
         grep_file,
+        glob_match,
     ]
 );
 
@@ -108,4 +110,9 @@ fn create_patch<'a>(
 #[rustler::nif]
 fn apply_patch<'a>(base_content: &'a str, patch_content: &'a str) -> String {
     patch::apply(base_content, patch_content)
+}
+
+#[rustler::nif]
+fn glob_match<'a>(path: &'a str, pattern: &'a str) -> bool {
+    glob::glob_match(pattern, path)
 }

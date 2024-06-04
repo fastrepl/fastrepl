@@ -26,5 +26,8 @@ defmodule Fastrepl.Native.CodeUtils do
   @spec apply_patch(String.t(), String.t()) :: String.t()
   def apply_patch(_base_content, _patch_content), do: error()
 
+  @spec glob_match(String.t(), String.t()) :: boolean()
+  def glob_match(_path, _pattern), do: error()
+
   defp error(), do: :erlang.nif_error(:nif_not_loaded)
 end

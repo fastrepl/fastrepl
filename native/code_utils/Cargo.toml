@@ -20,6 +20,7 @@ serde_json = "1.0"
 anyhow = "1.0"
 git2 = "0.18.3"
 diffy = "0.3.0"
+glob-match = "0.2.1"
 
 [dev-dependencies]
 include_uri = "0.1.1"
