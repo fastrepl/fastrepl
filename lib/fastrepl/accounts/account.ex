@@ -20,7 +20,6 @@ defmodule Fastrepl.Accounts.Account do
     account
     |> cast(attrs, [:name])
     |> validate_required([:name])
-    |> unique_constraint(:name)
-    |> assoc_constraint(:user)
+    |> unique_constraint([:user_id, :name])
   end
 end

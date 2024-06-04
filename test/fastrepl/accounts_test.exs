@@ -7,12 +7,16 @@ defmodule Fastrepl.AccountsTest do
 
   describe "accounts" do
     test "create_account/2" do
-      user = user_fixture()
-      {:ok, account} = Accounts.create_account(user, %{name: "personal"})
+      user_1 = user_fixture()
+      {:ok, account} = Accounts.create_account(user_1, %{name: "personal"})
       assert account.name == "personal"
 
-      {:error, changeset} = Accounts.create_account(user, %{name: "personal"})
+      {:error, changeset} = Accounts.create_account(user_1, %{name: "personal"})
       assert changeset.errors |> length() == 1
+
+      user_2 = user_fixture()
+      {:ok, account} = Accounts.create_account(user_2, %{name: "personal"})
+      assert account.name == "personal"
     end
 
     test "get_account_by_name/2" do
