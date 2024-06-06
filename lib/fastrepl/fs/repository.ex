@@ -1,15 +1,17 @@
 defmodule Fastrepl.FS.Repository do
-  defstruct root_path: nil, paths: [], original_files: [], current_files: []
+  defstruct root_path: nil, paths: [], original_files: [], current_files: [], config: nil
 
   alias __MODULE__
   alias Fastrepl.FS
   alias Fastrepl.Native.CodeUtils
+  alias Fastrepl.Config
 
   @type t :: %Repository{
           root_path: String.t(),
           paths: [String.t()],
           original_files: [FS.File.t()],
-          current_files: [FS.File.t()]
+          current_files: [FS.File.t()],
+          config: Config.t() | nil
         }
 
   def from(repo_full_name, commit_sha, auth_token \\ nil) do
@@ -20,7 +22,19 @@ defmodule Fastrepl.FS.Repository do
           |> FS.list_files()
           |> Enum.map(&Path.relative_to(&1, root_path))
 
-        {:ok, %Repository{root_path: root_path, paths: paths}}
+        config_path = Path.join(root_path, "fastrepl.yaml")
+
+        repo =
+          if File.exists?(config_path) do
+            case config_path |> File.read!() |> Config.parse() do
+              {:ok, config} -> %Repository{root_path: root_path, paths: paths, config: config}
+              _ -> %Repository{root_path: root_path, paths: paths, config: %Config{}}
+            end
+          else
+            %Repository{root_path: root_path, paths: paths, config: %Config{}}
+          end
+
+        {:ok, repo}
 
       {:error, error} ->
         {:error, error}

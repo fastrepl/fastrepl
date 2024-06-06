@@ -9,6 +9,8 @@ defmodule Fastrepl.ConfigTest do
       ---
       version: 1
       base_branch: main
+      ignored_paths:
+        - "**/*.py"
       """
 
       {:ok, config} = Config.parse(config)
@@ -16,7 +18,7 @@ defmodule Fastrepl.ConfigTest do
       assert config == %Config{
                version: 1,
                base_branch: "main",
-               ignored_paths: []
+               ignored_paths: ["**/*.py"]
              }
     end
 

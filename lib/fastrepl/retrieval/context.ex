@@ -3,6 +3,7 @@ defmodule Fastrepl.Retrieval.Context do
 
   alias __MODULE__
   alias Fastrepl.FS
+  alias Fastrepl.Config
   alias Fastrepl.Retrieval.Chunker
   alias Fastrepl.Retrieval.Chunker.Chunk
 
@@ -14,8 +15,8 @@ defmodule Fastrepl.Retrieval.Context do
           tree: String.t()
         }
 
-  def from(repo_root_path) do
-    absoulte_paths = repo_root_path |> FS.list_informative_files()
+  def from(repo_root_path, %Config{ignored_paths: ignored_paths} \\ %Config{}) do
+    absoulte_paths = repo_root_path |> FS.list_informative_files(ignored_paths)
     relative_paths = absoulte_paths |> Enum.map(&Path.relative_to(&1, repo_root_path))
 
     chunks =

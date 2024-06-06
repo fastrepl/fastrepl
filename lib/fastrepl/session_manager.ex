@@ -312,7 +312,7 @@ defmodule Fastrepl.SessionManager do
     Task.Supervisor.start_child(Fastrepl.TaskSupervisor, fn ->
       ctx =
         repo_root_path
-        |> Retrieval.Context.from()
+        |> Retrieval.Context.from(state.repository.config)
         |> Retrieval.Context.add_tools([
           Retrieval.Tool.LookupFile,
           Retrieval.Tool.SemanticSearch,

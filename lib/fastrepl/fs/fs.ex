@@ -37,7 +37,7 @@ defmodule Fastrepl.FS do
     end)
   end
 
-  def list_informative_files(root) do
+  def list_informative_files(root, ignore_patterns \\ []) do
     is_hidden = &String.starts_with?(Path.basename(&1), ".")
     is_banned_dir = &(Path.basename(&1) in ["node_modules", "dist", "venv", "_next"])
     is_banned_filename = &(Path.basename(&1) in ["package-lock.json"])
@@ -48,7 +48,6 @@ defmodule Fastrepl.FS do
           ".pyc",
           ".ipynb",
           ".log",
-          ".json",
           ".css",
           ".txt",
           ".html"
@@ -66,13 +65,20 @@ defmodule Fastrepl.FS do
           ".svg"
         ])
 
+    is_ignored_by_config =
+      &Enum.any?(
+        ignore_patterns,
+        fn pattern -> CodeUtils.glob_match(&1, pattern) end
+      )
+
     walk_dir(root, fn
       {:dir, path} ->
         path = Path.relative_to(path, root)
 
         Enum.all?([
           not is_hidden.(path),
-          not is_banned_dir.(path)
+          not is_banned_dir.(path),
+          not is_ignored_by_config.(path)
         ])
 
       {:file, path} ->
@@ -82,7 +88,8 @@ defmodule Fastrepl.FS do
           not is_hidden.(path),
           not is_banned_extension.(path),
           not is_banned_filename.(path),
-          not is_media_extension.(path)
+          not is_media_extension.(path),
+          not is_ignored_by_config.(path)
         ])
     end)
   end

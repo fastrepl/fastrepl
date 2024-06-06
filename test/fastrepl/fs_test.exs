@@ -14,6 +14,19 @@ defmodule Fastrepl.FSTest do
       assert paths |> length() > 10
       assert Enum.all?(paths, &String.starts_with?(&1, root))
     end
+
+    test "respects ignore_patterns" do
+      root =
+        Application.fetch_env!(:fastrepl, :root)
+        |> Path.join("/lib")
+
+      full = FS.list_informative_files(root, [])
+      partial = FS.list_informative_files(root, ["**/*.ex"])
+
+      assert length(full) > 0
+      assert length(partial) > 0
+      assert length(full) - length(partial) > 10
+    end
   end
 
   describe "Tree.build/1" do
