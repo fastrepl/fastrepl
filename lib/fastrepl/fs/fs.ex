@@ -40,7 +40,7 @@ defmodule Fastrepl.FS do
   def list_informative_files(root, ignore_patterns \\ []) do
     is_hidden = &String.starts_with?(Path.basename(&1), ".")
     is_banned_dir = &(Path.basename(&1) in ["node_modules", "dist", "venv", "_next"])
-    is_banned_filename = &(Path.basename(&1) in ["package-lock.json"])
+    is_banned_filename = &(Path.basename(&1) in ["package-lock.json", "LICENSE"])
 
     is_banned_extension =
       &(Path.extname(&1) in [
@@ -50,7 +50,11 @@ defmodule Fastrepl.FS do
           ".log",
           ".css",
           ".txt",
-          ".html"
+          ".html",
+          ".txt",
+          ".log",
+          ".ini",
+          ".jsonl"
         ])
 
     is_media_extension =
@@ -59,6 +63,7 @@ defmodule Fastrepl.FS do
           ".mp4",
           ".png",
           ".jpg",
+          ".jpeg",
           ".gif",
           ".webp",
           ".wav",
