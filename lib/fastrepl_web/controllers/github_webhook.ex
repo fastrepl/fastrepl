@@ -88,7 +88,7 @@ defmodule FastreplWeb.GithubWebhookHandler do
         auth = Github.get_installation_token!(installation_id)
 
         case action do
-          action when action in ["labeled"] ->
+          "labeled" ->
             %{"label" => %{"name" => label_name}} = payload
 
             {:ok, ticket} =
@@ -104,6 +104,27 @@ defmodule FastreplWeb.GithubWebhookHandler do
                 ticket: ticket
               })
             end
+
+          "closed" ->
+            sessions =
+              Sessions.find_sessions(%{
+                github_repo_full_name: repo_full_name,
+                github_issue_number: issue_number
+              })
+
+            sessions
+            |> Enum.map(
+              &Task.async(fn ->
+                session = Sessions.find_active_session(&1.display_id)
+
+                if session != nil do
+                  GenServer.call(session, :done)
+                end
+
+                Sessions.update_session(&1, %{status: :done})
+              end)
+            )
+            |> Task.await_many()
 
           _ ->
             :ok

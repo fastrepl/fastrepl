@@ -110,6 +110,29 @@ defmodule Fastrepl.SessionsTest do
       {:ok, updated_session} = Sessions.update_session(session, %{status: :run})
       assert updated_session.status == :run
     end
+
+    test "find_sessions/1" do
+      account = user_fixture() |> account_fixture(%{name: "personal"})
+
+      ticket_attrs = %{
+        github_repo_full_name: "fastrepl/fastrepl",
+        github_issue_number: 1
+      }
+
+      {:ok, ticket} = Sessions.ticket_from(ticket_attrs)
+
+      {:ok, session} =
+        Sessions.session_from(
+          ticket,
+          %{account_id: account.id, display_id: "123"}
+        )
+
+      results = Sessions.find_sessions(ticket_attrs)
+      assert Enum.count(results) == 0 + 1
+
+      results = Sessions.find_sessions(%{ticket_attrs | github_issue_number: 2})
+      assert Enum.count(results) == 0
+    end
   end
 
   describe "comment" do

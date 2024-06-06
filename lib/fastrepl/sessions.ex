@@ -10,6 +10,15 @@ defmodule Fastrepl.Sessions do
   alias Fastrepl.Sessions.Comment
   alias Fastrepl.Sessions.Session
 
+  def find_active_session(session_display_id) do
+    registry = Application.fetch_env!(:fastrepl, :session_manager_registry)
+
+    case Registry.select(registry, [{{session_display_id, :"$1", :_}, [], [:"$1"]}]) do
+      [pid] -> pid
+      [] -> nil
+    end
+  end
+
   def list_sessions(%Account{} = account, opts \\ []) do
     limit = Keyword.get(opts, :limit, nil)
 
@@ -40,24 +49,24 @@ defmodule Fastrepl.Sessions do
         } = attrs,
         opts \\ []
       ) do
-    with ticket =
-           Ticket
-           |> Repo.get_by(
-             github_repo_full_name: github_repo_full_name,
-             github_issue_number: github_issue_number
-           ),
-         {:ok, repo} <- Github.Repo.from(github_repo_full_name, opts),
+    ticket =
+      Repo.one(
+        from t in Ticket,
+          where:
+            t.github_issue_number == ^github_issue_number and
+              t.github_repo_full_name == ^github_repo_full_name
+      )
+
+    with {:ok, repo} <- Github.Repo.from(github_repo_full_name, opts),
          {:ok, issue} <- Github.Issue.from(github_repo_full_name, github_issue_number, opts) do
-      case ticket do
-        nil ->
-          attrs = Map.merge(%{base_commit_sha: repo.default_branch_head}, attrs)
+      if ticket != nil do
+        {:ok, ticket |> Map.merge(%{github_repo: repo, github_issue: issue})}
+      else
+        attrs = Map.merge(%{base_commit_sha: repo.default_branch_head}, attrs)
 
-          %Ticket{github_repo: repo, github_issue: issue}
-          |> Ticket.changeset(attrs)
-          |> Repo.insert()
-
-        _ ->
-          {:ok, ticket |> Map.merge(%{github_repo: repo, github_issue: issue})}
+        %Ticket{github_repo: repo, github_issue: issue}
+        |> Ticket.changeset(attrs)
+        |> Repo.insert()
       end
     end
   end
@@ -113,6 +122,19 @@ defmodule Fastrepl.Sessions do
 
   def find_session(attrs) do
     Session |> Repo.get_by(attrs)
+  end
+
+  def find_sessions(%{
+        github_repo_full_name: repo_name,
+        github_issue_number: issue_number
+      }) do
+    q =
+      from s in Session,
+        join: t in assoc(s, :ticket),
+        where: t.github_repo_full_name == ^repo_name and t.github_issue_number == ^issue_number,
+        preload: [ticket: t]
+
+    Repo.all(q)
   end
 
   def update_session(%Session{} = session, attrs) do

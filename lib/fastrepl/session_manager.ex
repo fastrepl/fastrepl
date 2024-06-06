@@ -109,6 +109,13 @@ defmodule Fastrepl.SessionManager do
   end
 
   @impl true
+  def handle_call(:done, _from, state) do
+    Sessions.update_session(state.session, %{status: :done})
+    state = state |> sync_with_views(%{status: :done})
+    {:stop, :normal, :ok, state}
+  end
+
+  @impl true
   def handle_call({:file_add, path}, _from, state) do
     repo = FS.Repository.add_file!(state.repository, path)
     file = FS.Repository.find_file(repo, path)
@@ -316,7 +323,7 @@ defmodule Fastrepl.SessionManager do
       precompute_embeddings(ctx.chunks)
 
       send(state.self, {:update, :status, :idle})
-      send(state.self, :retrieval)
+      # send(state.self, :retrieval)
     end)
 
     {:noreply, state}
