@@ -76,7 +76,7 @@ defmodule FastreplWeb.GithubWebhookHandler do
     %{
       "action" => action,
       "installation" => %{"id" => installation_id},
-      "issue" => %{"number" => issue_number, "labels" => labels},
+      "issue" => %{"number" => issue_number},
       "repository" => %{"full_name" => repo_full_name}
     } = payload
 
@@ -87,15 +87,17 @@ defmodule FastreplWeb.GithubWebhookHandler do
       app ->
         auth = Github.get_installation_token!(installation_id)
 
-        {:ok, ticket} =
-          Sessions.ticket_from(
-            %{github_repo_full_name: repo_full_name, github_issue_number: issue_number},
-            auth: auth
-          )
-
         case action do
           action when action in ["labeled"] ->
-            if has_fastrepl_label?(labels) do
+            %{"label" => %{"name" => label_name}} = payload
+
+            {:ok, ticket} =
+              Sessions.ticket_from(
+                %{github_repo_full_name: repo_full_name, github_issue_number: issue_number},
+                auth: auth
+              )
+
+            if label_name == "fastrepl" do
               start_session_manager(%{
                 account_id: app.account_id,
                 session_id: Nanoid.generate(),
@@ -135,10 +137,6 @@ defmodule FastreplWeb.GithubWebhookHandler do
 
   def handle_event(event, _payload) do
     {:error, %{type: :unhandled, event: event}}
-  end
-
-  defp has_fastrepl_label?(labels) do
-    labels |> Enum.any?(&(&1["name"] == "fastrepl"))
   end
 
   defp start_session_manager(args) do
