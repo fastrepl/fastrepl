@@ -116,8 +116,9 @@
       {mode}
       {diffs}
       {comments}
-      {handleClickExecute}
       {executing}
+      {currentFile}
+      {handleClickExecute}
       {handleClickCreatePR}
       {handleClickComment}
       {handleClickDownloadPatch}

@@ -76,7 +76,7 @@
     ])}
   >
     <span class="text-xs font-semibold">
-      {currentFile.path}
+      {`${currentFile.path} (editing)`}
     </span>
 
     <div class="flex flex-row items-center gap-2">

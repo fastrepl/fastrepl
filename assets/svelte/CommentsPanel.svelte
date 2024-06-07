@@ -52,8 +52,8 @@
         on:click={handleShowDiffsSummary}
         class={clsx([
           "py-1.5 rounded-md w-full",
-          "border border-gray-200 rounded-md",
-          "bg-gray-100 hover:bg-gray-200",
+          "border border-gray-300 rounded-md",
+          "bg-gray-200 hover:bg-gray-300",
         ])}
       >
         Show changes

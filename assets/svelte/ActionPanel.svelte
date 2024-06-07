@@ -5,7 +5,7 @@
   import CommentsPanel from "$components/CommentsPanel.svelte";
   import ChangesPanel from "$components/ChangesPanel.svelte";
 
-  import type { Diff, Comment } from "$lib/interfaces";
+  import type { Diff, File, Comment } from "$lib/interfaces";
 
   import type { Mode } from "$lib/types";
   import type { Writable } from "svelte/store";
@@ -13,6 +13,7 @@
   export let mode: Writable<Mode>;
   export let diffs: Diff[] = [];
   export let comments: Comment[] = [];
+  export let currentFile: File | null = null;
   export let handleClickExecute: () => void;
   export let executing: boolean;
 
@@ -77,6 +78,7 @@
       <ChangesPanel
         {mode}
         {diffs}
+        {currentFile}
         {handleClickCreatePR}
         {handleClickDownloadPatch}
         {handleSelectExistingFile}

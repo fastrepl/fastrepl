@@ -3,10 +3,11 @@
   import { DropdownMenu } from "bits-ui";
 
   import type { Mode } from "$lib/types";
-  import type { Diff } from "$lib/interfaces";
+  import type { Diff, File } from "$lib/interfaces";
   import type { Writable } from "svelte/store";
 
   export let mode: Writable<Mode>;
+  export let currentFile: File | null = null;
   export let handleClickCreatePR: () => Promise<any>;
   export let handleClickDownloadPatch: () => Promise<any>;
   export let handleSelectExistingFile: (path: string) => void;
@@ -40,26 +41,26 @@
 
 <div class="flex flex-col gap-2 h-full text-sm">
   <div class="h-full overflow-y-hidden hover:overflow-y-auto">
-    <ul class="flex flex-col gap-2 list-disc">
+    <div class="flex flex-col gap-2">
       {#each diffs as diff}
-        <li
+        <button
+          on:click={() => handleClickDiff(diff)}
           class={clsx([
             "w-full flex flex-row justify-between gap-2",
             "px-2 py-1 border border-gray-200 rounded-md",
             "bg-gray-100 hover:bg-gray-200",
+            $mode === "diff_edit" &&
+              currentFile.path === diff.path &&
+              "bg-gray-200",
           ])}
         >
-          <button
-            on:click={() => handleClickDiff(diff)}
-            type="button"
-            class="truncate"
-          >
+          <span class="truncate">
             {diff.path}
-          </button>
+          </span>
           <span class="text-yellow-700 opacity-50">M</span>
-        </li>
+        </button>
       {/each}
-    </ul>
+    </div>
   </div>
 
   {#if $mode !== "diffs_summary"}
@@ -70,8 +71,8 @@
       }}
       class={clsx([
         "py-1.5 rounded-md w-full",
-        "border border-gray-200 rounded-md",
-        "bg-gray-100 hover:bg-gray-200",
+        "border border-gray-300 rounded-md",
+        "bg-gray-200 hover:bg-gray-300",
       ])}
     >
       Show changes summary
