@@ -18,7 +18,7 @@
   } from "@codemirror/view";
   import { EditorState, StateEffect, type Extension } from "@codemirror/state";
 
-  import { githubLight as theme } from "$lib/codemirror/theme";
+  import { tomorrow as theme } from "thememirror";
   import { getLanguage } from "$lib/codemirror/language";
   import {
     lineHighlightField,

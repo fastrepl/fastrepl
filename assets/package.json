@@ -41,6 +41,7 @@
     "posthog-js": "^1.129.0",
     "svelte-tiptap": "^1.1.2",
     "tailwind-scrollbar-hide": "^1.1.7",
+    "thememirror": "^2.0.1",
     "tippy.js": "^6.3.7",
     "turndown": "^7.1.3"
   },

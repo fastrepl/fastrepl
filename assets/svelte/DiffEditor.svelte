@@ -13,7 +13,7 @@
     goToNextChunk,
   } from "@codemirror/merge";
   import { history, historyKeymap, defaultKeymap } from "@codemirror/commands";
-  import { githubLight as theme } from "$lib/codemirror/theme";
+  import { tomorrow as theme } from "thememirror";
   import { getLanguage } from "$lib/codemirror/language";
 
   let element: HTMLDivElement;
