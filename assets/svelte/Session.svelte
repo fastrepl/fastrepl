@@ -124,6 +124,7 @@
       {handleClickShareComments}
       {handleDeleteComments}
       {handleUpdateComments}
+      {handleSelectExistingFile}
     />
   </Pane>
   <PaneResizer class="w-2" />

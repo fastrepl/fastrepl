@@ -9,10 +9,14 @@
   export let mode: Writable<Mode>;
   export let handleClickCreatePR: () => Promise<any>;
   export let handleClickDownloadPatch: () => Promise<any>;
+  export let handleSelectExistingFile: (path: string) => void;
 
   export let diffs: Diff[] = [];
 
-  const handleClickDiff = (diff: Diff) => {};
+  const handleClickDiff = (diff: Diff) => {
+    handleSelectExistingFile(diff.path);
+    $mode = "diff_edit";
+  };
 
   let isLoadingCreatePR = false;
   let isLoadingDownloadPatch = false;

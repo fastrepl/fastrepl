@@ -23,6 +23,7 @@
   export let handleClickComment: (comment: Comment) => void;
   export let handleDeleteComments: (comments: Comment[]) => void;
   export let handleUpdateComments: (comments: Comment[]) => void;
+  export let handleSelectExistingFile: (path: string) => void;
 
   const TABS = ["comments", "changes"];
   let currentTab: (typeof TABS)[number] =
@@ -78,6 +79,7 @@
         {diffs}
         {handleClickCreatePR}
         {handleClickDownloadPatch}
+        {handleSelectExistingFile}
       />
     </Tabs.Content>
   </Tabs.Root>
