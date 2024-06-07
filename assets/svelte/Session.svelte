@@ -1,13 +1,18 @@
 <script lang="ts">
+  import { clsx } from "clsx";
+  import { writable } from "svelte/store";
+
   import { PaneGroup, Pane, PaneResizer } from "paneforge";
   import { EditorView } from "@codemirror/view";
   import { EditorSelection } from "@codemirror/state";
 
+  import type { Mode } from "$lib/types";
   import type { File, Diff, Comment } from "$lib/interfaces";
 
   import ActionPanel from "$components/ActionPanel.svelte";
   import FileViewer from "$components/FileViewer.svelte";
-  import MergeViewer from "$components/MergeViewer.svelte";
+  import DiffEditor from "$components/DiffEditor.svelte";
+  import DiffsViewer from "$components/DiffsViewer.svelte";
   import FileNavigator from "$components/FileNavigator.svelte";
 
   export let live: any;
@@ -16,21 +21,21 @@
   export let repoFullName: string;
   export let paths: string[] = [];
   export let diffs: Diff[] = [];
-  export let files: File[] = [];
+  export let originalFiles: File[] = [];
+  export let currentFiles: File[] = [];
   export let comments: Comment[] = [];
   export let executing: boolean;
 
-  let showDiffs = false;
-  let handleToggleShowDiffs = () => (showDiffs = !showDiffs);
+  const mode = writable<Mode>("comments");
 
   let currentFile: File | null = null;
 
-  $: if (!currentFile && files.length > 0) {
-    currentFile = files[0];
+  $: if (!currentFile && originalFiles.length > 0) {
+    currentFile = originalFiles[0];
   }
 
   const handleSelectExistingFile = (path: string) => {
-    const nextFile = files.find((f) => f.path === path);
+    const nextFile = originalFiles.find((f) => f.path === path);
     if (nextFile) {
       currentFile = nextFile;
     }
@@ -70,7 +75,7 @@
   };
 
   const handleClickComment = (comment: Comment) => {
-    const file = files.find((f) => f.path === comment.file_path);
+    const file = originalFiles.find((f) => f.path === comment.file_path);
 
     if (file && file.path != currentFile?.path) {
       currentFile = file;
@@ -108,9 +113,8 @@
 <PaneGroup direction="horizontal">
   <Pane defaultSize={34} minSize={10} order={1}>
     <ActionPanel
+      {mode}
       {diffs}
-      {showDiffs}
-      {handleToggleShowDiffs}
       {comments}
       {handleClickExecute}
       {executing}
@@ -124,9 +128,11 @@
   </Pane>
   <PaneResizer class="w-2" />
   <Pane defaultSize={50} order={2} minSize={10} class="relative">
-    {#if showDiffs}
-      <MergeViewer
-        {currentFile}
+    {#if $mode === "diffs_summary"}
+      <DiffsViewer content={diffs.map((d) => d.content).join("\n\n")} />
+    {:else if $mode === "diff_edit"}
+      <DiffEditor
+        currentFile={currentFiles.find((f) => f.path === currentFile.path)}
         originalFile={currentFile}
         handleChange={console.log}
       />
@@ -141,7 +147,10 @@
       />
     {:else}
       <div
-        class="flex flex-col items-center justify-center h-full border border-gray-200 rounded-lg"
+        class={clsx([
+          "flex flex-col items-center justify-center h-full",
+          "border border-gray-200 rounded-lg",
+        ])}
       >
         <div class="text-sm text-gray-500">No file selected.</div>
       </div>
@@ -151,7 +160,7 @@
   <Pane defaultSize={10} minSize={5} order={3}>
     <FileNavigator
       {paths}
-      {files}
+      files={originalFiles}
       {repoFullName}
       currentFilePath={currentFile?.path}
       {handleSelectExistingFile}

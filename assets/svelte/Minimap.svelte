@@ -32,6 +32,10 @@
   });
 
   const showCanvas = () => {
+    if (!canvas) {
+      return;
+    }
+
     canvas.style.visibility = "visible";
     clearTimeout(timeout);
     timeout = setTimeout(() => {

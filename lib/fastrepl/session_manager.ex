@@ -99,7 +99,8 @@ defmodule Fastrepl.SessionManager do
     init_state = %{
       status: state.session.status,
       paths: state.repository.paths,
-      files: state.repository.original_files,
+      original_files: state.repository.original_files,
+      current_files: state.repository.current_files,
       comments: state.session.comments,
       patches: state.session.patches,
       ticket: state.session.ticket
@@ -122,7 +123,8 @@ defmodule Fastrepl.SessionManager do
 
     state =
       state
-      |> sync_with_views(%{files: repo.original_files})
+      |> sync_with_views(%{original_files: repo.original_files})
+      |> sync_with_views(%{current_files: repo.current_files})
       |> Map.put(:repository, repo)
 
     {:reply, file, state}
@@ -291,6 +293,7 @@ defmodule Fastrepl.SessionManager do
           patches = FS.Patch.from(repo)
 
           send(state.self, {:update, :repository, repo})
+          sync_with_views(state, %{current_files: repo.current_files})
           send(state.self, {:update, :patches, patches})
 
           patches
@@ -355,10 +358,16 @@ defmodule Fastrepl.SessionManager do
       end)
 
     session = state.session |> Map.put(:comments, comments)
-    sync_with_views(state, %{comments: comments})
-    sync_with_views(state, %{files: repo.original_files})
 
-    {:noreply, state |> Map.put(:session, session) |> Map.put(:repository, repo)}
+    state =
+      state
+      |> sync_with_views(%{comments: comments})
+      |> sync_with_views(%{original_files: repo.original_files})
+      |> sync_with_views(%{current_files: repo.current_files})
+      |> Map.put(:session, session)
+      |> Map.put(:repository, repo)
+
+    {:noreply, state}
   end
 
   @impl true

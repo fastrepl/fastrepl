@@ -36,7 +36,8 @@ defmodule FastreplWeb.SessionLive do
               %{
                 repoFullName: @ticket.github_repo.full_name,
                 paths: @paths,
-                files: @files,
+                originalFiles: @original_files,
+                currentFiles: @current_files,
                 comments: @comments,
                 diffs: @patches,
                 executing: @status == :run
@@ -64,7 +65,8 @@ defmodule FastreplWeb.SessionLive do
           manager_pid: pid,
           session_id: session_id,
           paths: [],
-          files: [],
+          original_files: [],
+          current_files: [],
           comments: [],
           patches: []
         }
