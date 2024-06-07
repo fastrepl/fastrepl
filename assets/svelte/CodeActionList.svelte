@@ -2,17 +2,12 @@
   import { clsx } from "clsx";
 
   export let handleSubmitComment: (value: string) => void;
-  export let handleSubmitReference: () => void;
   export let placeholder = "Instruction or information...";
 
   const items = [
     {
       name: "Comment",
       icon: "hero-pencil-square h-4 w-4",
-    },
-    {
-      name: "Chat",
-      icon: "hero-chat-bubble-bottom-center-text h-4 w-4",
     },
   ];
 
@@ -21,10 +16,6 @@
 
   const handleChangeIndex = (index: number) => {
     currentIndex = index;
-
-    if (currentIndex === 1) {
-      handleSubmitReference();
-    }
   };
 
   const handleSubmitCommentWrapper = () => {
@@ -63,7 +54,7 @@
       </button>
     {/each}
   {:else if currentIndex === 0}
-    <div class="flex flex-row gap-1 items-center">
+    <div class="flex flex-row items-center">
       <!-- svelte-ignore a11y-autofocus -->
       <input
         type="text"
@@ -72,7 +63,7 @@
         autofocus={true}
         class={clsx([
           "w-[400px] h-8 bg-gray-50",
-          "border border-gray-300 rounded-lg",
+          "border border-gray-300 rounded-l-lg",
           "border-transparent focus:border-transparent focus:ring-0",
         ])}
         {placeholder}
@@ -81,7 +72,7 @@
         type="button"
         on:click={handleSubmitCommentWrapper}
         class={clsx([
-          "w-12 h-8 rounded-lg",
+          "w-12 h-8 rounded-r-lg",
           "bg-gray-200 hover:bg-gray-300",
           "text-gray-400 hover:text-gray-500 text-md",
         ])}
