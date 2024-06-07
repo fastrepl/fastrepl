@@ -1,15 +1,17 @@
 <script lang="ts">
   import { PaneGroup, Pane, PaneResizer } from "paneforge";
+  import { EditorView } from "@codemirror/view";
+  import { EditorSelection } from "@codemirror/state";
 
-  import type { File, Diff, Comment, Message } from "$lib/interfaces";
-  import type { Selection } from "$lib/types";
+  import type { File, Diff, Comment } from "$lib/interfaces";
 
   import ActionPanel from "$components/ActionPanel.svelte";
   import FileViewer from "$components/FileViewer.svelte";
-  import DiffViewer from "$components/DiffViewer.svelte";
+  import MergeViewer from "$components/MergeViewer.svelte";
   import FileNavigator from "$components/FileNavigator.svelte";
 
   export let live: any;
+  let view: EditorView | null = null;
 
   export let repoFullName: string;
   export let paths: string[] = [];
@@ -22,32 +24,21 @@
   let handleToggleShowDiffs = () => (showDiffs = !showDiffs);
 
   let currentFile: File | null = null;
-  let currentSelection: Selection | null = null;
 
   $: if (!currentFile && files.length > 0) {
     currentFile = files[0];
   }
 
-  const removeSelection = () => {
-    document.getSelection().removeAllRanges();
-    currentSelection = null;
-  };
-
   const handleSelectExistingFile = (path: string) => {
     const nextFile = files.find((f) => f.path === path);
     if (nextFile) {
       currentFile = nextFile;
-      removeSelection();
     }
   };
   const handleSelectNewFile = (path: string) => {
     live.pushEvent("file:add", { path }, ({ file }) => {
       currentFile = file;
     });
-  };
-
-  const handleChangeSelection = (selection: Selection) => {
-    currentSelection = selection;
   };
 
   const handleClickExecute = () => {
@@ -81,10 +72,24 @@
   const handleClickComment = (comment: Comment) => {
     const file = files.find((f) => f.path === comment.file_path);
 
-    if (file) {
+    if (file && file.path != currentFile?.path) {
       currentFile = file;
-      currentSelection = { start: comment.line_start, end: comment.line_end };
     }
+
+    setTimeout(() => {
+      if (view && currentFile) {
+        const selection = EditorSelection.range(
+          view.state.doc.line(comment.line_start).from,
+          view.state.doc.line(comment.line_end).to,
+        );
+
+        view.dispatch({
+          effects: [
+            EditorView.scrollIntoView(selection, { x: "start", y: "center" }),
+          ],
+        });
+      }
+    }, 10);
   };
 
   const handleCreateComments = (comments: Comment[]) => {
@@ -120,15 +125,18 @@
   <PaneResizer class="w-2" />
   <Pane defaultSize={50} order={2} minSize={10} class="relative">
     {#if showDiffs}
-      <DiffViewer {diffs} />
+      <MergeViewer
+        {currentFile}
+        originalFile={currentFile}
+        handleChange={console.log}
+      />
     {:else if currentFile}
       <FileViewer
+        on:ready={(e) => (view = e.detail)}
         file={currentFile}
-        {currentSelection}
-        additionalSelections={comments
-          .filter((c) => c.file_path === currentFile.path)
+        highlights={comments
+          .filter((c) => c.file_path === currentFile?.path)
           .map((c) => ({ start: c.line_start, end: c.line_end }))}
-        {handleChangeSelection}
         {handleCreateComments}
       />
     {:else}
