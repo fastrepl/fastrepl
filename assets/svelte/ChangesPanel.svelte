@@ -100,8 +100,9 @@
 
     <DropdownMenu.Root>
       <DropdownMenu.Trigger
+        disabled={isLoadingCreatePR || isLoadingDownloadPatch}
         class={clsx([
-          "absolute right-1",
+          "absolute right-0",
           "text-gray-200 hover:text-white",
           "px-2 py-1 border-l-[0.5px] border-gray-500",
         ])}
@@ -109,7 +110,7 @@
         <span class="hero-chevron-up w-4 h-4" />
       </DropdownMenu.Trigger>
       <DropdownMenu.Content
-        class="z-50 text-sm p-0.5 bg-gray-800 text-white rounded-md border border-gray-400"
+        class="z-50 text-sm bg-gray-800 text-white rounded-md border border-gray-400"
       >
         <DropdownMenu.Item
           on:click={wrappedhandleClickDownloadPatch}

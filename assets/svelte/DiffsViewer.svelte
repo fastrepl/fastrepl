@@ -38,6 +38,12 @@
     .d2h-info {
       display: none;
     }
+    .d2h-file-diff {
+      overflow-x: hidden;
+    }
+    .d2h-file-diff:hover {
+      overflow-x: auto;
+    }
   </style>
 </svelte:head>
 
