@@ -108,6 +108,10 @@
   const handleUpdateComments = (comments: Comment[]) => {
     live.pushEvent("comments:update", { comments });
   };
+
+  const handleEditCurrentFile = (file: File) => {
+    live.pushEvent("file:update", file);
+  };
 </script>
 
 <PaneGroup direction="horizontal">
@@ -136,7 +140,7 @@
       <DiffEditor
         currentFile={currentFiles.find((f) => f.path === currentFile.path)}
         originalFile={currentFile}
-        handleChange={console.log}
+        handleChange={handleEditCurrentFile}
       />
     {:else if currentFile}
       <FileViewer

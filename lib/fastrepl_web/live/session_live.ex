@@ -94,6 +94,12 @@ defmodule FastreplWeb.SessionLive do
     {:reply, %{file: file}, socket}
   end
 
+  def handle_event("file:update", %{"path" => path, "content" => content}, socket) do
+    file = %Fastrepl.FS.File{path: path, content: content}
+    :ok = GenServer.call(socket.assigns.manager_pid, {:file_update, file})
+    {:noreply, socket}
+  end
+
   def handle_event("execute", %{}, socket) do
     :ok = GenServer.call(socket.assigns.manager_pid, :execute)
     {:noreply, socket}

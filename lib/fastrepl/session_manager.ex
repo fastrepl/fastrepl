@@ -131,6 +131,16 @@ defmodule Fastrepl.SessionManager do
   end
 
   @impl true
+  def handle_call({:file_update, file}, _from, state) do
+    repo = FS.Repository.update_file(state.repository, file)
+
+    state =
+      state |> Map.put(:repository, repo)
+
+    {:reply, :ok, state}
+  end
+
+  @impl true
   def handle_call({:comments_create, [comment]}, _from, state) do
     {:ok, created} =
       comment
