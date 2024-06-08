@@ -50,7 +50,7 @@
             "px-2 py-1 border border-gray-200 rounded-md",
             "bg-gray-100 hover:bg-gray-200",
             $mode === "diff_edit" &&
-              currentFile.path === diff.path &&
+              currentFile?.path === diff.path &&
               "bg-gray-200",
           ])}
         >
