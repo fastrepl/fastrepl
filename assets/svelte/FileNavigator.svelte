@@ -5,30 +5,28 @@
   import { clsx } from "clsx";
   import { Dialog } from "bits-ui";
 
-  import type { File } from "$lib/interfaces";
   import { buildTree } from "$lib/utils/tree";
   import { tippy as tippyAction } from "$lib/actions";
 
   import TreeView from "$components/TreeView.svelte";
   import SearchFile from "$components/SearchFile.svelte";
 
+  import type { Snapshot, Sender } from "$lib/fsm";
+
+  export let send: Sender;
+  export let snapshot: Snapshot;
+
   export let paths: string[] = [];
-  export let files: File[] = [];
-
   export let repoFullName: string;
-  export let currentFilePath: string | undefined = undefined;
-
-  export let handleSelectExistingFile: (path: string) => void;
-  export let handleSelectNewFile: (path: string) => void;
 
   let openFileSearch = false;
 
-  const handleSelectFile = (path: string) => {
+  const handleClickFile = (path: string) => {
     openFileSearch = false;
-    handleSelectNewFile(path);
+    send({ type: "select_file_from_navigator", path });
   };
 
-  $: tree = buildTree(files.map((f) => f.path));
+  $: tree = buildTree(Array.from($snapshot.context.workingFilePaths));
 
   onMount(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -54,8 +52,8 @@
     />
     <Dialog.Content class="fixed left-[50%] top-[10px] z-50 translate-x-[-50%]">
       <SearchFile
-        paths={paths.filter((p) => !files.find((f) => f.path === p))}
-        {handleSelectFile}
+        paths={paths.filter((p) => !$snapshot.context.workingFilePaths.has(p))}
+        {handleClickFile}
       />
     </Dialog.Content>
   </Dialog.Portal>
@@ -94,8 +92,8 @@
   <div class="pl-2">
     <TreeView
       items={tree}
-      handleClickFile={handleSelectExistingFile}
-      {currentFilePath}
+      {handleClickFile}
+      currentFilePath={$snapshot.context.currentFile?.path}
     />
   </div>
 </div>

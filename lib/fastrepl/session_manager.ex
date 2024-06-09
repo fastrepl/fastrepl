@@ -99,7 +99,8 @@ defmodule Fastrepl.SessionManager do
     init_state = %{
       status: state.session.status,
       paths: state.repository.paths,
-      files: state.repository.original_files,
+      original_files: state.repository.original_files,
+      current_files: state.repository.current_files,
       comments: state.session.comments,
       patches: state.session.patches,
       ticket: state.session.ticket
@@ -116,16 +117,32 @@ defmodule Fastrepl.SessionManager do
   end
 
   @impl true
-  def handle_call({:file_add, path}, _from, state) do
-    repo = FS.Repository.add_file!(state.repository, path)
-    file = FS.Repository.find_file(repo, path)
+  def handle_call({:open_file, path}, _from, state) do
+    case FS.Repository.open_file(state.repository, path) do
+      {:ok, repo} ->
+        file = FS.Repository.find_original_file(repo, path)
+        {:reply, file, state |> Map.put(:repository, repo)}
+
+      {:error, _} ->
+        {:reply, nil, state}
+    end
+  end
+
+  @impl true
+  def handle_call({:open_file_for_edit, path}, _from, state) do
+    original_file = FS.Repository.find_original_file(state.repository, path)
+    current_file = FS.Repository.find_current_file(state.repository, path)
+    {:reply, %{original_file: original_file, current_file: current_file}, state}
+  end
+
+  @impl true
+  def handle_call({:update_file, file}, _from, state) do
+    repo = FS.Repository.update_file(state.repository, file)
 
     state =
-      state
-      |> sync_with_views(%{files: repo.original_files})
-      |> Map.put(:repository, repo)
+      state |> Map.put(:repository, repo)
 
-    {:reply, file, state}
+    {:reply, :ok, state}
   end
 
   @impl true
@@ -236,6 +253,12 @@ defmodule Fastrepl.SessionManager do
   end
 
   @impl true
+  def handle_call(:diffs_fetch, _from, state) do
+    patches = FS.Patch.from(state.repository)
+    {:reply, patches, state}
+  end
+
+  @impl true
   def handle_call(:pr_create, _from, state) do
     issue_number = state.session.ticket.github_issue_number
     repo_full_name = state.session.ticket.github_repo.full_name
@@ -291,11 +314,12 @@ defmodule Fastrepl.SessionManager do
           patches = FS.Patch.from(repo)
 
           send(state.self, {:update, :repository, repo})
+          sync_with_views(state, %{current_files: repo.current_files})
           send(state.self, {:update, :patches, patches})
 
-          patches
-          |> Enum.map(fn patch -> Map.put(patch, :session_id, state.session.id) end)
-          |> Enum.each(&Sessions.create_patch/1)
+          # patches
+          # |> Enum.map(fn patch -> Map.put(patch, :session_id, state.session.id) end)
+          # |> Enum.each(&Sessions.create_patch/1)
 
           send(state.self, {:update, :execution_done, nil})
         end)
@@ -355,10 +379,16 @@ defmodule Fastrepl.SessionManager do
       end)
 
     session = state.session |> Map.put(:comments, comments)
-    sync_with_views(state, %{comments: comments})
-    sync_with_views(state, %{files: repo.original_files})
 
-    {:noreply, state |> Map.put(:session, session) |> Map.put(:repository, repo)}
+    state =
+      state
+      |> sync_with_views(%{comments: comments})
+      |> sync_with_views(%{original_files: repo.original_files})
+      |> sync_with_views(%{current_files: repo.current_files})
+      |> Map.put(:session, session)
+      |> Map.put(:repository, repo)
+
+    {:noreply, state}
   end
 
   @impl true

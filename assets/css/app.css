@@ -2,28 +2,36 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
-.hljs-ln-numbers {
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  -khtml-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-}
-
-.hljs::selection,
-.hljs ::selection {
-  background-color: #fef16033 !important;
-  color: #181818 !important;
-}
-
 details > summary {
   list-style: none;
 }
+
 details > summary::-webkit-details-marker {
   display: none;
 }
 
 .tiptap code {
   background-color: #fef16033 !important;
+}
+
+.cm-deletedChunk {
+  background-color: rgb(254, 232, 233) !important;
+}
+
+.cm-insertedLine {
+  background-color: rgb(221, 255, 221) !important;
+}
+
+.cm-selectionBackground {
+  width: 100%;
+  background-color: #fef16033 !important;
+}
+
+.cm-editor,
+.cm-gutter {
+  background-color: rgb(249 250 251) !important;
+}
+
+body {
+  overflow: hidden;
 }

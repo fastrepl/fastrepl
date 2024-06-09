@@ -36,9 +36,7 @@ defmodule FastreplWeb.SessionLive do
               %{
                 repoFullName: @ticket.github_repo.full_name,
                 paths: @paths,
-                files: @files,
                 comments: @comments,
-                diffs: @patches,
                 executing: @status == :run
               }
             }
@@ -64,7 +62,8 @@ defmodule FastreplWeb.SessionLive do
           manager_pid: pid,
           session_id: session_id,
           paths: [],
-          files: [],
+          original_files: [],
+          current_files: [],
           comments: [],
           patches: []
         }
@@ -87,14 +86,30 @@ defmodule FastreplWeb.SessionLive do
     {:noreply, socket}
   end
 
-  def handle_event("file:add", %{"path" => path}, socket) do
-    file = GenServer.call(socket.assigns.manager_pid, {:file_add, path})
+  def handle_event("open_file", %{"path" => path}, socket) do
+    file = GenServer.call(socket.assigns.manager_pid, {:open_file, path})
     {:reply, %{file: file}, socket}
+  end
+
+  def handle_event("open_file_for_edit", %{"path" => path}, socket) do
+    result = GenServer.call(socket.assigns.manager_pid, {:open_file_for_edit, path})
+    {:reply, result, socket}
+  end
+
+  def handle_event("update_file", %{"file" => %{"path" => path, "content" => content}}, socket) do
+    file = %Fastrepl.FS.File{path: path, content: content}
+    :ok = GenServer.call(socket.assigns.manager_pid, {:update_file, file})
+    {:noreply, socket}
   end
 
   def handle_event("execute", %{}, socket) do
     :ok = GenServer.call(socket.assigns.manager_pid, :execute)
     {:noreply, socket}
+  end
+
+  def handle_event("diffs_fetch", %{}, socket) do
+    patches = GenServer.call(socket.assigns.manager_pid, :diffs_fetch)
+    {:reply, %{diffs: patches}, socket}
   end
 
   def handle_event("patch:download", %{}, socket) do
