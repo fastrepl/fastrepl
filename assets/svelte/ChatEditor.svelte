@@ -5,28 +5,18 @@
 
   import { createEditor, Editor, EditorContent } from "svelte-tiptap";
 
-  import { Shared } from "$lib/extensions/shared";
-  import { Mention, setCandidates } from "$lib/extensions/mention";
+  import { Shared } from "$lib/tiptap/shared";
+  import { Mention } from "$lib/tiptap/mention";
   import { Placeholder } from "@tiptap/extension-placeholder";
 
-  import type { Reference } from "$lib/types";
   import type { Message } from "$lib/interfaces";
   import { turndownService } from "$lib/turndown";
   import { tippy } from "$lib/actions";
-  import References from "$components/References.svelte";
 
   export let placeholder = "Type something...";
   export let paths: string[] = [];
 
-  export let handleSubmit: (message: Message, references: Reference[]) => void;
-  export let references: Reference[] = [];
-  export let handleResetReferences: () => void;
-  export let handleDeleteReference: (index: number) => void;
-
-  $: setCandidates(
-    "#",
-    Array.from({ length: references.length }, (_, i) => `#${i + 1}`),
-  );
+  export let handleSubmit: (message: Message) => void;
 
   let editor: Readable<Editor>;
 
@@ -38,8 +28,7 @@
       return;
     }
 
-    handleSubmit({ role: "user", content: md }, references);
-    handleResetReferences();
+    handleSubmit({ role: "user", content: md });
     $editor.commands.clearContent();
   };
 
@@ -54,7 +43,6 @@
       extensions: [
         ...Shared,
         Mention({ trigger: "/", names: paths, filter: true }),
-        Mention({ trigger: "#", names: [], filter: false }),
         Placeholder.configure({
           placeholder,
           emptyEditorClass:
@@ -74,7 +62,6 @@
   });
 </script>
 
-<References handleDelete={handleDeleteReference} {references} />
 <div
   tabindex="0"
   role="textbox"

@@ -10,8 +10,6 @@ defmodule FastreplWeb.Nav do
     active_tab =
       case socket.view do
         FastreplWeb.SettingsLive -> :settings
-        FastreplWeb.ChatsLive -> :chats
-        FastreplWeb.ChatLive -> :chats
         FastreplWeb.SessionsLive -> :sessions
         FastreplWeb.SessionLive -> :sessions
         _ -> nil

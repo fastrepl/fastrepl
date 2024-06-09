@@ -82,7 +82,6 @@ config :fastrepl, :env, Mix.env()
 config :fastrepl, :root, File.cwd!()
 
 config :fastrepl, :session_manager_registry, Fastrepl.SessionManagerRegistry
-config :fastrepl, :chat_manager_registry, Fastrepl.ChatManagerRegistry
 
 config :fastrepl, :cache, Fastrepl.Cache.Redis
 config :fastrepl, :embedding, Fastrepl.Retrieval.Embedding.OpenAIWithCache

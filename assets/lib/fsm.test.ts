@@ -27,7 +27,7 @@ test("click 'show changes' button after 'make changes' is done", async () => {
 test("click a comment", async () => {
   const actor = getActorFromLive({
     pushEvent: (event, params, cb) => {
-      if (event === "file_open" && params.path === "a.py") {
+      if (event === "open_file" && params.path === "a.py") {
         cb({ file: { path: "a.py", content: "MOCK_CONTENT" } });
       }
     },
@@ -62,10 +62,12 @@ describe("select a file from navigator", () => {
 
     const actor = getActorFromLive({
       pushEvent: (event, params, cb) => {
-        if (event === "file_open" && params.path === "a.py") {
+        if (event === "open_file" && params.path === "a.py") {
           cb({ file: FILE_A });
-        } else if (event === "file_open" && params.path === "b.py") {
+        } else if (event === "open_file" && params.path === "b.py") {
           cb({ file: FILE_B });
+        } else if (event === "diffs_fetch") {
+          cb({ diffs: [] });
         } else {
           throw new Error(
             `NOT_IMPLEMENTED: event=${event}, params=${JSON.stringify(params)}`,
@@ -83,22 +85,22 @@ describe("select a file from navigator", () => {
 
     expect(actor.getSnapshot().value).toBe("VIEW_COMMENTS");
     expect(actor.getSnapshot().context.tab).toBe("comments");
-    // expect(actor.getSnapshot().context.currentFile).toEqual(FILE_A);
+    expect(actor.getSnapshot().context.currentFile).toEqual(FILE_A);
     expect(actor.getSnapshot().context.workingFilePaths).toEqual(
       new Set(["a.py"]),
     );
 
-    // actor.send({ type: "select_file_from_navigator", path: "a.py" });
-    // expect(actor.getSnapshot().context.currentFile).toEqual(FILE_A);
-    // expect(actor.getSnapshot().context.workingFilePaths).toEqual(
-    //   new Set(["a.py"]),
-    // );
+    actor.send({ type: "select_file_from_navigator", path: "a.py" });
+    expect(actor.getSnapshot().context.currentFile).toEqual(FILE_A);
+    expect(actor.getSnapshot().context.workingFilePaths).toEqual(
+      new Set(["a.py"]),
+    );
 
-    // actor.send({ type: "select_file_from_navigator", path: "b.py" });
-    // expect(actor.getSnapshot().context.currentFile).toEqual(FILE_B);
-    // expect(actor.getSnapshot().context.workingFilePaths).toEqual(
-    //   new Set(["a.py", "b.py"]),
-    // );
+    actor.send({ type: "select_file_from_navigator", path: "b.py" });
+    expect(actor.getSnapshot().context.currentFile).toEqual(FILE_B);
+    expect(actor.getSnapshot().context.workingFilePaths).toEqual(
+      new Set(["a.py", "b.py"]),
+    );
   });
 
   test("when not viewing comments", async () => {
@@ -106,7 +108,7 @@ describe("select a file from navigator", () => {
 
     const actor = getActorFromLive({
       pushEvent: (event, params, cb) => {
-        if (event === "file_open" && params.path === "a.py") {
+        if (event === "open_file" && params.path === "a.py") {
           cb({ file: FILE_A });
         } else if (event === "diffs_fetch") {
           cb({ diffs: [] });
@@ -119,40 +121,15 @@ describe("select a file from navigator", () => {
     });
 
     actor.send({ type: "toggle_tab" });
-    // expect(actor.getSnapshot().value).toBe("VIEW_CHANGES");
-    // expect(actor.getSnapshot().context.tab).toBe("changes");
+    expect(actor.getSnapshot().value).toBe("VIEW_CHANGES");
+    expect(actor.getSnapshot().context.tab).toBe("changes");
 
-    // actor.send({ type: "select_file_from_navigator", path: "a.py" });
-    // expect(actor.getSnapshot().value).toBe("VIEW_COMMENTS");
-    // expect(actor.getSnapshot().context.tab).toBe("comments");
-    // expect(actor.getSnapshot().context.currentFile).toEqual(FILE_A);
-    // expect(actor.getSnapshot().context.workingFilePaths).toEqual(
-    //   new Set(["a.py"]),
-    // );
+    actor.send({ type: "select_file_from_navigator", path: "a.py" });
+    expect(actor.getSnapshot().value).toBe("VIEW_COMMENTS");
+    expect(actor.getSnapshot().context.tab).toBe("comments");
+    expect(actor.getSnapshot().context.currentFile).toEqual(FILE_A);
+    expect(actor.getSnapshot().context.workingFilePaths).toEqual(
+      new Set(["a.py"]),
+    );
   });
-});
-
-test("edit changes", async () => {
-  const FILE_A = { path: "a.py", content: "MOCK_CONTENT_A" };
-
-  const actor = getActorFromLive({
-    pushEvent: (event, params, cb) => {
-      if (event === "open_file_for_edit" && params.path === "a.py") {
-        cb({ originalFile: FILE_A, currentFile: FILE_A });
-      } else {
-        throw new Error(
-          `NOT_IMPLEMENTED: event=${event}, params=${JSON.stringify(params)}`,
-        );
-      }
-    },
-  });
-
-  // actor.send({ type: "toggle_tab" });
-  // expect(actor.getSnapshot().value).toBe("VIEW_CHANGES");
-
-  // actor.send({ type: "open_file_for_edit", path: "a.py" });
-  // expect(actor.getSnapshot().context.tab).toBe("changes");
-  // expect(actor.getSnapshot().value).toBe("EDIT_CHANGE");
-  // expect(actor.getSnapshot().context.originalFile).toEqual(FILE_A);
-  // expect(actor.getSnapshot().context.currentFile).toEqual(FILE_A);
 });

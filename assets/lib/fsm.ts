@@ -1,7 +1,6 @@
 import { setup, assign } from "xstate";
 
 import type { Live, File, Comment, Diff } from "$lib/interfaces";
-import { debounce } from "./utils/debounce";
 
 type Tab = "comments" | "changes";
 

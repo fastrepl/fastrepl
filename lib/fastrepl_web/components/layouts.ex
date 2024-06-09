@@ -52,22 +52,6 @@ defmodule FastreplWeb.Layouts do
                   </span>
                 </.link>
               </li>
-
-              <li>
-                <.link
-                  navigate={~p"/chats"}
-                  class={[
-                    "group relative flex justify-center rounded px-2 py-1.5",
-                    if(@active_tab == :chats, do: "bg-blue-50 text-blue-700", else: "text-gray-500")
-                  ]}
-                >
-                  <span class="hero-chat-bubble-left-right-solid w-4 h-4" />
-
-                  <span class="z-50 invisible absolute start-full top-1/2 ms-4 -translate-y-1/2 rounded bg-gray-900 px-2 py-1.5 text-xs font-medium text-white group-hover:visible">
-                    Chats
-                  </span>
-                </.link>
-              </li>
             </ul>
           </div>
         </div>
