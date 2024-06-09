@@ -2,21 +2,17 @@
   import { clsx } from "clsx";
   import { DropdownMenu } from "bits-ui";
 
-  import type { Mode } from "$lib/types";
-  import type { Diff, File } from "$lib/interfaces";
-  import type { Writable } from "svelte/store";
+  import type { Diff } from "$lib/interfaces";
+  import type { Sender, Snapshot } from "$lib/fsm";
 
-  export let mode: Writable<Mode>;
-  export let currentFile: File | null = null;
+  export let send: Sender;
+  export let snapshot: Snapshot;
+
   export let handleClickCreatePR: () => Promise<any>;
   export let handleClickDownloadPatch: () => Promise<any>;
-  export let handleSelectExistingFile: (path: string) => void;
-
-  export let diffs: Diff[] = [];
 
   const handleClickDiff = (diff: Diff) => {
-    handleSelectExistingFile(diff.path);
-    $mode = "diff_edit";
+    send({ type: "open_file_for_edit", path: diff.path });
   };
 
   let isLoadingCreatePR = false;
@@ -42,15 +38,15 @@
 <div class="flex flex-col gap-2 h-full text-sm">
   <div class="h-full overflow-y-hidden hover:overflow-y-auto">
     <div class="flex flex-col gap-2">
-      {#each diffs as diff}
+      {#each $snapshot.context.diffs as diff}
         <button
           on:click={() => handleClickDiff(diff)}
           class={clsx([
             "w-full flex flex-row justify-between gap-2",
             "px-2 py-1 border border-gray-200 rounded-md",
             "bg-gray-100 hover:bg-gray-200",
-            $mode === "diff_edit" &&
-              currentFile?.path === diff.path &&
+            $snapshot.value === "VIEW_CHANGES" &&
+              $snapshot.context.currentFile?.path === diff.path &&
               "bg-gray-200",
           ])}
         >
@@ -63,11 +59,11 @@
     </div>
   </div>
 
-  {#if $mode !== "diffs_summary"}
+  {#if $snapshot.value !== "VIEW_CHANGES"}
     <button
       type="button"
       on:click={() => {
-        $mode = "diffs_summary";
+        send({ type: "view_changes" });
       }}
       class={clsx([
         "py-1.5 rounded-md w-full",

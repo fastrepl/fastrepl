@@ -19,8 +19,8 @@
   let element: HTMLDivElement;
   let view: EditorView;
 
-  export let currentFile: File;
-  export let originalFile: File;
+  export let currentFile: File | null;
+  export let originalFile: File | null;
   export let handleChange: (newFile: File) => void;
 
   const createEditorState = (currentFile: File, originalFile: File) => {
@@ -57,7 +57,10 @@
     return () => view.destroy();
   });
 
-  $: view && view.setState(createEditorState(currentFile, originalFile));
+  $: if (view && currentFile && originalFile) {
+    view.setState(createEditorState(currentFile, originalFile));
+    handleClickNextChange();
+  }
 
   const handleClickPreviousChange = () => {
     goToPreviousChunk({ state: view.state, dispatch: view.dispatch });
@@ -76,7 +79,7 @@
     ])}
   >
     <span class="text-xs font-semibold">
-      {`${currentFile.path} (editing)`}
+      {`${currentFile?.path} (editing)`}
     </span>
 
     <div class="flex flex-row items-center gap-2">

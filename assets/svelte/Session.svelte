@@ -1,13 +1,9 @@
 <script lang="ts">
   import { clsx } from "clsx";
-  import { writable } from "svelte/store";
 
   import { PaneGroup, Pane, PaneResizer } from "paneforge";
   import { EditorView } from "@codemirror/view";
   import { EditorSelection } from "@codemirror/state";
-
-  import type { Mode } from "$lib/types";
-  import type { File, Diff, Comment } from "$lib/interfaces";
 
   import ActionPanel from "$components/ActionPanel.svelte";
   import FileViewer from "$components/FileViewer.svelte";
@@ -15,36 +11,18 @@
   import DiffsViewer from "$components/DiffsViewer.svelte";
   import FileNavigator from "$components/FileNavigator.svelte";
 
-  export let live: any;
+  import type { Live, Diff, Comment } from "$lib/interfaces";
+  import { createMachine } from "$lib/fsm";
+  import { useMachine } from "@xstate/svelte";
+
+  export let live: Live;
   let view: EditorView | null = null;
+  const { snapshot, send } = useMachine(createMachine({ live }));
 
   export let repoFullName: string;
   export let paths: string[] = [];
-  export let diffs: Diff[] = [];
-  export let originalFiles: File[] = [];
-  export let currentFiles: File[] = [];
   export let comments: Comment[] = [];
   export let executing: boolean;
-
-  const mode = writable<Mode>("comments");
-
-  let currentFile: File | null = null;
-
-  $: if (!currentFile && originalFiles.length > 0) {
-    currentFile = originalFiles[0];
-  }
-
-  const handleSelectExistingFile = (path: string) => {
-    const nextFile = originalFiles.find((f) => f.path === path);
-    if (nextFile) {
-      currentFile = nextFile;
-    }
-  };
-  const handleSelectNewFile = (path: string) => {
-    live.pushEvent("file:add", { path }, ({ file }) => {
-      currentFile = file;
-    });
-  };
 
   const handleClickExecute = () => {
     live.pushEvent("execute", {});
@@ -75,14 +53,10 @@
   };
 
   const handleClickComment = (comment: Comment) => {
-    const file = originalFiles.find((f) => f.path === comment.file_path);
-
-    if (file && file.path != currentFile?.path) {
-      currentFile = file;
-    }
+    send({ type: "click_comment", comment });
 
     setTimeout(() => {
-      if (view && currentFile) {
+      if (view) {
         const selection = EditorSelection.range(
           view.state.doc.line(comment.line_start).from,
           view.state.doc.line(comment.line_end).to,
@@ -108,20 +82,15 @@
   const handleUpdateComments = (comments: Comment[]) => {
     live.pushEvent("comments:update", { comments });
   };
-
-  const handleEditCurrentFile = (file: File) => {
-    live.pushEvent("file:update", file);
-  };
 </script>
 
 <PaneGroup direction="horizontal">
   <Pane defaultSize={34} minSize={10} order={1}>
     <ActionPanel
-      {mode}
-      {diffs}
+      {send}
+      {snapshot}
       {comments}
       {executing}
-      {currentFile}
       {handleClickExecute}
       {handleClickCreatePR}
       {handleClickComment}
@@ -129,25 +98,26 @@
       {handleClickShareComments}
       {handleDeleteComments}
       {handleUpdateComments}
-      {handleSelectExistingFile}
     />
   </Pane>
   <PaneResizer class="w-2" />
   <Pane defaultSize={50} order={2} minSize={10} class="relative">
-    {#if $mode === "diffs_summary"}
-      <DiffsViewer content={diffs.map((d) => d.content).join("\n\n")} />
-    {:else if $mode === "diff_edit"}
-      <DiffEditor
-        currentFile={currentFiles.find((f) => f.path === currentFile.path)}
-        originalFile={currentFile}
-        handleChange={handleEditCurrentFile}
+    {#if $snapshot.value === "VIEW_CHANGES"}
+      <DiffsViewer
+        content={$snapshot.context.diffs.map((d) => d.content).join("\n\n")}
       />
-    {:else if currentFile}
+    {:else if $snapshot.value === "EDIT_CHANGE"}
+      <DiffEditor
+        currentFile={$snapshot.context.currentFile}
+        originalFile={$snapshot.context.originalFile}
+        handleChange={(file) => send({ type: "file_updated", file })}
+      />
+    {:else if $snapshot.context.currentFile}
       <FileViewer
         on:ready={(e) => (view = e.detail)}
-        file={currentFile}
+        file={$snapshot.context.currentFile}
         highlights={comments
-          .filter((c) => c.file_path === currentFile?.path)
+          .filter((c) => c.file_path === $snapshot.context.currentFile?.path)
           .map((c) => ({ start: c.line_start, end: c.line_end }))}
         {handleCreateComments}
       />
@@ -164,13 +134,6 @@
   </Pane>
   <PaneResizer class="w-2" />
   <Pane defaultSize={10} minSize={5} order={3}>
-    <FileNavigator
-      {paths}
-      files={originalFiles}
-      {repoFullName}
-      currentFilePath={currentFile?.path}
-      {handleSelectExistingFile}
-      {handleSelectNewFile}
-    />
+    <FileNavigator {send} {snapshot} {repoFullName} {paths} />
   </Pane>
 </PaneGroup>

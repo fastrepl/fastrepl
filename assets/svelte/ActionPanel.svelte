@@ -5,15 +5,13 @@
   import CommentsPanel from "$components/CommentsPanel.svelte";
   import ChangesPanel from "$components/ChangesPanel.svelte";
 
-  import type { Diff, File, Comment } from "$lib/interfaces";
+  import type { Comment } from "$lib/interfaces";
+  import type { Sender, Snapshot } from "$lib/fsm";
 
-  import type { Mode } from "$lib/types";
-  import type { Writable } from "svelte/store";
+  export let send: Sender;
+  export let snapshot: Snapshot;
 
-  export let mode: Writable<Mode>;
-  export let diffs: Diff[] = [];
   export let comments: Comment[] = [];
-  export let currentFile: File | null = null;
   export let handleClickExecute: () => void;
   export let executing: boolean;
 
@@ -24,27 +22,16 @@
   export let handleClickComment: (comment: Comment) => void;
   export let handleDeleteComments: (comments: Comment[]) => void;
   export let handleUpdateComments: (comments: Comment[]) => void;
-  export let handleSelectExistingFile: (path: string) => void;
 
   const TABS = ["comments", "changes"];
-  let currentTab: (typeof TABS)[number] =
-    $mode === "comments" ? TABS[0] : TABS[1];
-
-  $: {
-    if (currentTab === TABS[0]) {
-      $mode = "comments";
-    } else {
-      $mode = "diffs_summary";
-    }
-  }
-
-  const handleShowDiffsSummary = () => {
-    currentTab = TABS[1];
-  };
 </script>
 
 <div class="h-[calc(100vh-90px)] border border-gray-200 rounded-lg">
-  <Tabs.Root bind:value={currentTab} class="h-[calc(100vh-115px)]">
+  <Tabs.Root
+    value={$snapshot.context.tab}
+    onValueChange={() => send({ type: "toggle_tab" })}
+    class="h-[calc(100vh-115px)]"
+  >
     <Tabs.List
       class={clsx(["flex flex-row gap-2 px-1.5 py-0.5", "text-xs bg-gray-200"])}
     >
@@ -63,7 +50,8 @@
     </Tabs.List>
     <Tabs.Content value={TABS[0]} class="bg-gray-50 p-4 h-full">
       <CommentsPanel
-        {diffs}
+        {send}
+        {snapshot}
         {comments}
         {executing}
         {handleClickExecute}
@@ -71,17 +59,14 @@
         {handleDeleteComments}
         {handleUpdateComments}
         {handleClickShareComments}
-        {handleShowDiffsSummary}
       />
     </Tabs.Content>
     <Tabs.Content value={TABS[1]} class="bg-gray-50 p-4 h-full">
       <ChangesPanel
-        {mode}
-        {diffs}
-        {currentFile}
+        {send}
+        {snapshot}
         {handleClickCreatePR}
         {handleClickDownloadPatch}
-        {handleSelectExistingFile}
       />
     </Tabs.Content>
   </Tabs.Root>

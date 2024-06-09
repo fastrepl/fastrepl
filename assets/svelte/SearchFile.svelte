@@ -3,7 +3,7 @@
   import Fuse from "fuse.js";
 
   export let paths: string[];
-  export let handleSelectFile: (path: string) => void;
+  export let handleClickFile: (path: string) => void;
 
   let query = "";
   let currentIndex = null;
@@ -20,7 +20,7 @@
 
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === "Enter") {
-      handleSelectFile(matches[currentIndex]);
+      handleClickFile(matches[currentIndex]);
     }
     if (e.key === "ArrowUp") {
       currentIndex = (currentIndex + matches.length - 1) % matches.length;
@@ -64,7 +64,7 @@
     {#each matches as match, index}
       <button
         type="button"
-        on:click={() => handleSelectFile(match)}
+        on:click={() => handleClickFile(match)}
         class={clsx([
           "w-full flex flex-row gap-4 items-center",
           "antialiased text-sm",

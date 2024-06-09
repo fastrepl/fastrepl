@@ -2,7 +2,9 @@
   import { fade } from "svelte/transition";
   import { Dialog } from "bits-ui";
 
-  export let live: any;
+  import type { Live } from "$lib/interfaces";
+
+  export let live: Live;
   let content = "";
   let open = false;
 

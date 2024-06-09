@@ -20,3 +20,24 @@ export interface Message {
   role: "assistant" | "user";
   content: string;
 }
+
+export interface Live {
+  pushEvent: (
+    event:
+      | "open_file"
+      | "open_file_for_edit"
+      | "update_file"
+      | "diffs_fetch"
+      | "open_file_for_edit"
+      | "execute"
+      | "pr:create"
+      | "patch:download"
+      | "comments:share"
+      | "comments:create"
+      | "comments:delete"
+      | "comments:update"
+      | "issue:submit",
+    input: { [key: string]: any },
+    cb?: (output: { [key: string]: any }) => void,
+  ) => void;
+}

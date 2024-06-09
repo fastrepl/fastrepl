@@ -88,8 +88,29 @@ defmodule Fastrepl.FS.Repository do
     %Repository{repo | current_files: repo.current_files |> List.replace_at(index, updated_file)}
   end
 
-  def find_file(repo, file_path) do
-    repo.original_files
-    |> Enum.find(fn file -> file.path == file_path end)
+  def open_file(repo, path) do
+    if Enum.any?(repo.original_files, &(&1.path == path)) do
+      {:ok, repo}
+    else
+      case File.exists?(Path.join(repo.root_path, path)) do
+        true ->
+          opened_file = %FS.File{path: path, content: File.read!(Path.join(repo.root_path, path))}
+          current_files = [opened_file | repo.current_files]
+          original_files = [opened_file | repo.original_files]
+          repo = %Repository{repo | current_files: current_files, original_files: original_files}
+          {:ok, repo}
+
+        false ->
+          {:error, :invalid_path}
+      end
+    end
+  end
+
+  def find_original_file(repo, path) do
+    Enum.find(repo.original_files, &(&1.path == path))
+  end
+
+  def find_current_file(repo, path) do
+    Enum.find(repo.current_files, &(&1.path == path))
   end
 end

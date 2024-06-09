@@ -6,10 +6,13 @@
   import { DropdownMenu } from "bits-ui";
 
   import type { Diff, Comment } from "$lib/interfaces";
+  import type { Sender, Snapshot } from "$lib/fsm";
 
   import CommentList from "$components/CommentList.svelte";
 
-  export let diffs: Diff[] = [];
+  export let send: Sender;
+  export let snapshot: Snapshot;
+
   export let comments: Comment[] = [];
   export let handleClickExecute: () => void;
   export let executing: boolean;
@@ -18,7 +21,6 @@
   export let handleDeleteComments: (comments: Comment[]) => void;
   export let handleUpdateComments: (comments: Comment[]) => void;
   export let handleClickShareComments: () => Promise<any>;
-  export let handleShowDiffsSummary: () => void;
 
   let isSharingComments = false;
 
@@ -41,7 +43,7 @@
     />
   </div>
 
-  {#if diffs.length > 0}
+  {#if $snapshot.context.diffs.length > 0}
     <div
       in:fly={{ duration: 300, x: 30 }}
       out:fly={{ duration: 300, x: -30 }}
@@ -49,7 +51,7 @@
     >
       <button
         type="button"
-        on:click={handleShowDiffsSummary}
+        on:click={() => send({ type: "show_changes" })}
         class={clsx([
           "py-1.5 rounded-md w-full",
           "border border-gray-300 rounded-md",
